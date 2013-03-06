@@ -25,3 +25,94 @@ ClosureTable bundle uses a feature from Adjacency List pattern to retrieve immed
 For you, default value of the foreign key name is already set to <code>parent\_id</code>. If you want to change it, set <code>public static $parent\_key</code> to another value.
 
 # Some Examples
+## Where is my parent? And grandparents?
+Here they are. In a few lines.
+<pre>
+<code>
+$page       = Page::find(10);
+$has_parent = $page->has_parent(); 
+$parent     = $page->parent()->first(); //or $page->parent;
+$parents    = $page->ancestors()->get(); //or $page->ancestors;
+</code>
+</pre>
+
+## What about my children?
+Get them as follows:
+<pre>
+<code>
+$page         = Page::find(10);
+$has_children = $page->has_descendants();
+$children     = $page->descendants()->get(); //or $page->descendants;
+</code>
+</pre>
+
+## I want to find friends
+Quite simple.
+<pre>
+<code>
+$page = Page::find(10);
+
+//next siblings
+$next     = $page->next_siblings; //or $page->siblings();
+$next_one = $page->next_sibling;
+
+//previous siblings
+$prev     = $page->prev_siblings; //or $page->siblings('all', 'prev');
+$prev_one = $page->prev_sibling; //or $page->siblings('one', 'prev');
+</code>
+</pre>
+
+## I want the full tree
+Get it.
+<pre>
+<code>
+//assuming you want pages tree
+$tree = Page::fulltree();
+</code>
+</pre>
+
+## And now I want only root nodes of my menu
+Dead simple.
+<pre>
+<code>
+$roots = MenuItem::roots();
+$is_root = $menu_item->is_root(); //a check somewhere in your code
+$item->make_root(); //makes an item the root
+</code>
+</pre>
+
+## I want to move my item (with all the children!).
+With ease.
+<pre>
+<code>
+$item = MenuItem::find(15);
+$item->move_to(MenuItem::find(10));
+
+//or if you want to set the position that differs from 0 (i.e. first)
+$item->move_to(MenuItem::find(10), 5); //will be sixth
+</code>
+</pre>
+
+## Need a child.
+Use shorthand method or the default one.
+<pre>
+<code>
+$item->append_child(new MenuItem(/* attributes */)); //or $item->descendants()->insert(new MenuItem(/* attributes */));
+</code>
+</pre>
+
+## And once I got rid of it.
+Just remove.
+<pre>
+<code>
+$item->remove_child($position);
+</code>
+</pre>
+
+## Burn them.
+Ashes.
+<pre>
+<code>
+$item->delete_with_subtree();
+</code>
+</pre>
