@@ -166,7 +166,7 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
      */
     public static function fulltree()
     {
-        return static::select(array(static::$table.'.*', 't1.ancestor', 't1.descendant', 't1.level', 't1.position'))
+        return static::select(array(static::$table.'.*', 't1.ancestor', 't1.descendant', 't1.level'))
             ->join(static::$treepath.' as t1', static::$table.'.'.static::$key, '=', 't1.ancestor')
             ->join(static::$treepath.' as t2', static::$table.'.'.static::$key, '=', 't2.descendant')
             ->distinct()
