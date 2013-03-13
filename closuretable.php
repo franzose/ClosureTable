@@ -172,7 +172,7 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
                 where t1.ancestor = t1.descendant';
 
         if ($order_by)
-            $sql .= 'order by t0.'.$order_by;
+            $sql .= ' order by t0.'.$order_by;
 
         return static::_make_multi_array(DB::query($sql));
     }
