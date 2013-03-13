@@ -159,31 +159,35 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
         return !!$this->descendants()->count();
     }
 
-    /**
-     * Retrieves all the tree.
-     *
-     * @return array
-     */
-    public static function fulltree($select = '*')
+    public static function fulltree()
     {
-        $sql = 'select distinct '.static::$table.'.'.$select.', t1.ancestor, t1.descendant, t1.level
+        $sql = 'select distinct '.static::$table.'.*, t1.ancestor, t1.descendant, t1.level
                 from '.static::$table.'
                 inner join '.static::$treepath.' as t1 on '.static::$table.'.id = t1.ancestor
                 inner join '.static::$treepath.' as t2 on '.static::$table.'.id = t2.descendant
                 where t1.ancestor = t1.descendant';
 
-        $raw = DB::query($sql);
+        return static::_make_multi_array(DB::query($sql));
+    }
+
+    /**
+     * Makes multidimensional array from flat database results
+     *
+     * @param array $raw
+     * @param int $index
+     * @return array
+     */
+    protected static function _make_multi_array(array $raw, $index = null)
+    {
         $result = array();
 
-        foreach($raw as $element)
+        foreach ($raw as $i => $e)
         {
-            $id  = $element[static::$key];
-            $pid = $element[static::$parent_key];
-
-            if ($element[static::$parent_key] == null)
-                $result[$id] = $element;
-            else
-                $result[$pid]['children'][] = $element;
+            if ($e[static::$parent_key] == $index)
+            {
+                unset($raw[$i]);
+                $result[] = array_merge($e, array('children' => static::_make_multi_array($raw, $e[static::$key])));
+            }
         }
 
         return $result;
