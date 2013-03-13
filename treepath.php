@@ -97,8 +97,27 @@ class TreePath extends Eloquent {
      */
     public function delete()
     {
+        //$this->_update_treepaths_on_ancestor_delete();
         return $this->where('descendant', '=', $this->descendant)->delete();
     }
+
+    /*protected function _update_treepaths_on_ancestor_delete($ancestor = null)
+    {
+        $ancestor = ($ancestor === null ? $this->descendant : $ancestor);
+
+        $descendants = DB::table(static::$table)
+            ->select('descendant')
+            ->where('ancestor', '=', $ancestor)
+            ->get();
+
+        foreach ($descendants as $d)
+        {
+            $d['level'] = $this->level;
+            $d['ancestor'] = $this->ancestor;
+
+            return $this->_update_treepaths_on_ancestor_delete($d['descendant']);
+        }
+    }*/
 
     /**
      * Deletes a subtree completely.
@@ -109,7 +128,7 @@ class TreePath extends Eloquent {
     {
         $descendants = DB::table(static::$table)
             ->select('descendant')
-            ->where('ancestor', '=', $this->ancestor)
+            ->where('ancestor', '=', $this->descendant/*ancestor*/)
             ->get();
 
         $plain = array();
@@ -149,9 +168,12 @@ class TreePath extends Eloquent {
         unset($descendants, $ancestors);
 
         //disconnect the subtree from its ancestors
-        DB::table(static::$table)->where_in('descendant', $plain_descendants)
-            ->where_in('ancestor', $plain_ancestors)
-            ->delete();
+        if (count($plain_ancestors))
+        {
+            DB::table(static::$table)->where_in('descendant', $plain_descendants)
+                ->where_in('ancestor', $plain_ancestors)
+                ->delete();
+        }
 
         //null? make it root
         if ($ancestor === null)

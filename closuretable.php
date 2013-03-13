@@ -159,6 +159,9 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
         return !!$this->descendants()->count();
     }
 
+    /**
+     * @return array
+     */
     public static function fulltree()
     {
         $sql = 'select distinct '.static::$table.'.*, t1.ancestor, t1.descendant, t1.level
@@ -191,6 +194,11 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
         }
 
         return $result;
+    }
+
+    public static function breadcrumbs()
+    {
+        //return static::select()
     }
 
     /**
@@ -237,7 +245,7 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
     /**
      * Moves a node as a child to provided node or, if none parent node provided, makes it root.
      *
-     * @param IClosureTable|null $ancestor
+     * @param IClosureTable $ancestor
      * @param int $position
      * @return ClosureTable
      */
@@ -411,7 +419,7 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
 
         if ($result)
         {
-            $parent_id = $this->parent ? $this->parent->get_key() : $id;
+            $parent_id = $this->parent ? $this->parent->get_key() : null;//$id;
             TreePath::insert_leaf($id, $parent_id);
             $this->fire_event('created');
         }
@@ -430,18 +438,30 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
         $result = $query->update($this->get_dirty()) === 1;
 
         if ($result)
+        {
+            $this->move_to($this->parent()->first());
             $this->fire_event('updated');
+        }
 
         return $result;
     }
 
     /**
-     * Deletes the model and its treepath from the database.
+     * Deletes the model from the database.
+     * Also corrects tree paths of its descendants if those exist.
      *
      * @return int
      */
-    public function remove()
+    public function delete()
     {
+        $grand_parent = $this->parent()->first();
+        if (!$grand_parent) $grand_parent = null;
+
+        foreach ($this->descendants as $dsc)
+        {
+            $dsc->move_to($grand_parent);
+        }
+
         $this->treepath->delete();
         return parent::delete();
     }
