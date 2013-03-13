@@ -164,9 +164,9 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
      *
      * @return array
      */
-    public static function fulltree()
+    public static function fulltree($select = '*')
     {
-        $sql = 'select distinct '.static::$table.'.*, t1.ancestor, t1.descendant, t1.level
+        $sql = 'select distinct '.static::$table.'.'.$select.', t1.ancestor, t1.descendant, t1.level
                 from '.static::$table.'
                 inner join '.static::$treepath.' as t1 on '.static::$table.'.id = t1.ancestor
                 inner join '.static::$treepath.' as t2 on '.static::$table.'.id = t2.descendant
@@ -183,7 +183,7 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
             if ($element[static::$parent_key] == null)
                 $result[$id] = $element;
             else
-                $result[$pid][$id] = $element;
+                $result[$pid]['children'][] = $element;
         }
 
         return $result;
