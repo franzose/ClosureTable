@@ -160,15 +160,19 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
     }
 
     /**
+     * @param string $order_by
      * @return array
      */
-    public static function fulltree()
+    public static function fulltree($order_by = '')
     {
-        $sql = 'select distinct '.static::$table.'.*, t1.ancestor, t1.descendant, t1.level
-                from '.static::$table.'
-                inner join '.static::$treepath.' as t1 on '.static::$table.'.id = t1.ancestor
-                inner join '.static::$treepath.' as t2 on '.static::$table.'.id = t2.descendant
+        $sql = 'select distinct t0.*, t1.ancestor, t1.descendant, t1.level
+                from '.static::$table.' as t0
+                inner join '.static::$treepath.' as t1 on t0.id = t1.ancestor
+                inner join '.static::$treepath.' as t2 on t0.id = t2.descendant
                 where t1.ancestor = t1.descendant';
+
+        if ($order_by)
+            $sql .= 'order by t0.'.$order_by;
 
         return static::_make_multi_array(DB::query($sql));
     }
