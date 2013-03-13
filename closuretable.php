@@ -181,16 +181,9 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
             $pid = $element[static::$parent_key];
 
             if ($element[static::$parent_key] == null)
-            {
                 $result[$id] = $element;
-            }
             else
-            {
-                if (!is_array($result[$pid]))
-                    $result[$pid] = array();
-
-                $result[$pid] += array($id => $element);
-            }
+                $result[$pid][$id] = $element;
         }
 
         return $result;
