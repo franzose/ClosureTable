@@ -190,10 +190,21 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
 
         foreach ($raw as $i => $e)
         {
-            if ($e[static::$parent_key] == $index)
+            if (is_object($e))
+            {
+                $pk = $e->{static::$key};
+                $fk = $e->{static::$parent_key};
+            }
+            else
+            {
+                $pk = $e[static::$key];
+                $fk = $e[static::$parent_key];
+            } 
+            
+            if ($fk == $index)
             {
                 unset($raw[$i]);
-                $result[] = array_merge($e, array('children' => static::_make_multi_array($raw, $e[static::$key])));
+                $result[] = array_merge($e, array('children' => static::_make_multi_array($raw, $pk)));
             }
         }
 
