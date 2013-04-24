@@ -90,7 +90,7 @@ class Create_Pages_Treepath_Table {
             // 'ancestor' for the parent
             // 'descendant' for the child
             // 'level' for the deepness
-            // unlike 'parent_id' field name, which can be overriden, 
+            // unlike 'parent_id' field name from the previous table, which can be overriden, 
             // these fields must have explicit names as in this example
             $table->integer('ancestor')->unsigned();
             $table->integer('descendant')->unsigned();
