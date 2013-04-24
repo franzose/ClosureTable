@@ -24,7 +24,93 @@ ClosureTable bundle uses a feature from Adjacency List pattern to retrieve immed
 
 For you, default value of the foreign key name is already set to <code>parent\_id</code>. If you want to change it, set <code>public static $parent\_key</code> to another value.
 
-# Some Examples
+# Migration Tables
+Let's say we want to create a structure of pages. Migration classes could be done as follows. First, for the 'pages' table.
+<pre>
+<code>
+<?php
+
+class Create_Pages_Table {
+
+    /**
+	 * Make changes to the database.
+	 *
+	 * @return void
+	 */
+	public function up()
+	{
+		Schema::create('pages', function($table){
+            $table->increments('id');
+            $table->integer('parent_id')->unsigned()->nullable(); //required by ClosureTable/ClosureTable model
+            $table->string('language', 3);
+            $table->boolean('published')->default(false);
+            $table->string('url', 255);
+            $table->string('title', 255);
+            $table->text('content');
+            $table->integer('position')->unsigned();
+            $table->timestamps();
+
+            $table->index('pubid');
+            $table->index('parent_id');
+            $table->index('language');
+            $table->index('url');
+            $table->index('position');
+        });
+	}
+
+	/**
+	 * Revert the changes to the database.
+	 *
+	 * @return void
+	 */
+	public function down()
+	{
+		Schema::drop('pages');
+	}
+</code>
+</pre>
+
+And then for the pages' tree paths.
+<pre>
+<code>
+<?php
+
+class Create_Pages_Treepath_Table {
+
+    /**
+     * Make changes to the database.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('pages_treepath', function($table){
+            $table->increments('tpid');
+            
+            //these three fields are required by ClosureTable\TreePath model
+            $table->integer('ancestor')->unsigned();
+            $table->integer('descendant')->unsigned();
+            $table->integer('level')->unsigned();
+            
+            $table->index('level');
+        });
+    }
+
+    /**
+     * Revert the changes to the database.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::drop('pages_treepath');
+    }
+
+}
+</code>
+</pre>
+
+# Code Examples
 ## Where is my parent? And grandparents?
 Here they are. In a few lines.
 <pre>
