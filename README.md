@@ -28,7 +28,6 @@ For you, default value of the foreign key name is already set to <code>parent\_i
 Let's say we want to create a structure of pages. Migration classes could be done as follows. First, for the 'pages' table.
 <pre>
 <code>
-
 class Create_Pages_Table {
 
     /**
@@ -72,7 +71,6 @@ class Create_Pages_Table {
 And then for the pages' tree paths.
 <pre>
 <code>
-
 class Create_Pages_Treepath_Table {
 
     /**
