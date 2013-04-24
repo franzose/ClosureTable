@@ -39,7 +39,10 @@ class Create_Pages_Table {
 	{
 	    Schema::create('pages', function($table){
             $table->increments('id');
-            $table->integer('parent_id')->unsigned()->nullable(); //required by ClosureTable/ClosureTable model
+
+            // required by ClosureTable\ClosureTable model
+            // 'parent_id' by default unless ClosureTable\ClosureTable::$parent_key overriden
+            $table->integer('parent_id')->unsigned()->nullable();
             $table->string('language', 3);
             $table->boolean('published')->default(false);
             $table->string('url', 255);
@@ -83,7 +86,12 @@ class Create_Pages_Treepath_Table {
         Schema::create('pages_treepath', function($table){
             $table->increments('tpid');
             
-            //these three fields are required by ClosureTable\TreePath model
+            // these three fields are required by ClosureTable\TreePath model
+            // 'ancestor' for the parent
+            // 'descendant' for the child
+            // 'level' for the deepness
+            // unlike 'parent_id' field name, which can be overriden, 
+            // these fields must have explicit names as in this example
             $table->integer('ancestor')->unsigned();
             $table->integer('descendant')->unsigned();
             $table->integer('level')->unsigned();
