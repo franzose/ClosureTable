@@ -28,7 +28,6 @@ For you, default value of the foreign key name is already set to <code>parent\_i
 Let's say we want to create a structure of pages. Migration classes could be done as follows. First, for the 'pages' table.
 <pre>
 <code>
-<?php
 
 class Create_Pages_Table {
 
@@ -39,7 +38,7 @@ class Create_Pages_Table {
 	 */
 	public function up()
 	{
-		Schema::create('pages', function($table){
+	    Schema::create('pages', function($table){
             $table->increments('id');
             $table->integer('parent_id')->unsigned()->nullable(); //required by ClosureTable/ClosureTable model
             $table->string('language', 3);
@@ -73,7 +72,6 @@ class Create_Pages_Table {
 And then for the pages' tree paths.
 <pre>
 <code>
-<?php
 
 class Create_Pages_Treepath_Table {
 
