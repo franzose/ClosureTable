@@ -190,16 +190,15 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
 
         foreach ($raw as $i => $e)
         {
+            //here we convert stdClass object
+            //to multidimensional array
             if (is_object($e))
             {
-                $pk = $e->{static::$key};
-                $fk = $e->{static::$parent_key};
+                $e = get_object_vars($e);
             }
-            else
-            {
-                $pk = $e[static::$key];
-                $fk = $e[static::$parent_key];
-            } 
+
+            $pk = $e[static::$key];
+            $fk = $e[static::$parent_key];
             
             if ($fk == $index)
             {
