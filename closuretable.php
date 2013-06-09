@@ -122,7 +122,7 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
     }
 
     /**
-     * Relation to model's ancestors.
+     * Gets all entity's ancestors.
      *
      * @return mixed
      */
@@ -130,17 +130,18 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
     {
         $ancestor = static::$treepath.'.ancestor';
         $descendant = static::$treepath.'.descendant';
+        $level = static::$treepath.'.level';
         $key = static::$table.'.'.static::$key;
         
-        return $this->has_many(get_class($this), static::$parent_key)
+        return $this->where($descendant, '=', $this->get_key())
             ->join(static::$treepath, function($join) use($ancestor, $descendant, $key) {
                 $join->on($ancestor, '=', $key);
                 $join->on($descendant, '<>', $key);
-        })->select(array(static::$table.'.*'));
+        })->select(array(static::$table.'.*'))->order_by($level, 'desc')->get();
     }
 
     /**
-     * Relation to model's descendants.
+     * Gets all entity's descendants
      *
      * @return mixed
      */
@@ -150,11 +151,11 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
         $descendant = static::$treepath.'.descendant';
         $key = static::$table.'.'.static::$key;
         
-        return $this->has_many(get_class($this), static::$parent_key)
+        return $this->where($ancestor, '=', $this->get_key())
             ->join(static::$treepath, function($join) use($ancestor, $descendant, $key) {
                 $join->on($descendant, '=', $key);
                 $join->on($ancestor, '<>', $key);
-        })->select(array(static::$table.'.*'));
+        })->select(array(static::$table.'.*'))->get();
     }
 
     /**
@@ -165,6 +166,24 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
     public function has_descendants()
     {
         return !!$this->descendants()->count();
+    }
+
+    /**
+     * Gets immediate entity's descendants
+     *
+     * @return mixed
+     */
+    public function children()
+    {
+        $ancestor = static::$treepath.'.ancestor';
+        $descendant = static::$treepath.'.descendant';
+        $key = static::$table.'.'.static::$key;
+
+        return $this->has_many(get_class($this), static::$parent_key)
+            ->join(static::$treepath, function($join) use($ancestor, $descendant, $key) {
+            $join->on($descendant, '=', $key);
+            $join->on($ancestor, '<>', $key);
+        })->select(array(static::$table.'.*'));
     }
 
     /**
@@ -216,11 +235,6 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
         }
 
         return $result;
-    }
-
-    public static function breadcrumbs()
-    {
-        //return static::select()
     }
 
     /**
