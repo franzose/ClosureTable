@@ -97,7 +97,6 @@ class TreePath extends Eloquent {
      */
     public function delete()
     {
-        //$this->_update_treepaths_on_ancestor_delete();
         return $this->where('descendant', '=', $this->descendant)->delete();
     }
 
@@ -110,7 +109,7 @@ class TreePath extends Eloquent {
     {
         $descendants = DB::table(static::$table)
             ->select('descendant')
-            ->where('ancestor', '=', $this->descendant/*ancestor*/)
+            ->where('ancestor', '=', $this->descendant)
             ->get();
 
         $plain = array();
