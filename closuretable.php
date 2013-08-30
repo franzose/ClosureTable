@@ -47,8 +47,6 @@ abstract class ClosureTable extends Eloquent implements IClosureTable {
      *
      * @var string
      * @see ClosureTable::parent()
-     * @see ClosureTable::ancestors()
-     * @see ClosureTable::descendants()
      * @see ClosureTable::move_to()
      * @see ClosureTable::siblings()
      */
