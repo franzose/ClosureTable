@@ -1,0 +1,21 @@
+{
+    "name": "franzose/closure-table",
+    "description": "Database design pattern realization for Laravel",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "franzose",
+            "email": "iwanow.jan@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "4.0.x"
+    },
+    "autoload": {
+        "psr-0": {
+            "Franzose\\ClosureTable": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
