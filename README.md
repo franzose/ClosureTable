@@ -17,3 +17,16 @@ Now all that stuff is obsolete. `ClosureTable` model has three constants for you
 All you need to do is to extend the base ClouseTable model and define column names you want in your new model.
 
 `Entity` model doesn't use the feature from Adjacency List anymore (however a trick with direct parent presents) and has constant `Entity::POSITION` for you to define position column name you want.
+
+## Closure table name
+As the ClosureTable 1, this package offers you to define the name of the closure table in the Entity model. This is done to avoid useless spawning of ClouseTable models. Instead of that you write the name of the closure table to `Entity::$closure` once, and your Entity will use the same `ClosureTable` model but with different database table. For example,
+
+<pre>
+<code>
+use \Franzose\ClosureTable\Entity;
+
+class Page extends Entity {
+    public static $closure = 'pages_closure';
+}
+</code>
+</pre>
