@@ -9,6 +9,7 @@
  */
 
 use \Illuminate\Database\Eloquent\Model as Eloquent;
+use \Illuminate\Support\Facades\DB;
 
 /**
  * Generic model with Closure Table database design pattern capabilities.
@@ -26,14 +27,6 @@ class Entity extends Eloquent {
      * @see Entity::closuretable()
      */
     protected static $closure;
-
-    /**
-     * Static alias for Eloquent::getQualifiedKeyName() method results.
-     *
-     * @var string
-     * @see Entity::roots()
-     */
-    protected static $qualifiedKeyName;
 
     /**
      * A sort of 'virtual' attribute of the direct parent identifier.
@@ -59,7 +52,6 @@ class Entity extends Eloquent {
     {
         parent::__construct($attributes);
         ClosureTable::$tableName  = static::$closure;
-        static::$qualifiedKeyName = $this->getQualifiedKeyName();
     }
 
     /**
@@ -450,13 +442,30 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Retrieves all models with depth equal 0.
+     * Retrieves all models that have no ancestors.
      *
-     * @return array
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public static function roots()
     {
-        return static::buildRootsQuery()->get();
+        $instance   = new static;
+        $table      = $instance->getTable();
+        $closure    = ClosureTable::$tableName;
+        $ancestor   = ClosureTable::getQualifiedAncestorKeyName();
+        $descendant = ClosureTable::getQualifiedDescendantKeyName();
+        $depth      = ClosureTable::getQualifiedDepthKeyName();
+        $keyName    = $instance->getQualifiedKeyName();
+
+        $having = "(SELECT COUNT(*) FROM {$closure} WHERE {$descendant} = parentId AND {$depth} > 0) = 0";
+
+        return static::select(array($table.'.*', $ancestor.' AS parentId'))
+            ->distinct()
+            ->join($closure, function($join) use($ancestor, $descendant, $keyName){
+                $join->on($ancestor, '=', $keyName);
+                $join->on($descendant, '=', $keyName);
+            })
+            ->havingRaw($having)
+            ->get();
     }
 
     /**
@@ -466,7 +475,10 @@ class Entity extends Eloquent {
      */
     public function isRoot()
     {
-        //return $this->depth == 0 || !$this->buildAncestorsQuery()->count();
+        return !!$this->from(static::$closure)
+                      ->where(ClosureTable::DESCENDANT, '=', $this->getKey())
+                      ->where(ClosureTable::DEPTH, '>', $this->closuretable->{ClosureTable::DEPTH})
+                      ->count() == 0;
     }
 
     /**
@@ -480,18 +492,6 @@ class Entity extends Eloquent {
             $this->moveTo();
 
         return $this;
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    protected static function buildRootsQuery()
-    {
-        return static::join(static::$closure, function($join){
-            $pk = static::$qualifiedKeyName;
-            $join->on(ClosureTable::getQualifiedAncestorKeyName(), '=', $pk);
-            $join->on(ClosureTable::getQualifiedDescendantKeyName(), '=', $pk);
-        })->where(ClosureTable::getQualifiedDepthKeyName(), '=', 0);
     }
 
     /**
