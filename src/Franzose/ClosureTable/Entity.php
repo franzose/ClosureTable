@@ -334,7 +334,7 @@ class Entity extends Eloquent {
      */
     public function countPrevSiblings()
     {
-        return $this->buildSiblingsQuery('prev', true)->count();
+        return $this->buildSiblingsQuery('prev', true)->lists('id')/*->count()*/;
     }
 
     /**
@@ -406,32 +406,44 @@ class Entity extends Eloquent {
     /**
      * @param string $direction 'prev' for previous siblings, 'next' for next ones
      * @param bool $queryAll
+     * @throws \InvalidArgumentException
      * @return \Illuminate\Database\Eloquent\Builder
      */
     protected function buildSiblingsQuery($direction = 'next', $queryAll = false)
     {
+        if ($direction != 'next' && $direction != 'prev')
+        {
+            throw new \InvalidArgumentException('Invalid direction value.');
+        }
+
         $query = $this->select(array($this->table.'.*'))
             ->join(static::$closure, ClosureTable::getQualifiedDescendantKeyName(), '=', $this->getQualifiedKeyName())
-            ->where(ClosureTable::getQualifiedAncestorKeyName(), '<>', $this->getKey())
+            //->where(ClosureTable::getQualifiedAncestorKeyName(), '<>', $this->getKey())
             ->where(ClosureTable::getQualifiedDescendantKeyName(), '<>', $this->getKey())
+            ->where(ClosureTable::getQualifiedAncestorKeyName(), '=', $this->closuretable->{ClosureTable::ANCESTOR})
             ->where(ClosureTable::getQualifiedDepthKeyName(), '=', $this->closuretable->{ClosureTable::DEPTH});
 
         if ($queryAll === false)
         {
-            $position = null;
+            $position = $this->{static::POSITION}+1;
 
-            switch($direction)
+            if ($direction == 'prev')
             {
-                case 'prev':
-                    $position = $this->{static::POSITION}-1;
-                    break;
-
-                case 'next':
-                    $position = $this->{static::POSITION}+1;
-                    break;
+                $position = $this->{static::POSITION}-1;
             }
 
             $query->where(static::POSITION, '=', $position);
+        }
+        else
+        {
+            $operand = '>';
+
+            if ($direction == 'prev')
+            {
+                $operand = '<';
+            }
+
+            $query->where(static::POSITION, $operand, $this->{static::POSITION});
         }
 
         return $query;
@@ -454,7 +466,7 @@ class Entity extends Eloquent {
      */
     public function isRoot()
     {
-        return $this->depth == 0 || !$this->buildAncestorsQuery()->count();
+        //return $this->depth == 0 || !$this->buildAncestorsQuery()->count();
     }
 
     /**
