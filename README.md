@@ -21,9 +21,13 @@ class Page extends Entity {
 </code>
 </pre>
 
-Violà! You have a new Entity. Take a look at the `protected static $closure` variable. It is the name of the closure table where relationships between entities are stored. Remember that you will never have to manually extend the `ClosureTable` model for each your `Entity` model until you want to set other columns names in the closure table. If you do want, see ‘<a href="#restriction-on-columns-names-removed">Restriction on columns names removed</a>’ section.
+Violà! You have a new Entity. Take a look at the `protected static $closure` variable. It is the name of the closure table where relationships between entities are stored. Remember that you will never have to manually extend the `ClosureTable` model for each your `Entity` model until you want to set other columns names in the closure table. If you do want, see ‘<a href="#restriction-on-columns-names-removed">Restriction on columns names removed</a>’ section for more information.
+
+Every Entity uses `position` table column in order to be sortable. You can define your own column name by changing the default value of `Entity::POSITION` constant.
 
 ### Create migrations
+
+Read the Laravel's ‘<a href="http://laravel.com/docs/migrations">Migrations & Seeding</a>’ first. You need to create two database tables, one for the entities, one for their relationships (closure table).
 
 ## Time of coding
 
