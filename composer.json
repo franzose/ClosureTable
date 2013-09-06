@@ -1,5 +1,5 @@
 {
-    "name": "franzose/closure-table",
+    "name": "franzose/ClosureTable",
     "description": "Database design pattern realization for Laravel",
     "license": "MIT",
     "authors": [
