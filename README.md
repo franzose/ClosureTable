@@ -21,20 +21,114 @@ class Page extends Entity {
 </code>
 </pre>
 
-Violà! You have a new Entity. Take a look at the `protected static $closure` variable. It is the name of the closure table where relationships between entities are stored. Remember that you will never have to manually extend the `ClosureTable` model for each your `Entity` model until you want to set other columns names in the closure table. If you do want, see ‘<a href="#restriction-on-columns-names-removed">Restriction on columns names removed</a>’ section for more information.
+Violà! You have a new Entity. Take a look at the `protected static $closure` variable. It is the name of the closure table where relationships between entities are stored. Remember that you will never have to manually extend the `ClosureTable` model for each your `Entity` model until you want to change the default columns names in the closure table. If you do want, see ‘<a href="#customization">Customization</a>’ section of this readme for more information.
 
 Every Entity uses `position` table column in order to be sortable. You can define your own column name by changing the default value of `Entity::POSITION` constant.
 
 ### Create migrations
 
-Read the Laravel's ‘<a href="http://laravel.com/docs/migrations">Migrations & Seeding</a>’ first. You need to create two database tables, one for the entities, one for their relationships (closure table).
+Please, read the Laravel's ‘<a href="http://laravel.com/docs/migrations">Migrations & Seeding</a>’ first. Keep in mind that you must create two database tables—one for the entities, one for their relationships (closure table). 
+
+Your Entity table must include `position` column, which name is defined by `Entity::POSITION` constant, as I told you above.
+
+Your closure table must include the following columns:
+1. **Autoincremented identifier**
+2. **Ancestor column** points on a parent node
+3. **Descendant column** points on a child node
+4. **Depth column** shows a node depth in the tree
+
+Each of their names is customizable. See ‘<a href="#customization">Customization</a>’ section of this readme for more information.
 
 ## Time of coding
+Once your models and their database tables are created, at last, you can start actually coding. Here I will show you ClosureTable's specific approaches.
+
+### Get ancestors
+
+<pre>
+<code>
+$page = Page::find(15);
+$ancestors = $page->ancestors();
+
+if ($page->hasAncestors())
+{
+}
+
+$ancestorsNumber = $page->countAncestors();
+</code>
+</pre>
+
+### Get descendants
+
+<pre>
+<code>
+$page = Page::find(15);
+$descendants = $page->descendants();
+
+if ($page->hasDescendants())
+{
+}
+
+$descendantsNumber = $page->countDescendants();
+</code>
+</pre>
+
+### Get direct children
+
+<pre>
+<code>
+$page = Page::find(15);
+$children = $page->children();
+
+if ($page->hasChildren())
+{
+}
+
+$childrenNumber = $page->countChildren();
+</code>
+</pre>
+
+### Get siblings
+
+<pre>
+<code>
+$page = Page::find(15);
+$nextOne = $page->nextSibling();
+$nextAll = $page->nextSiblings();
+$prevOne = $page->prevSibling();
+$prevAll = $page->prevSiblings();
+
+if ($page->hasSiblings())
+{
+}
+
+if ($page->hasPrevSiblings())
+{
+}
+
+if ($page->hasNextSiblings())
+{
+}
+
+$siblingsNumber = $page->countSiblings();
+$nextNumber = $page->countNextSiblings();
+$prevNumber = $page->countPrevSiblings();
+</code>
+</pre>
+
+### Get the entire tree
+
+<pre>
+<code>
+$tree = Page::tree();
+</code>
+</pre>
+
+### Moving entities
+
+## Customization
+
 
 ## Changes compared to ClosureTable 1
-### Model names
-I decided to rename models and give them more appropriate names. Former `ClosureTable` model is now `Entity` because the database table, it operates, contains the entity data only. `TreePath` is now `ClosureTable`, named after the pattern, as it contains relationships of entities to each other.
-
 ### Restriction on columns names removed
 ClosureTable 1 had hardcoded columns names of the closure table: `ancestor`, `descendant`, `level`. In addition to this, `ClosureTable` model used Adjacency List feature with direct parent identifier in the entity table (i.e. `parent_id` or the like, which column name you had to set manually if needed) and hardcoded `position` column.
 
