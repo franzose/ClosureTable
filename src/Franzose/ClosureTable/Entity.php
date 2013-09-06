@@ -38,7 +38,7 @@ class Entity extends Eloquent {
     /**
      * A sort of 'virtual' attribute of the direct parent identifier.
      *
-     * @var Entity
+     * @var Entity|null
      * @see Entity::appendChild()
      */
     protected $parent = null;
@@ -322,6 +322,22 @@ class Entity extends Eloquent {
     }
 
     /**
+     * @return bool
+     */
+    public function hasPrevSiblings()
+    {
+        return !!$this->countPrevSiblings();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function countPrevSiblings()
+    {
+        return $this->buildSiblingsQuery('prev', true)->count();
+    }
+
+    /**
      * Grabs and immediate next model sibling.
      *
      * @return Entity
@@ -341,6 +357,19 @@ class Entity extends Eloquent {
         return $this->siblings();
     }
 
+    public function hasNextSiblings()
+    {
+        return !!$this->countNextSiblings();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function countNextSiblings()
+    {
+        return $this->buildSiblingsQuery('next', true)->count();
+    }
+
     /**
      * Retrieves previous or next model siblings.
      *
@@ -350,36 +379,62 @@ class Entity extends Eloquent {
      */
     protected function siblings($find = 'all', $direction = 'next')
     {
-        $position = null;
-
-        switch($direction)
-        {
-            case 'prev':
-                $position = $this->{static::POSITION}-1;
-                break;
-
-            case 'next':
-                $position = $this->{static::POSITION}+1;
-                break;
-        }
-
-        $query = $this->select(array($this->table.'.*'))
-            ->join(static::$closure, ClosureTable::getQualifiedDescendantKeyName(), '=', $this->getQualifiedKeyName())
-            ->where(ClosureTable::getQualifiedDepthKeyName(), '=', $this->closuretable->{ClosureTable::DEPTH})
-            ->where(static::POSITION, '=', $position);
-
         switch($find)
         {
             case 'one':
-                $result = $query->first();
+                $result = $this->buildSiblingsQuery($direction)->first();
                 break;
 
             case 'all':
-                $result = $query->get();
+                $result = $this->buildSiblingsQuery($direction, true)->get();
                 break;
         }
 
         return $result;
+    }
+
+    public function hasSiblings()
+    {
+        //
+    }
+
+    public function countSiblings()
+    {
+        //
+    }
+
+    /**
+     * @param string $direction 'prev' for previous siblings, 'next' for next ones
+     * @param bool $queryAll
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function buildSiblingsQuery($direction = 'next', $queryAll = false)
+    {
+        $query = $this->select(array($this->table.'.*'))
+            ->join(static::$closure, ClosureTable::getQualifiedDescendantKeyName(), '=', $this->getQualifiedKeyName())
+            ->where(ClosureTable::getQualifiedAncestorKeyName(), '<>', $this->getKey())
+            ->where(ClosureTable::getQualifiedDescendantKeyName(), '<>', $this->getKey())
+            ->where(ClosureTable::getQualifiedDepthKeyName(), '=', $this->closuretable->{ClosureTable::DEPTH});
+
+        if ($queryAll === false)
+        {
+            $position = null;
+
+            switch($direction)
+            {
+                case 'prev':
+                    $position = $this->{static::POSITION}-1;
+                    break;
+
+                case 'next':
+                    $position = $this->{static::POSITION}+1;
+                    break;
+            }
+
+            $query->where(static::POSITION, '=', $position);
+        }
+
+        return $query;
     }
 
     /**
