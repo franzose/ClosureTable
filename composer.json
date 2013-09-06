@@ -1,6 +1,6 @@
 {
     "name": "franzose/ClosureTable",
-    "description": "Database design pattern realization for Laravel",
+    "description": "Closure table database design pattern implementation for Laravel",
     "license": "MIT",
     "authors": [
         {
