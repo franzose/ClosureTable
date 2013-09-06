@@ -2,13 +2,36 @@
 
 Formerly bundle for Laravel 3, now it's a package for Laravel 4. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The codebase is being rewritten completely, however, the ClosureTable 2 is as simple in usage as ClosureTable 1 used to be from the start.
 
-# Installation
+## Installation
 
-# Changes compared to ClosureTable 1
-## Model names
+## Setup your ClosureTable
+### Create the Entity model
+For example, let's assume you're working on pages. In `app/models`, create new file called `Page.php` and put the following into it:
+
+<pre>
+<code>
+&lt;?php
+
+use \Franzose\ClosureTable\Entity;
+
+class Page extends Entity {
+    protected $table = 'pages';
+    protected static $closure = 'pages_closure';
+}
+</code>
+</pre>
+
+Violà! You have a new Entity. Take a look at the `protected static $closure` variable. It is the name of the closure table where relationships between entities are stored. Remember that you will never have to manually extend the `ClosureTable` model for each your `Entity` model until you want to set other columns names in the closure table. If you do want, see ‘<a href="#restriction-on-columns-names-removed">Restriction on columns names removed</a>’ section.
+
+### Create migrations
+
+## Time of coding
+
+## Changes compared to ClosureTable 1
+### Model names
 I decided to rename models and give them more appropriate names. Former `ClosureTable` model is now `Entity` because the database table, it operates, contains the entity data only. `TreePath` is now `ClosureTable`, named after the pattern, as it contains relationships of entities to each other.
 
-## Restriction on columns names removed
+### Restriction on columns names removed
 ClosureTable 1 had hardcoded columns names of the closure table: `ancestor`, `descendant`, `level`. In addition to this, `ClosureTable` model used Adjacency List feature with direct parent identifier in the entity table (i.e. `parent_id` or the like, which column name you had to set manually if needed) and hardcoded `position` column.
 
 Now all that stuff is obsolete. `ClosureTable` model has three constants for you to define column names you want:
@@ -20,7 +43,7 @@ All you need to do is to extend the base `ClouseTable` model and define column n
 
 Also `Entity` model doesn't use the feature from Adjacency List anymore (however a trick with direct parent presents) and has constant `Entity::POSITION` for you to define position column name you want.
 
-## Closure table name
+### Closure table name
 As the ClosureTable 1, this package offers you to define the name of the closure table in the Entity model. This is done to avoid useless spawning of `ClosuseTable` models. Instead of that, you write the name of the closure table to `Entity::$closure` (formerly `ClosureTable::$treepath`) once, and your Entity will use the same `ClosureTable` model as others but with different database table. For example,
 
 <pre>
@@ -32,5 +55,3 @@ class Page extends Entity {
 }
 </code>
 </pre>
-
-# Migration tables
