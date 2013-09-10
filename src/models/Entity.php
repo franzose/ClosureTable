@@ -51,7 +51,7 @@ class Entity extends Eloquent {
     public function __construct(array $attributes = array())
     {
         parent::__construct($attributes);
-        ClosureTable::$tableName  = static::$closure;
+        ClosureTable::$tableName = static::$closure;
     }
 
     /**
@@ -59,7 +59,7 @@ class Entity extends Eloquent {
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    protected function closuretable()
+    public function closuretable()
     {
         return $this->hasOne('Franzose\ClosureTable\ClosureTable', ClosureTable::DESCENDANT);
     }
@@ -69,7 +69,7 @@ class Entity extends Eloquent {
      *
      * @return Entity
      */
-    protected function getParent()
+    public function getParent()
     {
         return $this->parent;
     }
@@ -172,7 +172,7 @@ class Entity extends Eloquent {
      */
     public function countAncestors()
     {
-        return $this->buildAncestorsQuery()->count();
+        return (int)$this->buildAncestorsQuery()->count();
     }
 
     /**
@@ -186,7 +186,7 @@ class Entity extends Eloquent {
         $dk = ClosureTable::getQualifiedDescendantKeyName();
         $dpk = ClosureTable::getQualifiedDepthKeyName();
 
-        return $this->join(static::$closure, $ak, '=', $this->getQualifiedKeyName())
+        return $this->select($this->getTable().'.*')->join(static::$closure, $ak, '=', $this->getQualifiedKeyName())
             ->where($dk, '=', $this->getKey())
             ->where($dpk, '>', 0);
     }
@@ -218,7 +218,7 @@ class Entity extends Eloquent {
      */
     public function countChildren()
     {
-        return $this->buildChildrenQuery()->count();
+        return (int)$this->buildChildrenQuery()->count();
     }
 
     /**
@@ -590,7 +590,7 @@ class Entity extends Eloquent {
         if ($position === null)
             $position = 0;
 
-        $this->buildChildrenQuery()->where(static::POSITION, '=', $position)->delete();
+        $this->buildChildrenQuery()->where(static::POSITION, '=', $position)->first()->delete();
 
         return $this;
     }

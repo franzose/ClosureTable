@@ -36,7 +36,7 @@ class ClosureTable extends Eloquent {
      *
      * @var string
      */
-    public $primaryKey = 'ctid';
+    protected $primaryKey = 'ctid';
 
     /**
      * The ancestor column name.
@@ -153,7 +153,7 @@ class ClosureTable extends Eloquent {
      */
     protected function performDeleteOnModel()
     {
-        $query = $this->newQuery()->where($this->getKeyName(), $this->getKey());
+        $query = $this->newQuery();//->where($this->getKeyName(), $this->getKey());
 
         if ($this->softDelete)
         {
