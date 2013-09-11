@@ -492,6 +492,7 @@ class Entity extends Eloquent {
                 $join->on($ancestor, '=', $keyName);
                 $join->on($descendant, '=', $keyName);
             })
+            ->groupBy($keyName)
             ->havingRaw($having)
             ->get();
     }

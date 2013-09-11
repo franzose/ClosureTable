@@ -485,15 +485,28 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
 
     public function testRoots()
     {
-        //@todo: implement
+        $pagesIds = array();
+
+        for ($i=0; $i<=5; $i++)
+        {
+            $pagesIds[] = $this->prepareTestedEntity()->id;
+        }
+
+        $rootsIds = Page::roots()->lists('id');
+
+        $this->assertEmpty(array_diff($pagesIds, $rootsIds));
     }
 
     public function testIsRoot()
     {
-        //@todo: implement
+        list($page, $child, $grandchild) = $this->prepareTestedRelationships();
+
+        $this->assertFalse($child->isRoot());
+        $this->assertFalse($grandchild->isRoot());
+        $this->assertTrue($page->isRoot());
     }
 
-    public function testMakeRoot()
+    public function testMakeRootOrMoveToNull()
     {
         //@todo: implement
     }
@@ -503,7 +516,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         //@todo: implement
     }
 
-    public function testMoveTo()
+    public function testMoveToNode()
     {
         //@todo: implement
     }
