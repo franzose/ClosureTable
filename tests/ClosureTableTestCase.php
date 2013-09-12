@@ -33,6 +33,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         Schema::drop('pages_closure');
     }
 
+    /**
+     * Creates new page for further testing.
+     *
+     * @return Franzose\ClosureTable\Entity|static
+     */
     protected function prepareTestedEntity()
     {
         $page = Page::create(array(
@@ -44,6 +49,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         return $page;
     }
 
+    /**
+     * Creates three nested pages.
+     *
+     * @return array
+     */
     protected function prepareTestedRelationships()
     {
         $page = Page::create(array(
@@ -71,6 +81,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         return array($page, $child, $grandchild);
     }
 
+    /**
+     * Creates a page and its four child siblings.
+     *
+     * @return array
+     */
     protected function prepareTestedSiblings()
     {
         $page = Page::create(array(
@@ -106,6 +121,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         return array($page, $child1, $child2, $child3, $child4);
     }
 
+    /**
+     * Tests new Entity object properties for the right values.
+     *
+     * @return void
+     */
     public function testNewEntity()
     {
         $page = new Page;
@@ -117,6 +137,12 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(null, $page->closuretable);
     }
 
+    /**
+     * Tests insertion of a single Entity into the database.
+     * Makes sure of closure table data correctness.
+     *
+     * @return void
+     */
     public function testInsertSingle()
     {
         $page = $this->prepareTestedEntity();
@@ -143,6 +169,12 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(0, $closure->depth);
     }
 
+    /**
+     * Tests deletion of a single Entity.
+     * Makes sure of closure table data correctness.
+     *
+     * @return void
+     */
     public function testDeleteSingle()
     {
         $page = $this->prepareTestedEntity();
@@ -158,16 +190,30 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(0, $result->count());
     }
 
+    /**
+     *
+     * @return void
+     */
     public function testDeleteSubtree()
     {
         //@todo: implement
     }
 
+    /**
+     *
+     * @return void
+     */
     public function testDeleteDescendants()
     {
         //@todo: implement
     }
 
+    /**
+     * Tests 'buildAncestorsQuery' method.
+     * Checks the correctness of SQL it produces because that SQL is further used.
+     *
+     * @return void
+     */
     public function testBuildAncestorsQuery()
     {
         // all 'build...Query' methods are protected in the Entity class,
@@ -187,6 +233,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($rightsql, $resultsql);
     }
 
+    /**
+     * Tests 'ancestors' method.
+     *
+     * @return void
+     */
     public function testAncestors()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
@@ -197,6 +248,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($page->id, $child->getParent()->id);
     }
 
+    /**
+     * Tests 'hasAncestors' method.
+     *
+     * @return void
+     */
     public function testHasAncestors()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
@@ -206,6 +262,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($hasAncestors);
     }
 
+    /**
+     * Tests 'countAncestors' method.
+     *
+     * @return void
+     */
     public function testCountAncestors()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
@@ -215,6 +276,12 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(2, $number);
     }
 
+    /**
+     * Tests 'buildChildrenQuery' method.
+     * Checks the correctness of SQL it produces because that SQL is further used.
+     *
+     * @return void
+     */
     public function testBuildChildrenQuery()
     {
         $page = $this->prepareTestedEntity();
@@ -231,6 +298,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($rightsql, $resultsql);
     }
 
+    /**
+     * Tests 'children' method.
+     *
+     * @return void
+     */
     public function testChildren()
     {
         list($page) = $this->prepareTestedRelationships();
@@ -240,6 +312,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertCount(1, $pageChildren);
     }
 
+    /**
+     * Tests 'hasChildren' method.
+     *
+     * @return void
+     */
     public function testHasChildren()
     {
         list($page) = $this->prepareTestedRelationships();
@@ -249,6 +326,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($hasChildren);
     }
 
+    /**
+     * Tests 'countChildren' method.
+     *
+     * @return void
+     */
     public function testCountChildren()
     {
         list($page) = $this->prepareTestedRelationships();
@@ -258,6 +340,12 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(1, $number);
     }
 
+    /**
+     * Tests 'buildDescendantsQuery' method.
+     * Checks the correctness of SQL it produces because that SQL is further used.
+     *
+     * @return void
+     */
     public function testBuildDescendantsQuery()
     {
         $page = $this->prepareTestedEntity();
@@ -274,6 +362,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($rightsql, $resultsql);
     }
 
+    /**
+     * Tests 'descendants' method.
+     *
+     * @return void
+     */
     public function testDescendants()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
@@ -285,6 +378,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($grandchild->getParent()->id, $child->id);
     }
 
+    /**
+     * Tests 'hasDescendants' method.
+     *
+     * @return void
+     */
     public function testHasDescendants()
     {
         list($page) = $this->prepareTestedRelationships();
@@ -294,6 +392,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($hasDescendants);
     }
 
+    /**
+     * Tests 'countDescendants' method.
+     *
+     * @return void
+     */
     public function testCountDescendants()
     {
         list($page) = $this->prepareTestedRelationships();
@@ -303,6 +406,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(2, $number);
     }
 
+    /**
+     * Tests 'getDescendantsIds' method.
+     *
+     * @return void
+     */
     public function testGetDescendantsIds()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
@@ -317,6 +425,12 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertContains($grandchild->id, $result);
     }
 
+    /**
+     * Tests 'buildSiblingsQuery' method.
+     * Checks the correctness of SQL it produces because that SQL is further used.
+     *
+     * @return void
+     */
     public function testBuildSiblingsQuery()
     {
         $sqlSubstr = 'select "pages".* from "pages" inner join "pages_closure" on "pages_closure"."descendant" = "pages"."id" where "pages_closure"."descendant" <> ? and "pages_closure"."depth" = ? and ';
@@ -366,6 +480,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         }
     }
 
+    /**
+     * Tests 'siblings' method.
+     *
+     * @return void
+     */
     public function testSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -391,6 +510,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($child4->id, $child3siblings[1]->id);
     }
 
+    /**
+     * Tests 'prevSibling' method.
+     *
+     * @return void
+     */
     public function testPrevSibling()
     {
         list($page, $child1, $child2) = $this->prepareTestedSiblings();
@@ -401,6 +525,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($child1->position, $prev->position);
     }
 
+    /**
+     * Tests 'prevSiblings' method.
+     *
+     * @return void
+     */
     public function testPrevSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -410,6 +539,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertCount(3, $prevs);
     }
 
+    /**
+     * Tests 'hasPrevSiblings' method.
+     *
+     * @return void
+     */
     public function testHasPrevSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -419,6 +553,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($hasPrevs);
     }
 
+    /**
+     * Tests 'countPrevSiblings' method.
+     *
+     * @return void
+     */
     public function testCountPrevSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -428,6 +567,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(3, $number);
     }
 
+    /**
+     * Tests 'nextSibling' method.
+     *
+     * @return void
+     */
     public function testNextSibling()
     {
         list($page, $child1, $child2) = $this->prepareTestedSiblings();
@@ -438,6 +582,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($child2->position, $next->position);
     }
 
+    /**
+     * Tests 'nextSiblings' method.
+     *
+     * @return void
+     */
     public function testNextSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -447,6 +596,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertCount(3, $next);
     }
 
+    /**
+     * Tests 'hasNextSiblings' method.
+     *
+     * @return void
+     */
     public function testHasNextSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -456,6 +610,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($hasNext);
     }
 
+    /**
+     * Tests 'countNextSiblings' method.
+     *
+     * @return void
+     */
     public function testCountNextSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -465,6 +624,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(3, $number);
     }
 
+    /**
+     * Tests 'hasSiblings' method.
+     *
+     * @return void
+     */
     public function testHasSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -474,6 +638,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($has);
     }
 
+    /**
+     * Tests 'countSiblings' method.
+     *
+     * @return void
+     */
     public function testCountSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -483,6 +652,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(3, $number);
     }
 
+    /**
+     * Tests 'roots' method.
+     *
+     * @return void
+     */
     public function testRoots()
     {
         $pagesIds = array();
@@ -492,11 +666,22 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
             $pagesIds[] = $this->prepareTestedEntity()->id;
         }
 
+        Page::find($pagesIds[2])->appendChild(new Page(array(
+            'title'   => 'test',
+            'excerpt' => 'test',
+            'content' => 'content'
+        )));
+
         $rootsIds = Page::roots()->lists('id');
 
         $this->assertEmpty(array_diff($pagesIds, $rootsIds));
     }
 
+    /**
+     * Tests 'isRoot' method.
+     *
+     * @return void
+     */
     public function testIsRoot()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
@@ -506,26 +691,63 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($page->isRoot());
     }
 
+    /**
+     * Tests 'makeRoot' method and 'moveTo' method without 'ancestor' argument.
+     *
+     * @return void
+     */
     public function testMakeRootOrMoveToNull()
     {
-        //@todo: implement
+        list($page, $child, $grandchild) = $this->prepareTestedRelationships();
+        $grandchild->makeRoot();
+        $child->moveTo();
+
+        $this->assertFalse($grandchild->hasAncestors());
+        $this->assertFalse($child->hasAncestors());
+
+        $closure = new ClosureTable;
+        $grandchildRows = $closure->where('descendant', '=', $grandchild->id)->where('depth', '>', 0)->count();
+        $childRows = $closure->where('descendant', '=', $child->id)->where('depth', '>', 0)->count();
+
+        $this->assertEquals(0, $grandchildRows);
+        $this->assertEquals(0, $childRows);
     }
 
+    /**
+     *
+     *
+     * @return void
+     */
     public function testTree()
     {
         //@todo: implement
     }
 
+    /**
+     *
+     *
+     * @return void
+     */
     public function testMoveToNode()
     {
         //@todo: implement
     }
 
+    /**
+     *
+     *
+     * @return void
+     */
     public function testMoveGivenTo()
     {
         //@todo: implement
     }
 
+    /**
+     *
+     *
+     * @return void
+     */
     public function testRelationsSyncOnChildInsert()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
@@ -589,6 +811,8 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
 
     /**
      * Tests removing a child Entity with given position
+     *
+     * @return void
      */
     public function testRemoveChild()
     {
