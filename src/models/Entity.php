@@ -19,22 +19,22 @@ class Entity extends Eloquent {
     /**
      * Closure table name for this model.
      *
-     * It is used to avoid spawning of ClosureTable models
-     * (via extension of the base model) for each new Entity model.
-     * As you can see, the only one ClosureTable model is used Entity models.
-     *
      * @var string
-     * @see Entity::closuretable()
      */
-    protected static $closure;
+    protected $closure;
+
+    protected $hidden = array(
+        self::ANCESTOR => null,
+        self::DESCENDANT => null,
+        self::DEPTH => null
+    );
 
     /**
-     * A sort of 'virtual' attribute of the direct parent identifier.
+     * Indicates if the model should soft delete.
      *
-     * @var Entity|null
-     * @see Entity::appendChild()
+     * @var bool
      */
-    protected $parent = null;
+    protected $softDelete = true;
 
     /**
      * The position column name.
@@ -44,6 +44,27 @@ class Entity extends Eloquent {
     const POSITION = 'position';
 
     /**
+     * The ancestor column name.
+     *
+     * @var string
+     */
+    const ANCESTOR = 'ancestor';
+
+    /**
+     * The descendant column name.
+     *
+     * @var string
+     */
+    const DESCENDANT = 'descendant';
+
+    /**
+     * The depth column name.
+     *
+     * @var string
+     */
+    const DEPTH = 'depth';
+
+    /**
      * Model constructor.
      *
      * @param array $attributes
@@ -51,98 +72,90 @@ class Entity extends Eloquent {
     public function __construct(array $attributes = array())
     {
         parent::__construct($attributes);
-        ClosureTable::$tableName = static::$closure;
     }
 
-    /**
-     * Relation to ClosureTable model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    protected function closuretable()
+    protected function getAncestor()
     {
-        return $this->hasOne('Franzose\ClosureTable\ClosureTable', ClosureTable::DESCENDANT);
+        if ($this->hidden[static::ANCESTOR] === null)
+        {
+            $this->hidden[static::ANCESTOR] = $this->buildClosuretableQuery()
+                ->where(static::DEPTH, '=', $this->getDepth())
+                ->first()
+                ->{static::ANCESTOR};
+        }
+
+        return $this->hidden[static::ANCESTOR];
     }
 
-    /**
-     * Gets parent identifier virtual attribute.
-     *
-     * @return Entity
-     */
-    public function getParent()
+    protected function setAncestor($value)
     {
-        return $this->parent;
+        $this->hidden[static::ANCESTOR] = (int)$value;
     }
 
-    /**
-     * Sets parent identifier virtual attribute.
-     *
-     * @param Entity $value
-     * @return Entity
-     */
-    protected function setParent(Entity $value = null)
+    protected function getDescendant()
     {
-        $this->parent = $value;
+        if ($this->hidden[static::DESCENDANT] === null)
+        {
+            $this->hidden[static::DESCENDANT] = $this->buildClosuretableQuery()
+                ->where(static::DEPTH, '=', $this->getDepth())
+                ->first()
+                ->{static::DESCENDANT};
+        }
 
-        return $this;
+        return $this->hidden[static::DESCENDANT];
     }
 
-    /**
-     * Gets direct model parents.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection|static
-     */
-    public function parents()
+    protected function setDescedant($value)
     {
-        return $this->buildParentsQuery()->get();
+        $this->hidden[self::DESCENDANT] = (int)$value;
+    }
+
+    protected function getDepth()
+    {
+        if ($this->hidden[static::DEPTH] === null)
+        {
+            $this->hidden[static::DEPTH] = $this->buildClosuretableQuery()->max(static::DEPTH);
+        }
+
+        return $this->hidden[static::DEPTH];
+    }
+
+    protected function setDepth($value)
+    {
+        return $this->hidden[self::DEPTH] = (int)$value;
+    }
+
+    protected function buildClosuretableQuery()
+    {
+        return DB::table($this->closure)->where(static::DESCENDANT, '=', $this->getKey());
     }
 
     /**
-     * Gets the first direct model parent.
-     *
-     * @return mixed|null
+     * @return Entity|null
      */
     public function parent()
     {
-        return $this->parents()->first();
+        return $this->select(array($this->getTable().'.*'))
+            ->join($this->closure, $this->getQualifiedDescendantKeyName(), '=', $this->getKeyName())
+            ->where($this->getQualifiedAncestorKeyName(), '<>', $this->getKey())
+            ->where($this->getQualifiedDepthKeyName(), '=', $this->getDepth()-1)
+            ->first();
     }
 
     /**
-     * Checks whether the model has direct parents.
-     *
-     * @return bool
-     */
-    public function hasParents()
-    {
-        return !!$this->countParents();
-    }
-
-    /**
-     * Counts direct model parents.
-     *
-     * @return int
-     */
-    protected function countParents()
-    {
-        return $this->buildParentsQuery()->count();
-    }
-
-    /**
-     * Builds query for the direct model parents.
+     * Builds query for the model parents.
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildParentsQuery()
+    protected function buildAncestorsQuery()
     {
-        $depth = $this->closuretable->{ClosureTable::DEPTH};
-        $depth = ($depth <= 1 ? $depth : $depth-1);
+        $ak = $this->getQualifiedAncestorKeyName();
+        $dk = $this->getQualifiedDescendantKeyName();
+        $dpk = $this->getQualifiedDepthKeyName();
 
-        $dk = ClosureTable::getQualifiedDescendantKeyName();
-        $dpk = ClosureTable::getQualifiedDepthKeyName();
-
-        return $this->join(static::$closure, $dk, '=', $this->getQualifiedKeyName())
+        return $this->select($this->getTable().'.*')->join($this->closure, $ak, '=', $this->getQualifiedKeyName())
             ->where($dk, '=', $this->getKey())
-            ->where($dpk, '=', $depth);
+            ->where($dpk, '>', 0);
     }
 
     /**
@@ -176,19 +189,19 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Builds query for the model parents.
+     * Builds query for the direct model children.
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildAncestorsQuery()
+    protected function buildChildrenQuery()
     {
-        $ak = ClosureTable::getQualifiedAncestorKeyName();
-        $dk = ClosureTable::getQualifiedDescendantKeyName();
-        $dpk = ClosureTable::getQualifiedDepthKeyName();
+        $ak = $this->getQualifiedAncestorKeyName();
+        $dk = $this->getQualifiedDescendantKeyName();
+        $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->select($this->getTable().'.*')->join(static::$closure, $ak, '=', $this->getQualifiedKeyName())
-            ->where($dk, '=', $this->getKey())
-            ->where($dpk, '>', 0);
+        return $this->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
+            ->where($ak, '=', $this->getKey())
+            ->where($dpk, '=', $this->getDepth()+1);
     }
 
     /**
@@ -222,19 +235,31 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Builds query for the direct model children.
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     *
+     * @param Entity $child
+     * @param int|null $position
+     * @param bool $returnChild
+     * @return Entity
      */
-    protected function buildChildrenQuery()
+    public function appendChild(Entity $child, $position = null, $returnChild = false)
     {
-        $ak = ClosureTable::getQualifiedAncestorKeyName();
-        $dk = ClosureTable::getQualifiedDescendantKeyName();
-        $dpk = ClosureTable::getQualifiedDepthKeyName();
+        $child->moveTo($this, (int)$position);
 
-        return $this->join(static::$closure, $dk, '=', $this->getQualifiedKeyName())
-            ->where($ak, '=', $this->getKey())
-            ->where($dpk, '=', $this->closuretable->{ClosureTable::DEPTH}+1);
+        return ($returnChild === true ? $child : $this);
+    }
+
+    /**
+     * Removes a child with given position.
+     *
+     * @param int|null $position
+     * @return Entity
+     */
+    public function removeChild($position = null)
+    {
+        $this->buildChildrenQuery()->where(static::POSITION, '=', (int)$position)->first()->delete();
+
+        return $this;
     }
 
     /**
@@ -284,11 +309,11 @@ class Entity extends Eloquent {
      */
     protected function buildDescendantsQuery()
     {
-        $ak = ClosureTable::getQualifiedAncestorKeyName();
-        $dk = ClosureTable::getQualifiedDescendantKeyName();
-        $dpk = ClosureTable::getQualifiedDepthKeyName();
+        $ak = $this->getQualifiedAncestorKeyName();
+        $dk = $this->getQualifiedDescendantKeyName();
+        $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->join(static::$closure, $dk, '=', $this->getQualifiedKeyName())
+        return $this->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
             ->where($ak, '=', $this->getKey())
             ->where($dpk, '>', 0);
     }
@@ -386,7 +411,7 @@ class Entity extends Eloquent {
      *
      * @param string $find 'one' for the first found, 'all' for collection of siblings
      * @param string $direction 'prev' for previous siblings, 'next' for next ones
-     * @return Entity|\Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Database\Eloquent\Collection|Entity
      */
     public function siblings($find = 'all', $direction = 'both')
     {
@@ -429,15 +454,6 @@ class Entity extends Eloquent {
     {
         return (int)$this->buildSiblingsQuery()->count();
     }
-
-    /**
-     * @param $position
-     * @return Entity
-     */
-    /*public function siblingAt($position)
-    {
-        return $this->buildSiblingsSubquery()->where(static::POSITION, '=', $position)->first();
-    }*/
 
     /**
      * @param string $direction 'prev' for previous siblings, 'next' for next ones
@@ -493,12 +509,18 @@ class Entity extends Eloquent {
         return $query;
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
     protected function buildSiblingsSubquery()
     {
+        $dk = $this->getQualifiedDescendantKeyName();
+        $dpk = $this->getQualifiedDepthKeyName();
+
         return $this->select(array($this->getTable().'.*'))
-            ->join(static::$closure, ClosureTable::getQualifiedDescendantKeyName(), '=', $this->getQualifiedKeyName())
-            ->where(ClosureTable::getQualifiedDescendantKeyName(), '<>', $this->getKey())
-            ->where(ClosureTable::getQualifiedDepthKeyName(), '=', $this->closuretable->{ClosureTable::DEPTH});
+            ->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
+            ->where($dk, '<>', $this->getKey())
+            ->where($dpk, '=', $this->getDepth());
     }
 
     /**
@@ -510,10 +532,10 @@ class Entity extends Eloquent {
     {
         $instance   = new static;
         $table      = $instance->getTable();
-        $closure    = ClosureTable::$tableName;
-        $ancestor   = ClosureTable::getQualifiedAncestorKeyName();
-        $descendant = ClosureTable::getQualifiedDescendantKeyName();
-        $depth      = ClosureTable::getQualifiedDepthKeyName();
+        $closure    = $instance->closure;
+        $ancestor   = $instance->getQualifiedAncestorKeyName();
+        $descendant = $instance->getQualifiedDescendantKeyName();
+        $depth      = $instance->getQualifiedDepthKeyName();
         $keyName    = $instance->getQualifiedKeyName();
 
         $having = "(SELECT COUNT(*) FROM {$closure} WHERE {$descendant} = parentId AND {$depth} > 0) = 0";
@@ -536,9 +558,9 @@ class Entity extends Eloquent {
      */
     public function isRoot()
     {
-        return !!$this->from(static::$closure)
-                      ->where(ClosureTable::DESCENDANT, '=', $this->getKey())
-                      ->where(ClosureTable::DEPTH, '>', $this->closuretable->{ClosureTable::DEPTH})
+        return !!$this->from($this->closure)
+                      ->where(static::DESCENDANT, '=', $this->getKey())
+                      ->where(static::DEPTH, '>', 0)
                       ->count() == 0;
     }
 
@@ -592,79 +614,129 @@ class Entity extends Eloquent {
             return $given;
         }
 
-        $given->setParent($to);
         $given->{static::POSITION} = $position;
         $given->save();
-
-        static::reorderSiblingsOnGivenMove($given, $oldPosition);
-
-        $closure = $given->closuretable;
+        $given->performSiblingsReorder($oldPosition);
 
         if ($to === null)
         {
-            $closure->moveTo();
+            $given->performMoveTo();
 
             return $given;
         }
 
-        $toClosure = $to->closuretable;
-        $toId = $toClosure->{ClosureTable::DESCENDANT};
-        $toDepth = $toClosure->{ClosureTable::DEPTH};
-
-        $closure->{ClosureTable::DEPTH} = $toDepth;
-        $closure->save();
-        $closure->moveTo($toId);
+        $given->performMoveTo($to->getKey());
 
         return $given;
     }
 
     /**
-     * @param Entity $given
+     * @param int|null $ancestorId
+     * @return bool
+     */
+    protected function performMoveTo($ancestorId = null)
+    {
+        $ak  = static::ANCESTOR;
+        $dk  = static::DESCENDANT;
+        $dpk = static::DEPTH;
+
+        $ancestorValue = $this->getAncestor();
+        $descendantValue = $this->getDescendant();
+
+        $descendantsIds = DB::table($this->closure)
+            ->where($dk, '=', $ancestorValue)
+            ->where($ak, '<>', $descendantValue)
+            ->lists($dk);
+
+        // disconnect the subtree from its ancestors
+        if (count($descendantsIds))
+        {
+            DB::table($this->closure)
+                ->whereIn($dk, $descendantsIds)
+                ->where($ak, '<>', $descendantValue)
+                ->delete();
+        }
+
+        // null? make it root
+        if ($ancestorId === null)
+        {
+            return DB::table($this->closure)
+                ->where(static::ANCESTOR, '=', $ancestorValue)
+                ->where(static::DESCENDANT, '=', $descendantValue)
+                ->update(array(
+                    static::DEPTH => 0,
+                    static::ANCESTOR => $descendantValue
+            ));
+        }
+
+        $table = $this->closure;
+
+        DB::transaction(function() use($ak, $dk, $dpk, $table, $ancestorId, $descendantValue){
+            $selectQuery = "
+                SELECT supertbl.{$ak}, subtbl.{$dk}, supertbl.{$dpk}+subtbl.{$dpk}+1 as {$dpk}
+                FROM {$table} as supertbl
+                CROSS JOIN {$table} as subtbl
+                WHERE supertbl.{$dk} = {$ancestorId}
+                AND subtbl.{$ak} = {$descendantValue}
+            ";
+
+            $results = DB::select($selectQuery);
+            array_walk($results, function(&$item){ $item = (array)$item; });
+
+            DB::table($this->closure)->insert($results);
+        });
+    }
+
+    /**
+     * @param $descendant
+     * @param $ancestor
+     * @return mixed
+     */
+    protected function performInsertNode($descendant, $ancestor)
+    {
+        $table = $this->closure;
+        $ak = static::ANCESTOR;
+        $dk = static::DESCENDANT;
+        $dpk = static::DEPTH;
+
+        DB::transaction(function() use($table, $ak, $dk, $dpk, $descendant, $ancestor){
+            $selectQuery = "
+                SELECT tbl.{$ak}, {$descendant} as {$dk}, tbl.{$dpk}+1 as {$dpk}
+                FROM {$table} AS tbl
+                WHERE tbl.{$dk} = {$ancestor}
+                UNION ALL
+                SELECT {$descendant}, {$descendant}, 0
+            ";
+
+            $results = DB::select($selectQuery);
+            array_walk($results, function(&$item){ $item = (array)$item; });
+
+            DB::table($table)->insert($results);
+        });
+    }
+
+    /**
      * @param int $oldPosition
      */
-    public static function reorderSiblingsOnGivenMove(Entity $given, $oldPosition)
+    protected function performSiblingsReorder($oldPosition)
     {
-        $newPosition = $given->{static::POSITION};
-        $range = range($newPosition, $oldPosition);
-        $subquery = $given->buildSiblingsSubquery()->whereIn(static::POSITION, $range);
+        $subquery = $this->buildSiblingsSubquery();
+        $newPosition = $this->{static::POSITION};
 
-        if ($newPosition < $oldPosition)
+        if ($subquery->count())
         {
-            $subquery->increment(static::POSITION);
+            $range = range($newPosition, $oldPosition);
+            $subquery = $subquery->whereIn(static::POSITION, $range);
+
+            if ($newPosition < $oldPosition || $newPosition == $oldPosition)
+            {
+                $subquery->increment(static::POSITION);
+            }
+            else
+            {
+                $subquery->decrement(static::POSITION);
+            }
         }
-        else
-        {
-            $subquery->decrement(static::POSITION);
-        }
-    }
-
-
-    /**
-     *
-     *
-     * @param Entity $child
-     * @param int|null $position
-     * @param bool $returnChild
-     * @return Entity
-     */
-    public function appendChild(Entity $child, $position = null, $returnChild = false)
-    {
-        $child->moveTo($this, (int)$position);
-
-        return ($returnChild === true ? $child : $this);
-    }
-
-    /**
-     * Removes a child with given position.
-     *
-     * @param int|null $position
-     * @return Entity
-     */
-    public function removeChild($position = null)
-    {
-        $this->buildChildrenQuery()->where(static::POSITION, '=', (int)$position)->first()->delete();
-
-        return $this;
     }
 
     /**
@@ -678,7 +750,7 @@ class Entity extends Eloquent {
         if (parent::performInsert($query) === true)
         {
             $id = $this->getKey();
-            $parent = $this->getParent();
+            $parent = $this->parent();
 
             if ( ! $parent instanceof Entity)
             {
@@ -689,25 +761,18 @@ class Entity extends Eloquent {
                 $parentId = $parent->getKey();
             }
 
-            ClosureTable::insertLeaf($id, $parentId);
+            $this->performInsertNode($id, $parentId);
+            $this->performSiblingsReorder($this->{static::POSITION});
+
             return true;
         }
 
         return false;
     }
 
-    /**
-     * Deletes the model from the database.
-     * Also corrects closure table data of its descendants if those exist.
-     *
-     * @return bool|null|void
-     */
-    public function delete()
+    public function performUpdate($query)
     {
-        //static::moveGivenTo($this->getDescendantsIds(), null);
-        $this->closuretable->delete();
-
-        parent::delete();
+        return parent::performUpdate($query);
     }
 
     /**
@@ -717,18 +782,39 @@ class Entity extends Eloquent {
      */
     public function deleteSubtree()
     {
-        $this->deleteDescendants();
-        $this->closuretable->deleteSubtree();
-        return $this->delete();
+        $ids =  $this->getDescendantsIds();
+        $ids[] = $this->getKey();
+
+        return $this->whereIn($this->getKeyName(), $ids)->delete();
     }
 
     /**
-     * Deletes all model descendants.
+     * Get the table qualified ancestor key name.
      *
-     * @return int|bool
+     * @return string
      */
-    protected function deleteDescendants()
+    protected function getQualifiedAncestorKeyName()
     {
-        return $this->whereIn($this->getKeyName(), $this->getDescendantsIds())->delete();
+        return $this->closure.'.'.static::ANCESTOR;
+    }
+
+    /**
+     * Get the table qualified descendant key name.
+     *
+     * @return string
+     */
+    protected function getQualifiedDescendantKeyName()
+    {
+        return $this->closure.'.'.static::DESCENDANT;
+    }
+
+    /**
+     * Get the table qualified depth key name.
+     *
+     * @return string
+     */
+    protected function getQualifiedDepthKeyName()
+    {
+        return $this->closure.'.'.static::DEPTH;
     }
 }

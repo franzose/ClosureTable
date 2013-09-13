@@ -723,14 +723,14 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * Test 'moveTo' method with ancestor argument given.
+     *
      *
      * @return void
      */
-    public function testMoveToNode()
+    public function testMoveGivenTo()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
-        $child2->moveTo($child3);
+        $child2 = Page::moveGivenTo($child2, $child3);
 
         $this->assertNotNull($child2->getParent());
         $this->assertEquals($child3->id, $child2->getParent()->id);
@@ -739,16 +739,6 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $results = $closure->where('descendant', '=', $child2->id)->count();
 
         $this->assertEquals(3, $results);
-    }
-
-    /**
-     *
-     *
-     * @return void
-     */
-    public function testMoveGivenTo()
-    {
-        //@todo: implement
     }
 
     /**
