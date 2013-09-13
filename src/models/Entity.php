@@ -59,7 +59,7 @@ class Entity extends Eloquent {
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function closuretable()
+    protected function closuretable()
     {
         return $this->hasOne('Franzose\ClosureTable\ClosureTable', ClosureTable::DESCENDANT);
     }
@@ -132,7 +132,7 @@ class Entity extends Eloquent {
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function buildParentsQuery()
+    protected function buildParentsQuery()
     {
         $depth = $this->closuretable->{ClosureTable::DEPTH};
         $depth = ($depth <= 1 ? $depth : $depth-1);
@@ -326,7 +326,15 @@ class Entity extends Eloquent {
      */
     public function countPrevSiblings()
     {
-        return (int)$this->buildSiblingsQuery('prev', true)->count();
+        return (int)$this->buildSiblingsQuery('prev')->count();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getPrevSiblingsIds()
+    {
+        return $this->buildSiblingsQuery('prev')->orderBy(static::POSITION)->lists($this->getKeyName());
     }
 
     /**
@@ -366,6 +374,14 @@ class Entity extends Eloquent {
     }
 
     /**
+     * @return array
+     */
+    protected function getNextSiblingsIds()
+    {
+        return $this->buildSiblingsQuery('next')->orderBy(static::POSITION)->lists($this->getKeyName());
+    }
+
+    /**
      * Retrieves previous or next model siblings.
      *
      * @param string $find 'one' for the first found, 'all' for collection of siblings
@@ -377,13 +393,15 @@ class Entity extends Eloquent {
         switch($find)
         {
             case 'one':
+                $result = $this->buildSiblingsQuery($direction, false);
+
                 if ($direction == 'both')
                 {
-                    $result = $this->buildSiblingsQuery($direction, false)->get();
+                    $result = $result->get();
                 }
                 else
                 {
-                    $result = $this->buildSiblingsQuery($direction, false)->first();
+                    $result = $result->first();
                 }
 
                 break;
@@ -413,6 +431,15 @@ class Entity extends Eloquent {
     }
 
     /**
+     * @param $position
+     * @return Entity
+     */
+    /*public function siblingAt($position)
+    {
+        return $this->buildSiblingsSubquery()->where(static::POSITION, '=', $position)->first();
+    }*/
+
+    /**
      * @param string $direction 'prev' for previous siblings, 'next' for next ones
      * @param bool $queryAll
      * @throws \InvalidArgumentException
@@ -425,10 +452,7 @@ class Entity extends Eloquent {
             throw new \InvalidArgumentException('Invalid direction value.');
         }
 
-        $query = $this->select(array($this->getTable().'.*'))
-            ->join(static::$closure, ClosureTable::getQualifiedDescendantKeyName(), '=', $this->getQualifiedKeyName())
-            ->where(ClosureTable::getQualifiedDescendantKeyName(), '<>', $this->getKey())
-            ->where(ClosureTable::getQualifiedDepthKeyName(), '=', $this->closuretable->{ClosureTable::DEPTH});
+        $query = $this->buildSiblingsSubquery();
 
         $operand = '';
         $position = null;
@@ -467,6 +491,14 @@ class Entity extends Eloquent {
         }
 
         return $query;
+    }
+
+    protected function buildSiblingsSubquery()
+    {
+        return $this->select(array($this->getTable().'.*'))
+            ->join(static::$closure, ClosureTable::getQualifiedDescendantKeyName(), '=', $this->getQualifiedKeyName())
+            ->where(ClosureTable::getQualifiedDescendantKeyName(), '<>', $this->getKey())
+            ->where(ClosureTable::getQualifiedDepthKeyName(), '=', $this->closuretable->{ClosureTable::DEPTH});
     }
 
     /**
@@ -539,49 +571,71 @@ class Entity extends Eloquent {
      */
     public function moveTo(Entity $ancestor = null, $position = null)
     {
-        $this->setParent($ancestor);
-        $closuretable = $this->closuretable;
-
-        if ($ancestor === null)
-        {
-            if ($position !== null && is_int($position))
-            {
-                $this->{static::POSITION} = $position;
-                $this->save();
-            }
-
-            $closuretable->moveTo();
-
-            return $this;
-        }
-
-        $ancestorClosure = $ancestor->closuretable;
-        $ancestorValue = $ancestorClosure->{ClosureTable::ANCESTOR};
-        $depthValue = $ancestorClosure->{ClosureTable::DEPTH};
-
-        $closuretable->{ClosureTable::DEPTH} = $depthValue;
-        $closuretable->save();
-        $closuretable->moveTo($ancestorValue);
-
-        if ($position !== null && is_int($position))
-        {
-            $this->{static::POSITION} = $position;
-            $this->save();
-        }
-
-        return $this;
+        return static::moveGivenTo($this, $ancestor, $position);
     }
 
     /**
      * Makes given model a child or a root.
      *
-     * @param Entity|array|int $given
-     * @param Entity|array|int|null $to
-     * @param int $position
+     * @param Entity|int $given
+     * @param Entity|int|null $to
+     * @param int|null $position
+     * @return Entity
      */
-    public static function moveGivenTo($given, $to, $position = 0)
+    public static function moveGivenTo(Entity $given, Entity $to = null, $position = null)
     {
-        //
+        $position = (int)$position;
+        $oldPosition = $given->{static::POSITION};
+
+        if ($position === $oldPosition)
+        {
+            return $given;
+        }
+
+        $given->setParent($to);
+        $given->{static::POSITION} = $position;
+        $given->save();
+
+        static::reorderSiblingsOnGivenMove($given, $oldPosition);
+
+        $closure = $given->closuretable;
+
+        if ($to === null)
+        {
+            $closure->moveTo();
+
+            return $given;
+        }
+
+        $toClosure = $to->closuretable;
+        $toId = $toClosure->{ClosureTable::DESCENDANT};
+        $toDepth = $toClosure->{ClosureTable::DEPTH};
+
+        $closure->{ClosureTable::DEPTH} = $toDepth;
+        $closure->save();
+        $closure->moveTo($toId);
+
+        return $given;
+    }
+
+    /**
+     * @param Entity $given
+     * @param int $oldPosition
+     */
+    public static function reorderSiblingsOnGivenMove(Entity $given, $oldPosition)
+    {
+        $newPosition = $given->{static::POSITION};
+        $range = range($newPosition, $oldPosition);
+        $subquery = $given->buildSiblingsSubquery()->whereIn(static::POSITION, $range);
+
+        if ($newPosition < $oldPosition)
+        {
+            $subquery->increment(static::POSITION);
+        }
+        else
+        {
+            $subquery->decrement(static::POSITION);
+        }
     }
 
 
@@ -595,15 +649,7 @@ class Entity extends Eloquent {
      */
     public function appendChild(Entity $child, $position = null, $returnChild = false)
     {
-        if ($child->getKey() === null)
-        {
-            $child->{static::POSITION} = (int)$position;
-            $child->setParent($this)->save();
-        }
-        else
-        {
-            $child->moveTo($this, (int)$position);
-        }
+        $child->moveTo($this, (int)$position);
 
         return ($returnChild === true ? $child : $this);
     }
@@ -616,10 +662,7 @@ class Entity extends Eloquent {
      */
     public function removeChild($position = null)
     {
-        if ($position === null)
-            $position = 0;
-
-        $this->buildChildrenQuery()->where(static::POSITION, '=', $position)->first()->delete();
+        $this->buildChildrenQuery()->where(static::POSITION, '=', (int)$position)->first()->delete();
 
         return $this;
     }
@@ -661,7 +704,7 @@ class Entity extends Eloquent {
      */
     public function delete()
     {
-        static::moveGivenTo($this->getDescendantsIds(), null);
+        //static::moveGivenTo($this->getDescendantsIds(), null);
         $this->closuretable->delete();
 
         parent::delete();

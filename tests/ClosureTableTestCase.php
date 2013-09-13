@@ -155,10 +155,9 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('Test Excerpt', $page->excerpt);
         $this->assertEquals('Test content', $page->content);
 
-        $closure = $page->closuretable();
+        $closure = new ClosureTable;
         $result = $closure->where('descendant', '=', $page->id)->get();
 
-        $this->assertInstanceOf('\Illuminate\Database\Eloquent\Relations\HasOne', $closure);
         $this->assertInstanceOf('\Illuminate\Database\Eloquent\Collection', $result);
         $this->assertEquals(1, $result->count());
 
@@ -714,7 +713,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     *
+     * Tests 'tree' method.
      *
      * @return void
      */
@@ -724,13 +723,22 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     *
+     * Test 'moveTo' method with ancestor argument given.
      *
      * @return void
      */
     public function testMoveToNode()
     {
-        //@todo: implement
+        list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
+        $child2->moveTo($child3);
+
+        $this->assertNotNull($child2->getParent());
+        $this->assertEquals($child3->id, $child2->getParent()->id);
+
+        $closure = new ClosureTable;
+        $results = $closure->where('descendant', '=', $child2->id)->count();
+
+        $this->assertEquals(3, $results);
     }
 
     /**
