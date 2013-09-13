@@ -74,6 +74,9 @@ class Entity extends Eloquent {
         parent::__construct($attributes);
     }
 
+    /**
+     * @return int
+     */
     protected function getAncestor()
     {
         if ($this->hidden[static::ANCESTOR] === null)
@@ -87,11 +90,17 @@ class Entity extends Eloquent {
         return $this->hidden[static::ANCESTOR];
     }
 
+    /**
+     * @param int $value
+     */
     protected function setAncestor($value)
     {
         $this->hidden[static::ANCESTOR] = (int)$value;
     }
 
+    /**
+     * @return int
+     */
     protected function getDescendant()
     {
         if ($this->hidden[static::DESCENDANT] === null)
@@ -105,11 +114,17 @@ class Entity extends Eloquent {
         return $this->hidden[static::DESCENDANT];
     }
 
+    /**
+     * @param int $value
+     */
     protected function setDescedant($value)
     {
         $this->hidden[self::DESCENDANT] = (int)$value;
     }
 
+    /**
+     * @return int
+     */
     protected function getDepth()
     {
         if ($this->hidden[static::DEPTH] === null)
@@ -120,11 +135,18 @@ class Entity extends Eloquent {
         return $this->hidden[static::DEPTH];
     }
 
+    /**
+     * @param $value
+     * @return int
+     */
     protected function setDepth($value)
     {
         return $this->hidden[self::DEPTH] = (int)$value;
     }
 
+    /**
+     * @return \Illuminate\Database\Query\Builder
+     */
     protected function buildClosuretableQuery()
     {
         return DB::table($this->closure)->where(static::DESCENDANT, '=', $this->getKey());
@@ -263,6 +285,22 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Builds query for the model children.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function buildDescendantsQuery()
+    {
+        $ak = $this->getQualifiedAncestorKeyName();
+        $dk = $this->getQualifiedDescendantKeyName();
+        $dpk = $this->getQualifiedDepthKeyName();
+
+        return $this->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
+            ->where($ak, '=', $this->getKey())
+            ->where($dpk, '>', 0);
+    }
+
+    /**
      * Grab all model children.
      *
      * @return \Illuminate\Database\Eloquent\Collection
@@ -293,29 +331,71 @@ class Entity extends Eloquent {
     }
 
     /**
-     * @return array
-     * @see Entity::delete()
-     * @see Entity::deleteDescendants()
+     * @param string $direction 'prev' for previous siblings, 'next' for next ones
+     * @param bool $queryAll
+     * @throws \InvalidArgumentException
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function getDescendantsIds()
+    protected function buildSiblingsQuery($direction = 'both', $queryAll = true)
     {
-        return $this->buildDescendantsQuery()->lists($this->getKeyName());
+        if (!in_array($direction, array('next', 'prev', 'both')))
+        {
+            throw new \InvalidArgumentException('Invalid direction value.');
+        }
+
+        $query = $this->buildSiblingsSubquery();
+
+        $operand = '';
+        $position = null;
+
+        switch($direction)
+        {
+            case 'prev':
+                $operand = '<';
+                $position = $this->{static::POSITION}-1;
+                break;
+
+            case 'next':
+                $operand = '>';
+                $position = $this->{static::POSITION}+1;
+                break;
+
+            case 'both':
+                $operand = '<>';
+                $position = array($this->{static::POSITION}-1, $this->{static::POSITION}+1);
+        }
+
+        if ($queryAll === true)
+        {
+            $query->where(static::POSITION, $operand, $this->{static::POSITION});
+        }
+        else
+        {
+            if ($direction == 'both')
+            {
+                $query->whereIn(static::POSITION, $position);
+            }
+            else
+            {
+                $query->where(static::POSITION, '=', $position);
+            }
+        }
+
+        return $query;
     }
 
     /**
-     * Builds query for the model children.
-     *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildDescendantsQuery()
+    protected function buildSiblingsSubquery()
     {
-        $ak = $this->getQualifiedAncestorKeyName();
         $dk = $this->getQualifiedDescendantKeyName();
         $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
-            ->where($ak, '=', $this->getKey())
-            ->where($dpk, '>', 0);
+        return $this->select(array($this->getTable().'.*'))
+            ->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
+            ->where($dk, '<>', $this->getKey())
+            ->where($dpk, '=', $this->getDepth());
     }
 
     /**
@@ -453,74 +533,6 @@ class Entity extends Eloquent {
     public function countSiblings()
     {
         return (int)$this->buildSiblingsQuery()->count();
-    }
-
-    /**
-     * @param string $direction 'prev' for previous siblings, 'next' for next ones
-     * @param bool $queryAll
-     * @throws \InvalidArgumentException
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    protected function buildSiblingsQuery($direction = 'both', $queryAll = true)
-    {
-        if (!in_array($direction, array('next', 'prev', 'both')))
-        {
-            throw new \InvalidArgumentException('Invalid direction value.');
-        }
-
-        $query = $this->buildSiblingsSubquery();
-
-        $operand = '';
-        $position = null;
-
-        switch($direction)
-        {
-            case 'prev':
-                $operand = '<';
-                $position = $this->{static::POSITION}-1;
-                break;
-
-            case 'next':
-                $operand = '>';
-                $position = $this->{static::POSITION}+1;
-                break;
-
-            case 'both':
-                $operand = '<>';
-                $position = array($this->{static::POSITION}-1, $this->{static::POSITION}+1);
-        }
-
-        if ($queryAll === true)
-        {
-            $query->where(static::POSITION, $operand, $this->{static::POSITION});
-        }
-        else
-        {
-            if ($direction == 'both')
-            {
-                $query->whereIn(static::POSITION, $position);
-            }
-            else
-            {
-                $query->where(static::POSITION, '=', $position);
-            }
-        }
-
-        return $query;
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    protected function buildSiblingsSubquery()
-    {
-        $dk = $this->getQualifiedDescendantKeyName();
-        $dpk = $this->getQualifiedDepthKeyName();
-
-        return $this->select(array($this->getTable().'.*'))
-            ->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
-            ->where($dk, '<>', $this->getKey())
-            ->where($dpk, '=', $this->getDepth());
     }
 
     /**
@@ -782,7 +794,7 @@ class Entity extends Eloquent {
      */
     public function deleteSubtree()
     {
-        $ids =  $this->getDescendantsIds();
+        $ids = $this->buildDescendantsQuery()->lists($this->getKeyName());
         $ids[] = $this->getKey();
 
         return $this->whereIn($this->getKeyName(), $ids)->delete();
