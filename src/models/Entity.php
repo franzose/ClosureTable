@@ -24,6 +24,13 @@ class Entity extends Eloquent {
     protected $closure;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = array(self::POSITION);
+
+    /**
      * Closure table attributes caching array.
      *
      * @var array
@@ -356,10 +363,11 @@ class Entity extends Eloquent {
      *
      * @param string $direction
      * @param bool $queryAll
+     * @param int|null $position
      * @throws \InvalidArgumentException
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildSiblingsQuery($direction = 'both', $queryAll = true)
+    protected function buildSiblingsQuery($direction = 'both', $queryAll = true, $position = null)
     {
         if (!in_array($direction, array('next', 'prev', 'both')))
         {
@@ -369,38 +377,39 @@ class Entity extends Eloquent {
         $query = $this->buildSiblingsSubquery();
 
         $operand = '';
-        $position = null;
+        $position = ($position === null ? $this->{static::POSITION} : $position);
+        $wherePos = null;
 
         switch($direction)
         {
             case 'prev':
                 $operand = '<';
-                $position = $this->{static::POSITION}-1;
+                $wherePos = $position-1;
                 break;
 
             case 'next':
                 $operand = '>';
-                $position = $this->{static::POSITION}+1;
+                $wherePos = $position+1;
                 break;
 
             case 'both':
                 $operand = '<>';
-                $position = array($this->{static::POSITION}-1, $this->{static::POSITION}+1);
+                $wherePos = array($position-1, $position+1);
         }
 
         if ($queryAll === true)
         {
-            $query->where(static::POSITION, $operand, $this->{static::POSITION});
+            $query->where(static::POSITION, $operand, $position);
         }
         else
         {
             if ($direction == 'both')
             {
-                $query->whereIn(static::POSITION, $position);
+                $query->whereIn(static::POSITION, $wherePos);
             }
             else
             {
-                $query->where(static::POSITION, '=', $position);
+                $query->where(static::POSITION, '=', $wherePos);
             }
         }
 
@@ -429,9 +438,9 @@ class Entity extends Eloquent {
      *
      * @return Entity
      */
-    public function prevSibling()
+    public function prevSibling($position = null)
     {
-        return $this->siblings('one', 'prev');
+        return $this->siblings('one', 'prev', $position);
     }
 
     /**
@@ -439,9 +448,9 @@ class Entity extends Eloquent {
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function prevSiblings()
+    public function prevSiblings($position = null)
     {
-        return $this->siblings('all', 'prev');
+        return $this->siblings('all', 'prev', $position);
     }
 
     /**
@@ -477,9 +486,9 @@ class Entity extends Eloquent {
      *
      * @return Entity
      */
-    public function nextSibling()
+    public function nextSibling($position = null)
     {
-        return $this->siblings('one', 'next');
+        return $this->siblings('one', 'next', $position);
     }
 
     /**
@@ -487,9 +496,9 @@ class Entity extends Eloquent {
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function nextSiblings()
+    public function nextSiblings($position = null)
     {
-        return $this->siblings('all', 'next');
+        return $this->siblings('all', 'next', $position);
     }
 
     /**
@@ -525,14 +534,15 @@ class Entity extends Eloquent {
      *
      * @param string $find number of the searched: 'all', 'one'
      * @param string $direction searching direction: 'prev', 'next', 'both'
+     * @param int|null $position
      * @return \Illuminate\Database\Eloquent\Collection|Entity
      */
-    public function siblings($find = 'all', $direction = 'both')
+    public function siblings($find = 'all', $direction = 'both', $position = null)
     {
         switch($find)
         {
             case 'one':
-                $result = $this->buildSiblingsQuery($direction, false);
+                $result = $this->buildSiblingsQuery($direction, false, $position);
 
                 if ($direction == 'both')
                 {
@@ -546,7 +556,7 @@ class Entity extends Eloquent {
                 break;
 
             case 'all':
-                $result = $this->buildSiblingsQuery($direction)->get();
+                $result = $this->buildSiblingsQuery($direction, true, $position)->get();
                 break;
         }
 
@@ -660,17 +670,14 @@ class Entity extends Eloquent {
      */
     public static function moveGivenTo(Entity $given, Entity $to = null, $position = null)
     {
-        $position = (int)$position;
-        $oldPosition = $given->{static::POSITION};
-
-        if ($position === $oldPosition)
+        if ($position == $given->{static::POSITION})
         {
             return $given;
         }
 
         $given->{static::POSITION} = $position;
         $given->save();
-        $given->performSiblingsReorder($oldPosition);
+        $given->reorderSiblings();
 
         if ($to === null)
         {
@@ -682,6 +689,69 @@ class Entity extends Eloquent {
         $given->performMoveTo($to->getKey());
 
         return $given;
+    }
+
+    /**
+     * Changes positions of all of the model siblings when it's moved.
+     *
+     * @return void
+     */
+    protected function reorderSiblings()
+    {
+        $siblings = $this->buildSiblingsSubquery();
+
+        if ($this->hasSiblings())
+        {
+            if ($this->{static::POSITION} === null)
+            {
+                $position = $this->siblings()->last()->{static::POSITION};
+                $this->{static::POSITION} = $position+1;
+                $this->save();
+            }
+            else
+            {
+                $ids = array();
+                $equalPosEntity = $this->buildSiblingsQuery('both', false, $this->{static::POSITION}+1)
+                    ->where($this->getQualifiedKeyName(), '<>', $this->getKey())
+                    ->first();
+
+                if ($equalPosEntity instanceof Entity)
+                {
+                    $ids[] = $equalPosEntity->getKey();
+                }
+
+                $ids = array_merge($ids, $this->nextSiblings()->modelKeys());
+                $siblings->whereIn($this->getKeyName(), $ids)->increment(static::POSITION);
+            }
+        }
+        else
+        {
+            $this->{static::POSITION} = 0;
+            $this->save();
+        }
+    }
+
+    /**
+     * Perform a model insert operation.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder
+     * @return bool
+     */
+    protected function performInsert($query)
+    {
+        if (parent::performInsert($query) === true)
+        {
+            $id = $this->getKey();
+            $parent = $this->parent();
+            $parentId = ($parent instanceof Entity ? $parent->getKey() : $id);
+
+            $this->performInsertNode($id, $parentId);
+            $this->reorderSiblings();
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -771,63 +841,6 @@ class Entity extends Eloquent {
 
             DB::table($table)->insert($results);
         });
-    }
-
-    /**
-     * Changes positions of all of the model siblings when it's moved.
-     *
-     * @param int $oldModelPosition
-     */
-    protected function performSiblingsReorder($oldModelPosition)
-    {
-        $subquery = $this->buildSiblingsSubquery();
-        $newPosition = $this->{static::POSITION};
-
-        if ($subquery->count())
-        {
-            $range = range($newPosition, $oldPosition);
-            $subquery = $subquery->whereIn(static::POSITION, $range);
-
-            if ($newPosition < $oldPosition || $newPosition == $oldPosition)
-            {
-                $subquery->increment(static::POSITION);
-            }
-            else
-            {
-                $subquery->decrement(static::POSITION);
-            }
-        }
-    }
-
-    /**
-     * Perform a model insert operation.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder
-     * @return bool
-     */
-    public function performInsert($query)
-    {
-        if (parent::performInsert($query) === true)
-        {
-            $id = $this->getKey();
-            $parent = $this->parent();
-
-            if ( ! $parent instanceof Entity)
-            {
-                $parentId = $id;
-            }
-            else
-            {
-                $parentId = $parent->getKey();
-            }
-
-            $this->performInsertNode($id, $parentId);
-            $this->performSiblingsReorder($this->{static::POSITION});
-
-            return true;
-        }
-
-        return false;
     }
 
     /**
