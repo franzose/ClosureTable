@@ -670,7 +670,7 @@ class Entity extends Eloquent {
      */
     public static function moveGivenTo(Entity $given, Entity $to = null, $position = null)
     {
-        if ($position == $given->{static::POSITION})
+        if ($to === $given->parent() && $position == $given->{static::POSITION})
         {
             return $given;
         }
@@ -678,15 +678,7 @@ class Entity extends Eloquent {
         $given->{static::POSITION} = $position;
         $given->save();
         $given->reorderSiblings();
-
-        if ($to === null)
-        {
-            $given->performMoveTo();
-
-            return $given;
-        }
-
-        $given->performMoveTo($to->getKey());
+        $given->performMoveTo($to);
 
         return $given;
     }
@@ -757,10 +749,10 @@ class Entity extends Eloquent {
     /**
      * Performs closure table rebuilding when the model's moved.
      *
-     * @param int|null $ancestorId
+     * @param Entity|null $ancestor
      * @return bool
      */
-    protected function performMoveTo($ancestorId = null)
+    protected function performMoveTo(Entity $ancestor = null)
     {
         $ak  = static::ANCESTOR;
         $dk  = static::DESCENDANT;
@@ -784,7 +776,7 @@ class Entity extends Eloquent {
         }
 
         // null? make it root
-        if ($ancestorId === null)
+        if ($ancestor === null)
         {
             return DB::table($this->closure)
                 ->where(static::ANCESTOR, '=', $ancestorValue)
@@ -796,6 +788,7 @@ class Entity extends Eloquent {
         }
 
         $table = $this->closure;
+        $ancestorId = $ancestor->getKey();
 
         DB::transaction(function() use($ak, $dk, $dpk, $table, $ancestorId, $descendantValue){
             $selectQuery = "
