@@ -434,8 +434,41 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Gets the first sibling of a model.
+     *
+     * @return Entity
+     */
+    public function firstSibling()
+    {
+        return $this->siblingAt(0);
+    }
+
+    /**
+     * Gets the last sibling of a model.
+     *
+     * @return Entity
+     */
+    public function lastSibling()
+    {
+        $lastpos = $this->buildSiblingsSubquery()->max(static::POSITION);
+        return $this->siblingAt($lastpos);
+    }
+
+    /**
+     * Gets a sibling with given position.
+     *
+     * @param $position
+     * @return Entity
+     */
+    public function siblingAt($position)
+    {
+        return $this->nextSibling($position-1);
+    }
+
+    /**
      * Gets a previous model sibling.
      *
+     * @param int|null $position
      * @return Entity
      */
     public function prevSibling($position = null)
@@ -446,6 +479,7 @@ class Entity extends Eloquent {
     /**
      * Gets collection of previous model siblings.
      *
+     * @param int|null $position
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function prevSiblings($position = null)
@@ -474,16 +508,9 @@ class Entity extends Eloquent {
     }
 
     /**
-     * @return array
-     */
-    protected function getPrevSiblingsIds()
-    {
-        return $this->buildSiblingsQuery('prev')->orderBy(static::POSITION)->lists($this->getKeyName());
-    }
-
-    /**
      * Gets the next model sibling.
      *
+     * @param int|null $position
      * @return Entity
      */
     public function nextSibling($position = null)
@@ -494,6 +521,7 @@ class Entity extends Eloquent {
     /**
      * Gets collection of the next model siblings.
      *
+     * @param int|null $position
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function nextSiblings($position = null)
@@ -519,14 +547,6 @@ class Entity extends Eloquent {
     public function countNextSiblings()
     {
         return (int)$this->buildSiblingsQuery('next')->count();
-    }
-
-    /**
-     * @return array
-     */
-    protected function getNextSiblingsIds()
-    {
-        return $this->buildSiblingsQuery('next')->orderBy(static::POSITION)->lists($this->getKeyName());
     }
 
     /**
