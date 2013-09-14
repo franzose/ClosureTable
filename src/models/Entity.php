@@ -49,6 +49,11 @@ class Entity extends Eloquent {
     protected $softDelete = true;
 
     /**
+     * @var int|null
+     */
+    private $oldpos = null;
+
+    /**
      * The position column name.
      *
      * @var string
@@ -695,6 +700,7 @@ class Entity extends Eloquent {
             return $given;
         }
 
+        $given->oldpos = $given->{static::POSITION};
         $given->{static::POSITION} = $position;
         $given->save();
         $given->reorderSiblings();
@@ -710,30 +716,28 @@ class Entity extends Eloquent {
      */
     protected function reorderSiblings()
     {
-        $siblings = $this->buildSiblingsSubquery();
-
         if ($this->hasSiblings())
         {
             if ($this->{static::POSITION} === null)
             {
-                $position = $this->siblings()->last()->{static::POSITION};
+                $position = $this->lastSibling()->{static::POSITION};
                 $this->{static::POSITION} = $position+1;
                 $this->save();
             }
             else
             {
-                $ids = array();
-                $equalPosEntity = $this->buildSiblingsQuery('both', false, $this->{static::POSITION}+1)
-                    ->where($this->getQualifiedKeyName(), '<>', $this->getKey())
-                    ->first();
+                $siblings = $this->buildSiblingsSubquery()->where($this->getQualifiedKeyName(), '<>', $this->getKey());
 
-                if ($equalPosEntity instanceof Entity)
+                if ($this->{static::POSITION} > $this->oldpos)
                 {
-                    $ids[] = $equalPosEntity->getKey();
+                    $range = range($this->oldpos, $this->{static::POSITION});
+                    $siblings->whereIn(static::POSITION, $range)->decrement(static::POSITION);
                 }
-
-                $ids = array_merge($ids, $this->nextSiblings()->modelKeys());
-                $siblings->whereIn($this->getKeyName(), $ids)->increment(static::POSITION);
+                else
+                {
+                    $range = range($this->{static::POSITION}, $this->oldpos-1);
+                    $siblings->whereIn(static::POSITION, $range)->increment(static::POSITION);
+                }
             }
         }
         else
