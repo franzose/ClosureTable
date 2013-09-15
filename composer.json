@@ -1,12 +1,14 @@
 {
-    "name": "franzose/closure-table", 
+    "name": "franzose/closure-table",
     "description": "Closure table database design pattern implementation for Laravel",
     "keywords": ["laravel"],
     "license": "MIT",
     "authors": [
         {
-            "name": "franzose",
-            "email": "iwanow.jan@gmail.com"
+            "name": "Jan Iwanow",
+            "email": "iwanow.jan@gmail.com",
+            "homepage": "http://janiwanow.com",
+            "role": "Developer"
         }
     ],
     "require": {
