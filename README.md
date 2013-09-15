@@ -182,6 +182,17 @@ $tree = Page::tree();
 </code>
 </pre>
 
+You deal with the collection, thus you can control its items as you usually do. Descendants? They are already loaded.
+<pre>
+<code>
+$tree = Page::tree();
+$page = $tree->find(15);
+$children = $page->children();
+$child = $page->childAt(3);
+$grandchildren = $page->childAt(3)->children(); //and so on
+</code>
+</pre>
+
 ### Moving
 <pre>
 <code>
