@@ -33,7 +33,7 @@ php artisan migrate:make create_pages_closure_table --table=pages_closure --crea
 </code>
 </pre>
 
-Your pages table schema should look like this:
+Your `pages` table schema should look like this:
 <pre>
 <code>
 public function up()
@@ -54,7 +54,7 @@ public function up()
 
 Your `Entity` table must include `position` column in order to be sortable. The name of the column is <a href="#customization">customized</a>.
 
-Your pages_closure schema should look like this:
+Your `pages_closure` table schema should look like this:
 <pre>
 <code>
 public function up()
