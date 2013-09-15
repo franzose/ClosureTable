@@ -197,8 +197,11 @@ Page::moveGivenTo($page, Page::find(14), 5);
 </pre>
 
 ### Deleting subtree
+If you don't use foreign keys for some reason, you can delete subtree manually. This will delete the page and all its descendants:
 <pre>
 <code>
+$page = Page::find(34);
+$page->deleteSubtree();
 </code>
 </pre>
 
