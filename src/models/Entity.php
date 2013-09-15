@@ -185,7 +185,7 @@ class Entity extends Eloquent {
     {
         return $this->select(array($this->getTable().'.*'))
             ->join($this->closure, $this->getQualifiedDescendantKeyName(), '=', $this->getKeyName())
-            ->where($this->getQualifiedAncestorKeyName(), '<>', $this->getKey())
+            ->where($this->getQualifiedAncestorKeyName(), '=', $this->getAncestor())
             ->where($this->getQualifiedDepthKeyName(), '=', $this->getDepth()-1)
             ->first();
     }
@@ -213,7 +213,7 @@ class Entity extends Eloquent {
      */
     public function ancestors()
     {
-        return $this->buildAncestorsQuery()->get();
+        return $this->buildAncestorsQuery()->get()->toTree();
     }
 
     /**
@@ -352,7 +352,7 @@ class Entity extends Eloquent {
             $query->where($this->getQualifiedDepthKeyName(), '=', $depth);
         }
 
-        return $query->get();
+        return $query->get()->toTree();
     }
 
     /**
@@ -679,7 +679,23 @@ class Entity extends Eloquent {
      */
     public static function tree()
     {
-        //return array();
+        $instance = new static;
+        $columns = array(
+            $instance->getTable().".*",
+            "closure1.".static::ANCESTOR,
+            "closure1.".static::DESCENDANT,
+            "closure1.".static::DEPTH
+        );
+
+        $key = $instance->getQualifiedKeyName();
+
+        return static::select($columns)
+            ->distinct()
+            ->join($instance->closure.' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
+            ->join($instance->closure.' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
+            ->whereRaw('closure1.'.static::ANCESTOR.' = closure1.'.static::DESCENDANT)
+            ->get()
+            ->toTree();
     }
 
     /**
@@ -910,5 +926,10 @@ class Entity extends Eloquent {
     protected function getQualifiedDepthKeyName()
     {
         return $this->closure.'.'.static::DEPTH;
+    }
+
+    public function newCollection(array $models = array())
+    {
+        return new \Franzose\ClosureTable\Collection($models);
     }
 }
