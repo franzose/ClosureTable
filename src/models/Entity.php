@@ -259,7 +259,9 @@ class Entity extends Eloquent {
      */
     public function children()
     {
-        return $this->buildChildrenQuery()->get();
+        $result = (isset($this->nested) ? $this->nested : $this->buildChildrenQuery()->get());
+
+        return $result;
     }
 
     /**
@@ -279,7 +281,9 @@ class Entity extends Eloquent {
      */
     public function countChildren()
     {
-        return (int)$this->buildChildrenQuery()->count();
+        $result = (isset($this->nested) ? (int)$this->nested->count() : (int)$this->buildChildrenQuery()->count());
+
+        return $result;
     }
 
     /**
@@ -290,7 +294,21 @@ class Entity extends Eloquent {
      */
     public function childAt($position)
     {
-        return $this->buildChildrenQuery()->where(static::POSITION, '=', $position)->first();
+        $result = null;
+
+        if (isset($this->nested))
+        {
+            if (isset($this->nested[$position]))
+            {
+                $result = $this->nested[$position];
+            }
+        }
+        else
+        {
+            $result = $this->buildChildrenQuery()->where(static::POSITION, '=', $position)->first();
+        }
+
+        return $result;
     }
 
     /**
@@ -316,7 +334,17 @@ class Entity extends Eloquent {
      */
     public function removeChild($position = null)
     {
-        $this->buildChildrenQuery()->where(static::POSITION, '=', (int)$position)->first()->delete();
+        if (isset($this->nested))
+        {
+            if (isset($this->nested[$position]))
+            {
+                $this->nested[$position]->delete();
+            }
+        }
+        else
+        {
+            $this->buildChildrenQuery()->where(static::POSITION, '=', (int)$position)->first()->delete();
+        }
 
         return $this;
     }
