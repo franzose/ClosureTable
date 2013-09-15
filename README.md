@@ -130,61 +130,39 @@ $page->removeChild(0);
 </code>
 </pre>
 
-### Get descendants
-
+### Descendants
 <pre>
 <code>
 $page = Page::find(15);
 $descendants = $page->descendants();
-
-if ($page->hasDescendants())
-{
-}
-
+$hasDescendants = $page->hasDescendants();
 $descendantsNumber = $page->countDescendants();
 </code>
 </pre>
 
-### Get direct children
-
+### Siblings
 <pre>
 <code>
-$page = Page::find(15);
-$children = $page->children();
+$page  = Page::find(15);
+$first = $page->firstSibling(); //or $page->siblingAt(0);
+$last  = $page->lastSibling();
+$atpos = $page->siblingAt(5);
 
-if ($page->hasChildren())
-{
-}
-
-$childrenNumber = $page->countChildren();
-</code>
-</pre>
-
-### Get siblings
-
-<pre>
-<code>
-$page = Page::find(15);
-$nextOne = $page->nextSibling();
-$nextAll = $page->nextSiblings();
 $prevOne = $page->prevSibling();
 $prevAll = $page->prevSiblings();
+$prevsFromPos = $page->prevSiblings(5); //previous siblings from position 5
+$hasPrevs = $page->hasPrevSiblings();
+$prevsNumber = $page->countPrevSiblings();
 
-if ($page->hasSiblings())
-{
-}
-
-if ($page->hasPrevSiblings())
-{
-}
-
-if ($page->hasNextSiblings())
-{
-}
-
-$siblingsNumber = $page->countSiblings();
+$nextOne = $page->nextSibling();
+$nextAll = $page->nextSiblings();
+$nextFromPos = $page->nextSiblings(10);
+$hasNext = $page->hasNextSiblings();
 $nextNumber = $page->countNextSiblings();
-$prevNumber = $page->countPrevSiblings();
+
+//in both directions
+$hasSiblings = $page->hasSiblings();
+$siblingsNumber = $page->countSiblings();
 </code>
 </pre>
 
