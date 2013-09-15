@@ -1,6 +1,6 @@
 # ClosureTable 2
 
-Formerly bundle for Laravel 3, now it's a package for Laravel 4. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The codebase is being rewritten completely, however, the ClosureTable 2 is as simple in usage as ClosureTable 1 used to be from the start.
+Formerly bundle for Laravel 3, now it's a package for Laravel 4. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The codebase is being rewritten completely, however, the ClosureTable 2 is as simple in usage as ClosureTable 1 used to be.
 
 ## Installation
 
@@ -16,28 +16,73 @@ use \Franzose\ClosureTable\Entity;
 
 class Page extends Entity {
     protected $table = 'pages';
-    protected static $closure = 'pages_closure';
+    protected $closure = 'pages_closure';
 }
 </code>
 </pre>
 
-Violà! You have a new Entity. Take a look at the `protected static $closure` variable. It is the name of the closure table where relationships between entities are stored. Remember that you will never have to manually extend the `ClosureTable` model for each your `Entity` model until you want to change the default columns names in the closure table. If you do want, see ‘<a href="#customization">Customization</a>’ section of this readme for more information.
-
-Every Entity uses `position` table column in order to be sortable. You can define your own column name by changing the default value of `Entity::POSITION` constant.
+Violà! You have a new `Entity`. Take a look at the `protected $closure` property. It is the name of the closure table where relationships between `Entities` are stored. There is no separate model for the closure database table anymore. See ‘<a href="#customization">Customization</a>’ for more information.
 
 ### Create migrations
 
-Please, read the Laravel's ‘<a href="http://laravel.com/docs/migrations">Migrations & Seeding</a>’ first. Keep in mind that you must create two database tables—one for the entities, one for their relationships (closure table). 
+Open terminal and put the following commands:
+<pre>
+<code>
+php artisan migrate:make create_pages_table --table=pages --create
+php artisan migrate:make create_pages_closure_table --table=pages_closure --create
+</code>
+</pre>
 
-Your Entity table must include `position` column, which name is defined by `Entity::POSITION` constant, as I told you above.
+Your pages table schema should look like this:
+<pre>
+<code>
+public function up()
+{
+	Schema::create('pages', function(Blueprint $table)
+	{
+		$table->increments('id');
+        $table->string('title');
+        $table->string('excerpt', 500);
+        $table->longText('content');
+        $table->integer('position', false, true); //unsigned
+		$table->timestamps();
+        $table->softDeletes(); //notice this.
+	});
+}
+</code>
+</pre>
+
+Your `Entity` table must include `position` column in order to be sortable. The name of the column is <a href="#customization">customized</a>.
+
+Your pages_closure schema should look like this:
+<pre>
+<code>
+public function up()
+{
+	Schema::create('pages_closure', function(Blueprint $table)
+	{
+		$table->increments('id');
+        $table->integer('ancestor', false, true); //unsigned
+        $table->integer('descendant', false, true);
+        $table->integer('depth', false, true);
+
+        $table->foreign('ancestor')->references('id')->on('pages')->onDelete('cascade');
+        $table->foreign('descendant')->references('id')->on('pages')->onDelete('cascade');
+        $table->index('depth');
+	});
+}
+</code>
+</pre>
 
 Your closure table must include the following columns:
-1. **Autoincremented identifier**
-2. **Ancestor column** points on a parent node
-3. **Descendant column** points on a child node
+1. **Autoincremented identifier**<br>
+2. **Ancestor column** points on a parent node<br>
+3. **Descendant column** points on a child node<br>
 4. **Depth column** shows a node depth in the tree
 
-Each of their names is customizable. See ‘<a href="#customization">Customization</a>’ section of this readme for more information.
+Each of their names is customizable. See ‘<a href="#customization">Customization</a>’ for more information.
+
+We made foreign keys `cascade` to simplify removing a subtree from the database. That's why the `Entity` model is `softDelete`d by default: we prevent accidential subtree removing that way.
 
 ## Time of coding
 Once your models and their database tables are created, at last, you can start actually coding. Here I will show you ClosureTable's specific approaches.
