@@ -17,6 +17,7 @@ use \Franzose\ClosureTable\Entity;
 class Page extends Entity {
     protected $table = 'pages';
     protected $closure = 'pages_closure';
+    protected $fillable = array('title', 'excerpt', 'content');
 }
 </code>
 </pre>
@@ -52,7 +53,7 @@ public function up()
 </code>
 </pre>
 
-Your `Entity` table must include `position` column in order to be sortable. The name of the column is <a href="#customization">customized</a>.
+Your `Entity` table must include `position` column in order to be sortable. The name of the column can be <a href="#customization">customized</a>.
 
 Your `pages_closure` table schema should look like this:
 <pre>
@@ -74,7 +75,7 @@ public function up()
 </code>
 </pre>
 
-Your closure table must include the following columns:
+Your closure table must include the following columns:<br>
 1. **Autoincremented identifier**<br>
 2. **Ancestor column** points on a parent node<br>
 3. **Descendant column** points on a child node<br>
@@ -87,18 +88,45 @@ We made foreign keys `cascade` to simplify removing a subtree from the database.
 ## Time of coding
 Once your models and their database tables are created, at last, you can start actually coding. Here I will show you ClosureTable's specific approaches.
 
-### Get ancestors
+### Direct ancestor (parent)
+<pre>
+<code>
+$parent = Page::find(15)->parent();
+</code>
+</pre>
 
+### Ancestors
 <pre>
 <code>
 $page = Page::find(15);
 $ancestors = $page->ancestors();
-
-if ($page->hasAncestors())
-{
-}
-
+$hasAncestors = $page->hasAncestors();
 $ancestorsNumber = $page->countAncestors();
+</code>
+</pre>
+
+### Direct descendants (children)
+<pre>
+<code>
+$page = Page::find(15);
+$children = $page->children();
+$hasChildren = $page->hasChildren();
+$childrenNumber = $page->countChildren();
+
+$newChild = new Page(array(
+	'title' => 'The title',
+	'excerpt' => 'The excerpt',
+	'content' => 'The content of a child'
+));
+
+$page->appendChild($newChild);
+
+//or you could get that child after appending
+//second argument is the position
+//if null, it will be set automatically
+$child = $page->appendChild($newChild, null, true);
+
+$page->removeChild(0);
 </code>
 </pre>
 
