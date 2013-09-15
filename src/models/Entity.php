@@ -24,13 +24,6 @@ class Entity extends Eloquent {
     protected $closure;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = array(self::POSITION);
-
-    /**
      * Closure table attributes caching array.
      *
      * @var array
@@ -290,6 +283,17 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Gets direct descendant at given position
+     *
+     * @param $position
+     * @return Entity
+     */
+    public function childAt($position)
+    {
+        return $this->buildChildrenQuery()->where(static::POSITION, '=', $position)->first();
+    }
+
+    /**
      * Inserts a model as a direct descendant of this one.
      *
      * @param Entity $child
@@ -336,11 +340,19 @@ class Entity extends Eloquent {
     /**
      * Gets all model descendants.
      *
+     * @param int|null $depth depth relative to the model's depth
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function descendants()
+    public function descendants($depth = null)
     {
-        return $this->buildDescendantsQuery()->get();
+        $query = $this->buildDescendantsQuery();
+
+        if ($depth !== null)
+        {
+            $query->where($this->getQualifiedDepthKeyName(), '=', $depth);
+        }
+
+        return $query->get();
     }
 
     /**
@@ -473,12 +485,11 @@ class Entity extends Eloquent {
     /**
      * Gets a previous model sibling.
      *
-     * @param int|null $position
      * @return Entity
      */
-    public function prevSibling($position = null)
+    public function prevSibling()
     {
-        return $this->siblings('one', 'prev', $position);
+        return $this->siblings('one', 'prev');
     }
 
     /**
@@ -515,12 +526,11 @@ class Entity extends Eloquent {
     /**
      * Gets the next model sibling.
      *
-     * @param int|null $position
      * @return Entity
      */
-    public function nextSibling($position = null)
+    public function nextSibling()
     {
-        return $this->siblings('one', 'next', $position);
+        return $this->siblings('one', 'next');
     }
 
     /**
@@ -665,12 +675,11 @@ class Entity extends Eloquent {
     /**
      * Retrives a whole tree from the database.
      *
-     * @param bool $returnObjectsArray
-     * @return array
+     * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function tree($returnObjectsArray = true)
+    public static function tree()
     {
-        return array();
+        //return array();
     }
 
     /**
