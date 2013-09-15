@@ -166,15 +166,41 @@ $siblingsNumber = $page->countSiblings();
 </code>
 </pre>
 
-### Get the entire tree
+### Roots (entities that have no ancestors)
+<pre>
+<code>
+$roots = Page::roots();
+$isRoot = Page::find(23)->isRoot();
+Page::find(11)->makeRoot();
+</code>
+</pre>
 
+### Entire tree
 <pre>
 <code>
 $tree = Page::tree();
 </code>
 </pre>
 
-### Moving entities
+### Moving
+<pre>
+<code>
+$page = Page::find(25);
+$page->moveTo(Page::find(14));
+
+//or to a certain position within the subtree
+$page->moveTo(Page::find(14), 5);
+
+//another way of moving
+Page::moveGivenTo($page, Page::find(14), 5);
+</code>
+</pre>
+
+### Deleting subtree
+<pre>
+<code>
+</code>
+</pre>
 
 ## Customization
 
