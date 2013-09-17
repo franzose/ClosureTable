@@ -93,10 +93,14 @@ class Entity extends Eloquent {
     {
         if ($this->hidden[static::ANCESTOR] === null)
         {
-            $this->hidden[static::ANCESTOR] = $this->buildClosuretableQuery()
+            $closure = $this->buildClosuretableQuery()
                 ->where(static::DEPTH, '=', $this->getDepth())
-                ->first()
-                ->{static::ANCESTOR};
+                ->first();
+
+            if ($closure !== null)
+            {
+                $this->hidden[static::ANCESTOR] = $closure->{static::ANCESTOR};
+            }
         }
 
         return $this->hidden[static::ANCESTOR];
@@ -121,10 +125,14 @@ class Entity extends Eloquent {
     {
         if ($this->hidden[static::DESCENDANT] === null)
         {
-            $this->hidden[static::DESCENDANT] = $this->buildClosuretableQuery()
+            $closure = $this->buildClosuretableQuery()
                 ->where(static::DEPTH, '=', $this->getDepth())
-                ->first()
-                ->{static::DESCENDANT};
+                ->first();
+
+            if ($closure !== null)
+            {
+                $this->hidden[static::DESCENDANT] = $closure->{static::DESCENDANT};
+            }
         }
 
         return $this->hidden[static::DESCENDANT];
