@@ -209,6 +209,6 @@ $page->deleteSubtree();
 ## Customization
 You can customize the following things in your ClosureTable:<br>
 1. `Entity` table name. Set `protected $table` to change it.<br>
-2. Closure table name. By default its name is `Entity` table name + `_closure` (e.g. `pages_closure`). Set `protected $closure` if you want to change closure table name.
+2. Closure table name. By default its name is `Entity` table name + `_closure` (e.g. `pages_closure`). Set `protected $closure` if you want to change closure table name.<br>
 3. `position` column name in the entity database table. Just set `const POSITION` of your model to whatever you want.<br>
 4. `ancestor` column name in the closure database table. Just set `const ANCESTOR` of your model to whatever you want. The same is for `descendant` and `depth` columns: they have their own constants in the `\Franzose\ClosureTable\Entity` class.
