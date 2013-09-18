@@ -21,13 +21,11 @@ For example, let's assume you're working on pages. In `app/models`, create new f
 use \Franzose\ClosureTable\Entity;
 
 class Page extends Entity {
-    protected $table = 'pages';
-    protected $closure = 'pages_closure';
     protected $fillable = array('title', 'excerpt', 'content');
 }
 ```
 
-Violà! You have a new `Entity`. Take a look at the `protected $closure` property. It is the name of the closure table where relationships between `Entities` are stored. There is no separate model for the closure database table anymore. See ‘<a href="#customization">Customization</a>’ for more information.
+Violà! You have a new `Entity`. Closure table name is set by `protected $closure` property. See ‘<a href="#customization">Customization</a>’ for more information.
 
 ### Create migrations
 
@@ -210,5 +208,7 @@ $page->deleteSubtree();
 
 ## Customization
 You can customize the following things in your ClosureTable:<br>
-1. `position` column name in the entity database table. Just set `const POSITION` of your model to whatever you want.<br>
-2. `ancestor` column name in the closure database table. Just set `const ANCESTOR` of your model to whatever you want. The same is for `descendant` and `depth` columns: they have their own constants in the `\Franzose\ClosureTable\Entity` class.
+1. `Entity` table name. Set `protected $table` to change it.
+2. Closure table name. By default its name is `Entity` table name + `_closure` (e.g. `pages_closure`). Set `protected $closure` if you want to change closure table name.
+3. `position` column name in the entity database table. Just set `const POSITION` of your model to whatever you want.<br>
+4. `ancestor` column name in the closure database table. Just set `const ANCESTOR` of your model to whatever you want. The same is for `descendant` and `depth` columns: they have their own constants in the `\Franzose\ClosureTable\Entity` class.
