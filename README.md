@@ -4,47 +4,41 @@ Formerly bundle for Laravel 3, now it's a package for Laravel 4. It's intended t
 
 ## Installation
 To install the package, put the following in your composer.json:
-<pre>
-<code>
+
+```json
 "require": {
 	"franzose/closure-table": "dev-master"
 }
-</code>
-</pre>
+```
 
 ## Setup your ClosureTable
 ### Create the Entity model
 For example, let's assume you're working on pages. In `app/models`, create new file called `Page.php` and put the following into it:
 
-<pre>
-<code>
-&lt;?php
+```php
+<?php
 
 use \Franzose\ClosureTable\Entity;
 
 class Page extends Entity {
-    protected $table = 'pages';
-    protected $closure = 'pages_closure';
     protected $fillable = array('title', 'excerpt', 'content');
 }
-</code>
-</pre>
+```
 
-Violà! You have a new `Entity`. Take a look at the `protected $closure` property. It is the name of the closure table where relationships between `Entities` are stored. There is no separate model for the closure database table anymore. See ‘<a href="#customization">Customization</a>’ for more information.
+Violà! You have a new `Entity`. Closure table name is set by `protected $closure` property. See ‘<a href="#customization">Customization</a>’ for more information.
 
 ### Create migrations
 
 Open terminal and put the following commands:
-<pre>
-<code>
+
+```bash
 php artisan migrate:make create_pages_table --table=pages --create
 php artisan migrate:make create_pages_closure_table --table=pages_closure --create
-</code>
-</pre>
+```
 
 Your `pages` table schema should look like this:
-<pre>
-<code>
+
+```php
 public function up()
 {
 	Schema::create('pages', function(Blueprint $table)
@@ -58,14 +52,13 @@ public function up()
         $table->softDeletes(); //notice this.
 	});
 }
-</code>
-</pre>
+```
 
 Your `Entity` table must include `position` column in order to be sortable. The name of the column can be <a href="#customization">customized</a>.
 
 Your `pages_closure` table schema should look like this:
-<pre>
-<code>
+
+```php
 public function up()
 {
 	Schema::create('pages_closure', function(Blueprint $table)
@@ -80,8 +73,7 @@ public function up()
         $table->index('depth');
 	});
 }
-</code>
-</pre>
+```
 
 Your closure table must include the following columns:<br>
 1. **Autoincremented identifier**<br>
@@ -97,25 +89,23 @@ We made foreign keys `cascade` to simplify removing a subtree from the database.
 Once your models and their database tables are created, at last, you can start actually coding. Here I will show you ClosureTable's specific approaches.
 
 ### Direct ancestor (parent)
-<pre>
-<code>
+
+```php
 $parent = Page::find(15)->parent();
-</code>
-</pre>
+```
 
 ### Ancestors
-<pre>
-<code>
+
+```php
 $page = Page::find(15);
 $ancestors = $page->ancestors();
 $hasAncestors = $page->hasAncestors();
 $ancestorsNumber = $page->countAncestors();
-</code>
-</pre>
+```
 
 ### Direct descendants (children)
-<pre>
-<code>
+
+```php
 $page = Page::find(15);
 $children = $page->children();
 $hasChildren = $page->hasChildren();
@@ -135,22 +125,20 @@ $page->appendChild($newChild);
 $child = $page->appendChild($newChild, null, true);
 
 $page->removeChild(0);
-</code>
-</pre>
+```
 
 ### Descendants
-<pre>
-<code>
+
+```php
 $page = Page::find(15);
 $descendants = $page->descendants();
 $hasDescendants = $page->hasDescendants();
 $descendantsNumber = $page->countDescendants();
-</code>
-</pre>
+```
 
 ### Siblings
-<pre>
-<code>
+
+```php
 $page  = Page::find(15);
 $first = $page->firstSibling(); //or $page->siblingAt(0);
 $last  = $page->lastSibling();
@@ -171,39 +159,35 @@ $nextNumber = $page->countNextSiblings();
 //in both directions
 $hasSiblings = $page->hasSiblings();
 $siblingsNumber = $page->countSiblings();
-</code>
-</pre>
+```
 
 ### Roots (entities that have no ancestors)
-<pre>
-<code>
+
+```php
 $roots = Page::roots();
 $isRoot = Page::find(23)->isRoot();
 Page::find(11)->makeRoot();
-</code>
-</pre>
+```
 
 ### Entire tree
-<pre>
-<code>
+
+```php
 $tree = Page::tree();
-</code>
-</pre>
+```
 
 You deal with the collection, thus you can control its items as you usually do. Descendants? They are already loaded.
-<pre>
-<code>
+
+```php
 $tree = Page::tree();
 $page = $tree->find(15);
 $children = $page->children();
 $child = $page->childAt(3);
 $grandchildren = $page->childAt(3)->children(); //and so on
-</code>
-</pre>
+```
 
 ### Moving
-<pre>
-<code>
+
+```php
 $page = Page::find(25);
 $page->moveTo(Page::find(14));
 
@@ -212,19 +196,19 @@ $page->moveTo(Page::find(14), 5);
 
 //another way of moving
 Page::moveGivenTo($page, Page::find(14), 5);
-</code>
-</pre>
+```
 
 ### Deleting subtree
 If you don't use foreign keys for some reason, you can delete subtree manually. This will delete the page and all its descendants:
-<pre>
-<code>
+
+```php
 $page = Page::find(34);
 $page->deleteSubtree();
-</code>
-</pre>
+```
 
 ## Customization
 You can customize the following things in your ClosureTable:<br>
-1. `position` column name in the entity database table. Just set `const POSITION` of your model to whatever you want.<br>
-2. `ancestor` column name in the closure database table. Just set `const ANCESTOR` of your model to whatever you want. The same is for `descendant` and `depth` columns: they have their own constants in the `\Franzose\ClosureTable\Entity` class.
+1. `Entity` table name. Set `protected $table` to change it.<br>
+2. Closure table name. By default its name is `Entity` table name + `_closure` (e.g. `pages_closure`). Set `protected $closure` if you want to change closure table name.<br>
+3. `position` column name in the entity database table. Just set `const POSITION` of your model to whatever you want.<br>
+4. `ancestor` column name in the closure database table. Just set `const ANCESTOR` of your model to whatever you want. The same is for `descendant` and `depth` columns: they have their own constants in the `\Franzose\ClosureTable\Entity` class.
