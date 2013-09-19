@@ -82,6 +82,16 @@ class Entity extends Eloquent {
     public function __construct(array $attributes = array())
     {
         parent::__construct($attributes);
+
+        if ( ! $this->closure)
+        {
+            $this->closure = $this->getTable().'_closure';
+        }
+    }
+
+    public function getClosure()
+    {
+        return $this->closure;
     }
 
     /**
@@ -515,7 +525,7 @@ class Entity extends Eloquent {
      */
     public function siblingAt($position)
     {
-        return $this->nextSibling($position-1);
+        return $this->siblings('one', 'next', $position-1);
     }
 
     /**
@@ -907,7 +917,7 @@ class Entity extends Eloquent {
 
         DB::transaction(function() use($table, $ak, $dk, $dpk, $descendant, $ancestor){
             $selectQuery = "
-                SELECT tbl.{$ak}, {$descendant} as {$dk}, tbl.{$dpk}+1 as {$dpk}
+                SELECT tbl.{$ak} as {$ak}, {$descendant} as {$dk}, tbl.{$dpk}+1 as {$dpk}
                 FROM {$table} AS tbl
                 WHERE tbl.{$dk} = {$ancestor}
                 UNION ALL
@@ -924,14 +934,16 @@ class Entity extends Eloquent {
     /**
      * Delete the model, all related models and relationships in the closure table.
      *
+     * @param bool $forceDelete
      * @return bool|null|void
      */
-    public function deleteSubtree()
+    public function deleteSubtree($forceDelete = true)
     {
         $ids = $this->buildDescendantsQuery()->lists($this->getKeyName());
         $ids[] = $this->getKey();
+        $query = $this->whereIn($this->getKeyName(), $ids);
 
-        return $this->whereIn($this->getKeyName(), $ids)->delete();
+        return ($forceDelete === true ? $query->forceDelete() : $query->delete());
     }
 
     /**
