@@ -24,17 +24,6 @@ class Entity extends Eloquent {
     protected $closure;
 
     /**
-     * Closure table attributes caching array.
-     *
-     * @var array
-     */
-    protected $hidden = array(
-        self::ANCESTOR => null,
-        self::DESCENDANT => null,
-        self::DEPTH => null
-    );
-
-    /**
      * Indicates if the model should soft delete.
      *
      * @var bool
@@ -42,6 +31,8 @@ class Entity extends Eloquent {
     protected $softDelete = true;
 
     /**
+     * Node position before reordering.
+     *
      * @var int|null
      */
     private $oldpos = null;
@@ -101,29 +92,11 @@ class Entity extends Eloquent {
      */
     protected function getAncestor()
     {
-        if ($this->hidden[static::ANCESTOR] === null)
-        {
-            $closure = $this->buildClosuretableQuery()
-                ->where(static::DEPTH, '=', $this->getDepth())
-                ->first();
+        $closure = $this->buildClosuretableQuery()
+            ->where(static::DEPTH, '=', $this->getDepth())
+            ->first();
 
-            if ($closure !== null)
-            {
-                $this->hidden[static::ANCESTOR] = $closure->{static::ANCESTOR};
-            }
-        }
-
-        return $this->hidden[static::ANCESTOR];
-    }
-
-    /**
-     * Sets ancestor attribute on the model.
-     *
-     * @param int $value
-     */
-    protected function setAncestor($value)
-    {
-        $this->hidden[static::ANCESTOR] = (int)$value;
+        return ($closure === null ? null : $closure->{static::ANCESTOR});
     }
 
     /**
@@ -133,29 +106,11 @@ class Entity extends Eloquent {
      */
     protected function getDescendant()
     {
-        if ($this->hidden[static::DESCENDANT] === null)
-        {
-            $closure = $this->buildClosuretableQuery()
-                ->where(static::DEPTH, '=', $this->getDepth())
-                ->first();
+        $closure = $this->buildClosuretableQuery()
+            ->where(static::DEPTH, '=', $this->getDepth())
+            ->first();
 
-            if ($closure !== null)
-            {
-                $this->hidden[static::DESCENDANT] = $closure->{static::DESCENDANT};
-            }
-        }
-
-        return $this->hidden[static::DESCENDANT];
-    }
-
-    /**
-     * Sets descendant attribute on the model.
-     *
-     * @param int $value
-     */
-    protected function setDescedant($value)
-    {
-        $this->hidden[self::DESCENDANT] = (int)$value;
+        return ($closure === null ? null : $closure->{static::DESCENDANT});
     }
 
     /**
@@ -163,25 +118,9 @@ class Entity extends Eloquent {
      *
      * @return int
      */
-    protected function getDepth()
+    public function getDepth()
     {
-        if ($this->hidden[static::DEPTH] === null)
-        {
-            $this->hidden[static::DEPTH] = $this->buildClosuretableQuery()->max(static::DEPTH);
-        }
-
-        return $this->hidden[static::DEPTH];
-    }
-
-    /**
-     * Sets depth attribute on the model.
-     *
-     * @param $value
-     * @return int
-     */
-    protected function setDepth($value)
-    {
-        return $this->hidden[self::DEPTH] = (int)$value;
+        return $this->buildClosuretableQuery()->max(static::DEPTH);
     }
 
     /**
@@ -231,7 +170,7 @@ class Entity extends Eloquent {
      */
     public function ancestors()
     {
-        return $this->buildAncestorsQuery()->get()->toTree();
+        return $this->buildAncestorsQuery()->get();
     }
 
     /**
@@ -387,9 +326,10 @@ class Entity extends Eloquent {
      * Gets all model descendants.
      *
      * @param int|null $depth depth relative to the model's depth
+     * @param bool $flat
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function descendants($depth = null)
+    public function descendants($depth = null, $flat = false)
     {
         $query = $this->buildDescendantsQuery();
 
@@ -398,7 +338,14 @@ class Entity extends Eloquent {
             $query->where($this->getQualifiedDepthKeyName(), '=', $depth);
         }
 
-        return $query->get()->toTree();
+        $query = $query->get();
+
+        if ($flat === false)
+        {
+            return $query->toTree();
+        }
+
+        return $query;
     }
 
     /**
@@ -655,6 +602,16 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Checks if model had siblings being in at previous position.
+     *
+     * @return bool
+     */
+    protected function hadSiblings()
+    {
+        return !!$this->buildSiblingsQuery('both', true, $this->oldpos)->count();
+    }
+
+    /**
      * Counts model siblings.
      *
      * @return int
@@ -787,7 +744,7 @@ class Entity extends Eloquent {
      */
     protected function reorderSiblings()
     {
-        if ($this->hasSiblings())
+        if ($this->hadSiblings())
         {
             if ($this->{static::POSITION} === null)
             {
@@ -797,7 +754,13 @@ class Entity extends Eloquent {
             }
             else
             {
-                $siblings = $this->buildSiblingsSubquery()->where($this->getQualifiedKeyName(), '<>', $this->getKey());
+                $keyName = $this->getKeyName();
+
+                $siblingsIds = $this->buildSiblingsSubquery()
+                    ->where($this->getQualifiedKeyName(), '<>', $this->getKey())
+                    ->lists($keyName);
+
+                $siblings = $this->whereIn($keyName, $siblingsIds);
 
                 if ($this->{static::POSITION} > $this->oldpos)
                 {
@@ -854,7 +817,7 @@ class Entity extends Eloquent {
         $dpk = static::DEPTH;
 
         $ancestorValue = $this->getAncestor();
-        $descendantValue = $this->getDescendant();
+        $descendantValue = $this->getKey();
 
         $descendantsIds = DB::table($this->closure)
             ->where($dk, '=', $ancestorValue)
