@@ -29,7 +29,7 @@ $app['events'] = new Dispatcher;
 //$app['cache'] = new Repository(new ArrayStore);
 
 // Database configuration
-$app['config']['database.fetch'] = null;
+$app['config']['database.fetch'] = PDO::FETCH_CLASS;
 $app['config']['database.default'] = 'sqlite';
 $app['config']['database.connections']['sqlite'] = array(
     'name'	   => 'sqlite',
