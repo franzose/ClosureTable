@@ -12,7 +12,7 @@ use \Illuminate\Database\Eloquent\Model as Eloquent;
 use \Illuminate\Support\Facades\DB;
 
 /**
- * Generic model with Closure Table database design pattern capabilities.
+ * Generic Closure Table model.
  */
 class Entity extends Eloquent {
 
@@ -73,6 +73,12 @@ class Entity extends Eloquent {
         }
     }
 
+    /**
+     * Save a new model and return the instance.
+     *
+     * @param  array  $attributes
+     * @return Entity|static
+     */
     public static function create(array $attributes)
     {
         $model = parent::create($attributes);
@@ -81,6 +87,8 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Get the closure table associated with the model.
+     *
      * @return string
      */
     public function getClosure()
@@ -89,6 +97,8 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Get closure table column values on the model.
+     *
      * @return array
      */
     protected function getClosureAttributes()
@@ -101,7 +111,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets ancestor attribute from the model.
+     * Get ancestor attribute from the model.
      *
      * @return int
      */
@@ -111,7 +121,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets descendant attribute from the model.
+     * Get descendant attribute from the model.
      *
      * @return int
      */
@@ -121,7 +131,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets depth attribute on the model.
+     * Get depth attribute on the model.
      *
      * @return int
      */
@@ -131,7 +141,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets direct model ancestor.
+     * Get direct model ancestor.
      *
      * @return Entity|null
      */
@@ -145,7 +155,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Builds query for the model ancestors.
+     * Build query for the model ancestors.
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -161,7 +171,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets all model ancestors.
+     * Get all model ancestors.
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
@@ -171,7 +181,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Checks whether the model has any ancestors.
+     * Check if the model has any ancestors.
      *
      * @return bool
      */
@@ -181,7 +191,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Counts model ancestors.
+     * Count model ancestors.
      *
      * @return int
      */
@@ -191,7 +201,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Builds query for the direct model descendants.
+     * Build query for the direct model descendants.
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -207,7 +217,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets direct model descendants.
+     * Get direct model descendants.
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
@@ -219,7 +229,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Checks if the model has direct descendants.
+     * Check if the model has direct descendants.
      *
      * @return bool
      */
@@ -229,7 +239,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Counts direct model descendants.
+     * Count direct model descendants.
      *
      * @return int
      */
@@ -241,6 +251,8 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Get the first direct descendant of the model.
+     *
      * @return Entity
      */
     public function firstChild()
@@ -249,6 +261,8 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Get the last direct descendant of the model.
+     *
      * @return Entity
      */
     public function lastChild()
@@ -258,7 +272,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets direct descendant at given position
+     * Get direct descendant at given position.
      *
      * @param $position
      * @return Entity
@@ -283,7 +297,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Inserts a model as a direct descendant of this one.
+     * Insert a model as a direct descendant of this one.
      *
      * @param Entity $child
      * @param int|null $position
@@ -298,7 +312,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Removes a direct descendant with given position.
+     * Remove a direct descendant with given position.
      *
      * @param int|null $position
      * @param bool $forceDelete
@@ -334,7 +348,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Builds query for the model descendants.
+     * Build query for the model descendants.
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -350,7 +364,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets all model descendants.
+     * Get all model descendants.
      *
      * @param int|null $depth depth relative to the model's depth
      * @param bool $flat
@@ -376,7 +390,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Checks if the model has any descendants.
+     * Check if the model has any descendants.
      *
      * @return bool
      */
@@ -396,7 +410,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Builds query for siblings of the model.
+     * Build query for siblings of the model.
      *
      * @param string $direction
      * @param bool $queryAll
@@ -452,8 +466,8 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Builds a part of the siblings query.
-     * This part defines a sibling regardless of direction (prev or next) and position
+     * Build a part of the siblings query.
+     * This part defines a sibling regardless of direction (prev or next) and position.
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -469,7 +483,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Retrieves previous or next model siblings.
+     * Retrieve previous or next model siblings.
      *
      * @param string $find number of the searched: 'all', 'one'
      * @param string $direction searching direction: 'prev', 'next', 'both'
@@ -505,7 +519,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets the first sibling of a model.
+     * Get the first sibling of a model.
      *
      * @return Entity
      */
@@ -515,7 +529,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets the last sibling of a model.
+     * Get the last sibling of a model.
      *
      * @return Entity
      */
@@ -526,7 +540,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets a sibling with given position.
+     * Get a sibling with given position.
      *
      * @param $position
      * @return Entity
@@ -537,7 +551,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets a previous model sibling.
+     * Get a previous model sibling.
      *
      * @return Entity
      */
@@ -547,7 +561,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets collection of previous model siblings.
+     * Get collection of previous model siblings.
      *
      * @param int|null $position
      * @return \Illuminate\Database\Eloquent\Collection
@@ -558,7 +572,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Checks if the model has previous siblings.
+     * Check if the model has previous siblings.
      *
      * @return bool
      */
@@ -568,7 +582,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Counts previous siblings.
+     * Count previous siblings.
      *
      * @return int
      */
@@ -578,7 +592,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets the next model sibling.
+     * Get the next model sibling.
      *
      * @return Entity
      */
@@ -588,7 +602,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Gets collection of the next model siblings.
+     * Get collection of the next model siblings.
      *
      * @param int|null $position
      * @return \Illuminate\Database\Eloquent\Collection
@@ -599,7 +613,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Checks if model has next siblings.
+     * Check if model has next siblings.
      *
      * @return bool
      */
@@ -609,7 +623,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Counts next siblings.
+     * Count next siblings.
      *
      * @return int
      */
@@ -619,7 +633,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Checks if model has siblings.
+     * Check if model has siblings.
      *
      * @return bool
      */
@@ -629,7 +643,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Counts model siblings.
+     * Count model siblings.
      *
      * @return int
      */
@@ -639,7 +653,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Retrieves all models that have no ancestors.
+     * Retrieve all models that have no ancestors.
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
@@ -667,7 +681,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Checks if model is a top level one.
+     * Check if model is a top level one.
      *
      * @return bool
      */
@@ -680,7 +694,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Moves the model and its relationships to the top level of the tree.
+     * Move the model and its relationships to the top level of the tree.
      *
      * @return Entity
      */
@@ -693,7 +707,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Retrives a whole tree from the database.
+     * Retrive a whole tree from the database.
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
@@ -719,7 +733,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Makes the model a root or a direct descendant of the given model.
+     * Make the model a root or a direct descendant of the given model.
      *
      * @param Entity|null $ancestor
      * @param int|null $position
@@ -731,7 +745,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Makes given model a root or a direct descendant of another model.
+     * Make given model a root or a direct descendant of another model.
      *
      * @param Entity|int $given
      * @param Entity|int|null $to
@@ -762,6 +776,8 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Set a proper position before moving the model.
+     *
      * @param Entity|null $to
      * @param $position
      * @return int|mixed
@@ -782,7 +798,8 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Changes positions of all of the model siblings when it's moved.
+     * Reorder all of the model siblings when it's moved.
+     * When the model is moved from one subtree to another, its 'old' siblings are reordered as well.
      *
      * @param Entity $oldStateEntity
      * @return void
@@ -795,7 +812,6 @@ class Entity extends Eloquent {
 
             if ($this->{static::POSITION} != $origpos)
             {
-                // first, we reorder siblings of the current depth of the model
                 $keyName = $this->getKeyName();
 
                 $siblingsIds = $this->buildSiblingsSubquery()
@@ -817,7 +833,7 @@ class Entity extends Eloquent {
 
                 $siblings->whereIn(static::POSITION, $range)->$action(static::POSITION);
 
-                // then we reorder siblings of the depth the model located before moving
+                // here we reorder model's 'old' siblings
                 $oldStateEntityDepth = $oldStateEntity->getDepth();
 
                 if ($this->getDepth() != $oldStateEntityDepth)
@@ -870,7 +886,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Performs closure table rebuilding when the model's moved.
+     * Perform closure table rebuilding when the model's moved.
      *
      * @param Entity|null $ancestor
      * @return bool
@@ -940,7 +956,7 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Performs closure table rebuilding when a new model is saved to the database.
+     * Perform closure table rebuilding when a new model is saved to the database.
      *
      * @param $descendant
      * @param $ancestor
@@ -1015,8 +1031,10 @@ class Entity extends Eloquent {
     }
 
     /**
-     * @param array $models
-     * @return Collection|\Illuminate\Database\Eloquent\Collection
+     * Create a new Eloquent Collection instance.
+     *
+     * @param  array  $models
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function newCollection(array $models = array())
     {
