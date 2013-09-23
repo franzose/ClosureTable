@@ -103,7 +103,7 @@ class Entity extends Eloquent {
      */
     protected function getClosureAttributes()
     {
-        $closure = DB::table($this->closure)->where(static::DESCENDANT, '=', $this->getKey());
+        $closure = DB::table($this->getClosure())->where(static::DESCENDANT, '=', $this->getKey());
         $depth   = $closure->max(static::DEPTH);
         $columns = array(static::ANCESTOR, static::DESCENDANT, static::DEPTH);
 
@@ -148,7 +148,7 @@ class Entity extends Eloquent {
     public function parent()
     {
         return $this->select(array($this->getTable().'.*'))
-            ->join($this->closure, $this->getQualifiedAncestorKeyName(), '=', $this->getQualifiedKeyName())
+            ->join($this->getClosure(), $this->getQualifiedAncestorKeyName(), '=', $this->getQualifiedKeyName())
             ->where($this->getQualifiedDescendantKeyName(), '=', $this->getKey())
             ->where($this->getQualifiedDepthKeyName(), '=', 1)
             ->first();
@@ -165,7 +165,8 @@ class Entity extends Eloquent {
         $dk = $this->getQualifiedDescendantKeyName();
         $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->select($this->getTable().'.*')->join($this->closure, $ak, '=', $this->getQualifiedKeyName())
+        return $this->select($this->getTable().'.*')
+            ->join($this->getClosure(), $ak, '=', $this->getQualifiedKeyName())
             ->where($dk, '=', $this->getKey())
             ->where($dpk, '>', 0);
     }
@@ -211,7 +212,7 @@ class Entity extends Eloquent {
         $dk = $this->getQualifiedDescendantKeyName();
         $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
+        return $this->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
             ->where($ak, '=', $this->getKey())
             ->where($dpk, '=', 1);
     }
@@ -358,7 +359,7 @@ class Entity extends Eloquent {
         $dk = $this->getQualifiedDescendantKeyName();
         $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
+        return $this->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
             ->where($ak, '=', $this->getKey())
             ->where($dpk, '>', 0);
     }
@@ -477,7 +478,7 @@ class Entity extends Eloquent {
         $dpk = $this->getQualifiedDepthKeyName();
 
         return $this->select(array($this->getTable().'.*'))
-            ->join($this->closure, $dk, '=', $this->getQualifiedKeyName())
+            ->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
             ->where($dk, '<>', $this->getKey())
             ->where($dpk, '=', $this->getDepth());
     }
@@ -661,7 +662,7 @@ class Entity extends Eloquent {
     {
         $instance   = new static;
         $table      = $instance->getTable();
-        $closure    = $instance->closure;
+        $closure    = $instance->getClosure();
         $ancestor   = $instance->getQualifiedAncestorKeyName();
         $descendant = $instance->getQualifiedDescendantKeyName();
         $depth      = $instance->getQualifiedDepthKeyName();
@@ -687,7 +688,7 @@ class Entity extends Eloquent {
      */
     public function isRoot()
     {
-        return !!DB::table($this->closure)
+        return !!DB::table($this->getClosure())
                       ->where(static::DESCENDANT, '=', $this->getKey())
                       ->where(static::DEPTH, '>', 0)
                       ->count() == 0;
@@ -725,8 +726,8 @@ class Entity extends Eloquent {
 
         return static::select($columns)
             ->distinct()
-            ->join($instance->closure.' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
-            ->join($instance->closure.' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
+            ->join($instance->getClosure().' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
+            ->join($instance->getClosure().' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
             ->whereRaw('closure1.'.static::ANCESTOR.' = closure1.'.static::DESCENDANT)
             ->get()
             ->toTree();
@@ -906,19 +907,20 @@ class Entity extends Eloquent {
         }
 
         $descendantValue = $this->getKey();
+        $closure = $this->getClosure();
 
-        $ancestorsIds = DB::table($this->closure)
+        $ancestorsIds = DB::table($closure)
             ->where($dk, '=', $descendantValue)
             ->where($ak, '<>', $descendantValue)
             ->lists($ak);
 
-        $descendantsIds = DB::table($this->closure)
+        $descendantsIds = DB::table($closure)
             ->where($dk, '=', $descendantValue)
             ->lists($dk);
 
         if (count($ancestorsIds))
         {
-            DB::table($this->closure)
+            DB::table($closure)
                 ->whereIn($dk, $descendantsIds)
                 ->whereIn($ak, $ancestorsIds)
                 ->delete();
@@ -927,7 +929,7 @@ class Entity extends Eloquent {
         // null? make it root
         if ($ancestor === null)
         {
-            return DB::table($this->closure)
+            return DB::table($closure)
                 ->where(static::ANCESTOR, '=', $ancestorValue)
                 ->where(static::DESCENDANT, '=', $descendantValue)
                 ->update(array(
@@ -936,14 +938,13 @@ class Entity extends Eloquent {
             ));
         }
 
-        $table = $this->closure;
         $ancestorId = $ancestor->getKey();
 
-        DB::transaction(function() use($ak, $dk, $dpk, $table, $ancestorId, $descendantValue){
+        DB::transaction(function() use($ak, $dk, $dpk, $closure, $ancestorId, $descendantValue){
             $selectQuery = "
                 SELECT supertbl.{$ak}, subtbl.{$dk}, supertbl.{$dpk}+subtbl.{$dpk}+1 as {$dpk}
-                FROM {$table} as supertbl
-                CROSS JOIN {$table} as subtbl
+                FROM {$closure} as supertbl
+                CROSS JOIN {$closure} as subtbl
                 WHERE supertbl.{$dk} = {$ancestorId}
                 AND subtbl.{$ak} = {$descendantValue}
             ";
@@ -964,7 +965,7 @@ class Entity extends Eloquent {
      */
     protected function performInsertNode($descendant, $ancestor)
     {
-        $table = $this->closure;
+        $table = $this->getClosure();
         $ak = static::ANCESTOR;
         $dk = static::DESCENDANT;
         $dpk = static::DEPTH;
@@ -1007,7 +1008,7 @@ class Entity extends Eloquent {
      */
     protected function getQualifiedAncestorKeyName()
     {
-        return $this->closure.'.'.static::ANCESTOR;
+        return $this->getClosure().'.'.static::ANCESTOR;
     }
 
     /**
@@ -1017,7 +1018,7 @@ class Entity extends Eloquent {
      */
     protected function getQualifiedDescendantKeyName()
     {
-        return $this->closure.'.'.static::DESCENDANT;
+        return $this->getClosure().'.'.static::DESCENDANT;
     }
 
     /**
@@ -1027,7 +1028,7 @@ class Entity extends Eloquent {
      */
     protected function getQualifiedDepthKeyName()
     {
-        return $this->closure.'.'.static::DEPTH;
+        return $this->getClosure().'.'.static::DEPTH;
     }
 
     /**
