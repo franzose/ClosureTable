@@ -13,6 +13,14 @@ To install the package, put the following in your composer.json:
 }
 ```
 
+And to `app/config/app.php`:
+```php
+'providers' => array(
+        // ...
+        'Franzose\ClosureTable\ClosureTableServiceProvider',
+    ),
+```
+
 ## Setup your ClosureTable
 ### Create the Entity model
 For example, let's assume you're working on pages. In `app/models`, create new file called `Page.php` and put the following into it:
