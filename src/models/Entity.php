@@ -780,6 +780,49 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Retrive from the database a tree filtered using a where clause.
+     * 
+     * @param mixed|null $column
+     * @param mixed|null $operator
+     * @param mixed|null $value
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function filteredTree($column = null, $operator = null, $value = null)
+    {
+        $instance = new static;
+        $columns = array(
+            $instance->getTable().".*",
+            "closure1.".static::ANCESTOR,
+            "closure1.".static::DESCENDANT,
+            "closure1.".static::DEPTH
+        );
+
+        $key = $instance->getQualifiedKeyName();
+
+        if($column != null && $operator != null)
+        {
+            return static::select($columns)
+                ->distinct()
+                ->join($instance->getClosure().' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
+                ->join($instance->getClosure().' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
+                ->whereRaw('closure1.'.static::ANCESTOR.' = closure1.'.static::DESCENDANT)
+                ->where($column, $operator, $value)
+                ->get()
+                ->toTree();
+        }
+        else
+        {
+            return static::select($columns)
+                ->distinct()
+                ->join($instance->getClosure().' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
+                ->join($instance->getClosure().' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
+                ->whereRaw('closure1.'.static::ANCESTOR.' = closure1.'.static::DESCENDANT)
+                ->get()
+                ->toTree();
+        }
+    }
+
+    /**
      * Make the model a root or a direct descendant of the given model.
      *
      * @param Entity|null $ancestor
