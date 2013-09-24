@@ -710,27 +710,73 @@ class Entity extends Eloquent {
     /**
      * Retrive a whole tree from the database.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function tree()
+
+    public static function tree(array $columns = array('*'))
+    {
+
+        return static::buildTreeQuery(null, null, null, $columns)->get()->toTree();
+    }
+
+    /**
+     * Retrive from the database a tree filtered using a where clause.
+     *
+     * @param string|Closure|null $column
+     * @param string|null $operator
+     * @param string|Closure|null $value
+     * @param array $columns
+     * @return \Illuminate\Database\Query\Builder
+     */
+    public static function filteredTree($column = null, $operator = null, $value = null, array $columns = array('*'))
+    {
+        return static::buildTreeQuery($column, $operator, $value, $columns)->get()->toTree();
+    }
+
+    /**
+     * Builds query for retrieving a whole tree.
+     *
+     * @param string|Closure|null $column
+     * @param string|null $operator
+     * @param string|Closure|null $value
+     * @param array $columns
+     * @return \Illuminate\Database\Query\Builder
+     */
+    protected static function buildTreeQuery($column = null, $operator = null, $value = null, array $columns = array('*'))
+
     {
         $instance = new static;
-        $columns = array(
-            $instance->getTable().".*",
+
+        $closureColumns = array(
             "closure1.".static::ANCESTOR,
             "closure1.".static::DESCENDANT,
             "closure1.".static::DEPTH
         );
 
-        $key = $instance->getQualifiedKeyName();
 
-        return static::select($columns)
+        // prevent from selecting all columns from all tables
+        // as we have complex join query
+        if (count($columns) == 1 && $columns[0] == '*')
+        {
+            $columns[0] = $instance->getTable().'.*';
+        }
+
+        $columns = array_merge($columns, $closureColumns);
+        $key = $instance->getQualifiedKeyName();
+        $closure = $instance->getClosure();
+        $query = static::select($columns)
             ->distinct()
-            ->join($instance->getClosure().' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
-            ->join($instance->getClosure().' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
-            ->whereRaw('closure1.'.static::ANCESTOR.' = closure1.'.static::DESCENDANT)
-            ->get()
-            ->toTree();
+            ->join($closure.' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
+            ->join($closure.' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
+            ->whereRaw('closure1.'.static::ANCESTOR.' = closure1.'.static::DESCENDANT);
+
+        if($column != null && $operator != null)
+        {
+            $query->where($column, $operator, $value);
+        }
+
+        return $query;
     }
 
     /**
