@@ -13,7 +13,7 @@ class Collection extends \Illuminate\Database\Eloquent\Collection {
         {
            $current = $args[1];
         }
-        elseif ($items[0]->parent() !== null)
+        elseif (array_key_exists(0, $items) && $items[0]->parent() !== null)
         {
            $current = $items[0]->parent()->getKey();
         }
