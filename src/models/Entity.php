@@ -716,7 +716,6 @@ class Entity extends Eloquent {
 
     public static function tree(array $columns = array('*'))
     {
-
         return static::buildTreeQuery(null, null, null, $columns)->get()->toTree();
     }
 
@@ -744,7 +743,6 @@ class Entity extends Eloquent {
      * @return \Illuminate\Database\Query\Builder
      */
     protected static function buildTreeQuery($column = null, $operator = null, $value = null, array $columns = array('*'))
-
     {
         $instance = new static;
 
@@ -753,7 +751,6 @@ class Entity extends Eloquent {
             "closure1.".static::DESCENDANT,
             "closure1.".static::DEPTH
         );
-
 
         // prevent from selecting all columns from all tables
         // as we have complex join query
