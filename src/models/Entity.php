@@ -763,9 +763,9 @@ class Entity extends Eloquent {
     /**
      * Retrive from the database a tree filtered using a where clause.
      *
-     * @param string|Closure|null $column
+     * @param string|\Closure|null $column
      * @param string|null $operator
-     * @param string|Closure|null $value
+     * @param string|\Closure|null $value
      * @param array $columns
      * @return \Illuminate\Database\Query\Builder
      */
@@ -777,9 +777,9 @@ class Entity extends Eloquent {
     /**
      * Builds query for retrieving a whole tree.
      *
-     * @param string|Closure|null $column
+     * @param string|\Closure|null $column
      * @param string|null $operator
-     * @param string|Closure|null $value
+     * @param string|\Closure|null $value
      * @param array $columns
      * @return \Illuminate\Database\Query\Builder
      */
