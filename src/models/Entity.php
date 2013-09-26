@@ -767,7 +767,7 @@ class Entity extends Eloquent {
      * @param string|null $operator
      * @param string|\Closure|null $value
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public static function filteredTree($column = null, $operator = null, $value = null, array $columns = array('*'))
     {
