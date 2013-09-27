@@ -603,6 +603,11 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($grandchild->id, $tree[0]->nested[0]->firstChild()->id);
     }
 
+    public function testFilteredTree()
+    {
+
+    }
+
     public function testMoveGivenTo()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
