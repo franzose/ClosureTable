@@ -726,5 +726,6 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         }
 
         $this->assertEquals($page->id, $depthTest[2][0]->ancestor);
+        $this->assertEquals($newPage->id, $depthTest[2][1]->ancestor);
     }
 }
