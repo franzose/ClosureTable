@@ -183,6 +183,7 @@ Page::find(11)->makeRoot();
 
 ```php
 $tree = Page::tree();
+$filtered = Page::filteredTree('language', '=', 'fr');
 ```
 
 You deal with the collection, thus you can control its items as you usually do. Descendants? They are already loaded.
