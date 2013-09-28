@@ -141,13 +141,30 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Prepare selected columns array for further use.
+     *
+     * @param array $columns
+     * @return array
+     */
+    protected function getSelectedColumns(array $columns = array('*'))
+    {
+        if ($columns === array('*'))
+        {
+            return array($this->getTable().'.*');
+        }
+
+        return $columns;
+    }
+
+    /**
      * Get direct model ancestor.
      *
+     * @param array $columns
      * @return Entity|null
      */
-    public function parent()
+    public function parent(array $columns = array('*'))
     {
-        return $this->select(array($this->getTable().'.*'))
+        return $this->select($this->getSelectedColumns($columns))
             ->join($this->getClosure(), $this->getQualifiedAncestorKeyName(), '=', $this->getQualifiedKeyName())
             ->where($this->getQualifiedDescendantKeyName(), '=', $this->getKey())
             ->where($this->getQualifiedDepthKeyName(), '=', 1)
@@ -157,15 +174,16 @@ class Entity extends Eloquent {
     /**
      * Build query for the model ancestors.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildAncestorsQuery()
+    protected function buildAncestorsQuery(array $columns = array('*'))
     {
         $ak = $this->getQualifiedAncestorKeyName();
         $dk = $this->getQualifiedDescendantKeyName();
         $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->select($this->getTable().'.*')
+        return $this->select($this->getSelectedColumns($columns))
             ->join($this->getClosure(), $ak, '=', $this->getQualifiedKeyName())
             ->where($dk, '=', $this->getKey())
             ->where($dpk, '>', 0);
@@ -174,11 +192,12 @@ class Entity extends Eloquent {
     /**
      * Get all model ancestors.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function ancestors()
+    public function ancestors(array $columns = array('*'))
     {
-        return $this->buildAncestorsQuery()->get();
+        return $this->buildAncestorsQuery($columns)->get();
     }
 
     /**
@@ -204,15 +223,17 @@ class Entity extends Eloquent {
     /**
      * Build query for the direct model descendants.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildChildrenQuery()
+    protected function buildChildrenQuery(array $columns = array('*'))
     {
         $ak = $this->getQualifiedAncestorKeyName();
         $dk = $this->getQualifiedDescendantKeyName();
         $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
+        return $this->select($this->getSelectedColumns($columns))
+            ->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
             ->where($ak, '=', $this->getKey())
             ->where($dpk, '=', 1);
     }
@@ -220,11 +241,12 @@ class Entity extends Eloquent {
     /**
      * Get direct model descendants.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function children()
+    public function children(array $columns = array('*'))
     {
-        $result = (isset($this->nested) ? $this->nested : $this->buildChildrenQuery()->get());
+        $result = (isset($this->nested) ? $this->nested : $this->buildChildrenQuery($columns)->get());
 
         return $result;
     }
@@ -254,31 +276,34 @@ class Entity extends Eloquent {
     /**
      * Get the first direct descendant of the model.
      *
+     * @param array $columns
      * @return Entity
      */
-    public function firstChild()
+    public function firstChild(array $columns = array('*'))
     {
-        return $this->childAt(0);
+        return $this->childAt(0, $columns);
     }
 
     /**
      * Get the last direct descendant of the model.
      *
+     * @param array $columns
      * @return Entity
      */
-    public function lastChild()
+    public function lastChild(array $columns = array('*'))
     {
         $max = $this->buildChildrenQuery()->max(static::POSITION);
-        return $this->childAt($max);
+        return $this->childAt($max, $columns);
     }
 
     /**
      * Get direct descendant at given position.
      *
      * @param $position
+     * @param array $columns
      * @return Entity
      */
-    public function childAt($position)
+    public function childAt($position, array $columns = array('*'))
     {
         $result = null;
 
@@ -291,7 +316,7 @@ class Entity extends Eloquent {
         }
         else
         {
-            $result = $this->buildChildrenQuery()->where(static::POSITION, '=', $position)->first();
+            $result = $this->buildChildrenQuery($columns)->where(static::POSITION, '=', $position)->first();
         }
 
         return $result;
@@ -351,15 +376,17 @@ class Entity extends Eloquent {
     /**
      * Build query for the model descendants.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildDescendantsQuery()
+    protected function buildDescendantsQuery(array $columns = array('*'))
     {
         $ak = $this->getQualifiedAncestorKeyName();
         $dk = $this->getQualifiedDescendantKeyName();
         $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
+        return $this->select($this->getSelectedColumns($columns))
+            ->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
             ->where($ak, '=', $this->getKey())
             ->where($dpk, '>', 0);
     }
@@ -369,11 +396,12 @@ class Entity extends Eloquent {
      *
      * @param int|null $depth depth relative to the model's depth
      * @param bool $flat
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function descendants($depth = null, $flat = false)
+    public function descendants($depth = null, $flat = false, array $columns = array('*'))
     {
-        $query = $this->buildDescendantsQuery();
+        $query = $this->buildDescendantsQuery($columns);
 
         if ($depth !== null)
         {
@@ -416,17 +444,18 @@ class Entity extends Eloquent {
      * @param string $direction
      * @param bool $queryAll
      * @param int|null $position
+     * @param array $columns
      * @throws \InvalidArgumentException
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildSiblingsQuery($direction = 'both', $queryAll = true, $position = null)
+    protected function buildSiblingsQuery($direction = 'both', $queryAll = true, $position = null, array $columns = array('*'))
     {
         if (!in_array($direction, array('next', 'prev', 'both')))
         {
             throw new \InvalidArgumentException('Invalid direction value.');
         }
 
-        $query = $this->buildSiblingsSubquery();
+        $query = $this->buildSiblingsSubquery($columns);
         $operand = '';
         $wherePos = null;
 
@@ -470,14 +499,15 @@ class Entity extends Eloquent {
      * Build a part of the siblings query.
      * This part defines a sibling regardless of direction (prev or next) and position.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function buildSiblingsSubquery()
+    protected function buildSiblingsSubquery(array $columns = array('*'))
     {
         $dk = $this->getQualifiedDescendantKeyName();
         $dpk = $this->getQualifiedDepthKeyName();
 
-        return $this->select(array($this->getTable().'.*'))
+        return $this->select($this->getSelectedColumns($columns))
             ->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
             ->where($dk, '<>', $this->getKey())
             ->where($dpk, '=', $this->getDepth());
@@ -489,16 +519,17 @@ class Entity extends Eloquent {
      * @param string $find number of the searched: 'all', 'one'
      * @param string $direction searching direction: 'prev', 'next', 'both'
      * @param int|null $position
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection|Entity
      */
-    public function siblings($find = 'all', $direction = 'both', $position = null)
+    public function siblings($find = 'all', $direction = 'both', $position = null, array $columns = array('*'))
     {
         $position = ($position === null ? $this->{static::POSITION} : $position);
 
         switch($find)
         {
             case 'one':
-                $result = $this->buildSiblingsQuery($direction, false, $position);
+                $result = $this->buildSiblingsQuery($direction, false, $position, $columns);
 
                 if ($direction == 'both')
                 {
@@ -512,7 +543,7 @@ class Entity extends Eloquent {
                 break;
 
             case 'all':
-                $result = $this->buildSiblingsQuery($direction, true, $position)->get();
+                $result = $this->buildSiblingsQuery($direction, true, $position, $columns)->get();
                 break;
         }
 
@@ -522,54 +553,59 @@ class Entity extends Eloquent {
     /**
      * Get the first sibling of a model.
      *
+     * @param array $columns
      * @return Entity
      */
-    public function firstSibling()
+    public function firstSibling(array $columns = array('*'))
     {
-        return $this->siblingAt(0);
+        return $this->siblingAt(0, $columns);
     }
 
     /**
      * Get the last sibling of a model.
      *
+     * @param array $columns
      * @return Entity
      */
-    public function lastSibling()
+    public function lastSibling(array $columns = array('*'))
     {
         $lastpos = $this->buildSiblingsSubquery()->max(static::POSITION);
-        return $this->siblingAt($lastpos);
+        return $this->siblingAt($lastpos, $columns);
     }
 
     /**
      * Get a sibling with given position.
      *
      * @param $position
+     * @param array $columns
      * @return Entity
      */
-    public function siblingAt($position)
+    public function siblingAt($position, array $columns = array('*'))
     {
-        return $this->siblings('one', 'next', $position-1);
+        return $this->siblings('one', 'next', $position-1, $columns);
     }
 
     /**
      * Get a previous model sibling.
      *
+     * @param array $columns
      * @return Entity
      */
-    public function prevSibling()
+    public function prevSibling(array $columns = array('*'))
     {
-        return $this->siblings('one', 'prev');
+        return $this->siblings('one', 'prev', null, $columns);
     }
 
     /**
      * Get collection of previous model siblings.
      *
      * @param int|null $position
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function prevSiblings($position = null)
+    public function prevSiblings($position = null, array $columns = array('*'))
     {
-        return $this->siblings('all', 'prev', $position);
+        return $this->siblings('all', 'prev', $position, $columns);
     }
 
     /**
@@ -597,20 +633,21 @@ class Entity extends Eloquent {
      *
      * @return Entity
      */
-    public function nextSibling()
+    public function nextSibling(array $columns = array('*'))
     {
-        return $this->siblings('one', 'next');
+        return $this->siblings('one', 'next', null, $columns);
     }
 
     /**
      * Get collection of the next model siblings.
      *
      * @param int|null $position
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function nextSiblings($position = null)
+    public function nextSiblings($position = null, array $columns = array('*'))
     {
-        return $this->siblings('all', 'next', $position);
+        return $this->siblings('all', 'next', $position, $columns);
     }
 
     /**
@@ -656,9 +693,10 @@ class Entity extends Eloquent {
     /**
      * Retrieve all models that have no ancestors.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function roots()
+    public static function roots(array $columns = array('*'))
     {
         $instance   = new static;
         $table      = $instance->getTable();
@@ -670,7 +708,10 @@ class Entity extends Eloquent {
 
         $having = "(SELECT COUNT(*) FROM {$closure} WHERE {$descendant} = parentId AND {$depth} > 0) = 0";
 
-        return static::select(array($table.'.*', $ancestor.' AS parentId'))
+        $columns = $instance->getSelectedColumns($columns);
+        array_push($columns, $ancestor.' AS parentId');
+
+        return static::select($columns)
             ->distinct()
             ->join($closure, function($join) use($ancestor, $descendant, $keyName){
                 $join->on($ancestor, '=', $keyName);
@@ -710,27 +751,63 @@ class Entity extends Eloquent {
     /**
      * Retrive a whole tree from the database.
      *
+     * @param array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function tree()
+
+    public static function tree(array $columns = array('*'))
+    {
+        return static::buildTreeQuery(null, null, null, $columns)->get()->toTree();
+    }
+
+    /**
+     * Retrive from the database a tree filtered using a where clause.
+     *
+     * @param string|\Closure|null $column
+     * @param string|null $operator
+     * @param string|\Closure|null $value
+     * @param array $columns
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function filteredTree($column = null, $operator = null, $value = null, array $columns = array('*'))
+    {
+        return static::buildTreeQuery($column, $operator, $value, $columns)->get()->toTree();
+    }
+
+    /**
+     * Builds query for retrieving a whole tree.
+     *
+     * @param string|\Closure|null $column
+     * @param string|null $operator
+     * @param string|\Closure|null $value
+     * @param array $columns
+     * @return \Illuminate\Database\Query\Builder
+     */
+    protected static function buildTreeQuery($column = null, $operator = null, $value = null, array $columns = array('*'))
     {
         $instance = new static;
-        $columns = array(
-            $instance->getTable().".*",
+
+        $closureColumns = array(
             "closure1.".static::ANCESTOR,
             "closure1.".static::DESCENDANT,
             "closure1.".static::DEPTH
         );
 
+        $columns = array_merge($instance->getSelectedColumns($columns), $closureColumns);
         $key = $instance->getQualifiedKeyName();
-
-        return static::select($columns)
+        $closure = $instance->getClosure();
+        $query = static::select($columns)
             ->distinct()
-            ->join($instance->getClosure().' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
-            ->join($instance->getClosure().' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
-            ->whereRaw('closure1.'.static::ANCESTOR.' = closure1.'.static::DESCENDANT)
-            ->get()
-            ->toTree();
+            ->join($closure.' as closure1', $key, '=', 'closure1.'.static::ANCESTOR)
+            ->join($closure.' as closure2', $key, '=', 'closure2.'.static::DESCENDANT)
+            ->whereRaw('closure1.'.static::ANCESTOR.' = closure1.'.static::DESCENDANT);
+
+        if($column != null && $operator != null)
+        {
+            $query->where($column, $operator, $value);
+        }
+
+        return $query;
     }
 
     /**
