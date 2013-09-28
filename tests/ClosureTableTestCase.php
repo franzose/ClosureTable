@@ -271,7 +271,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
     public function testAncestors()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
-        $ancestors = $grandchild->ancestors(true);
+        $ancestors = $grandchild->ancestors();
 
         $this->assertInstanceOf('\Illuminate\Database\Eloquent\Collection', $ancestors);
         $this->assertCount(2, $ancestors);
