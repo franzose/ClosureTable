@@ -17,6 +17,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
             $table->string('title', 250);
             $table->string('excerpt', 500);
             $table->text('content');
+            $table->string('language', 2);
             $table->integer('position')->unsigned();
             $table->timestamps();
             $table->softDeletes();
@@ -56,22 +57,46 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $page = Page::create(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         ));
 
         $child = $page->appendChild(new Page(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
-            'content' => 'Child Page Test content'
+            'content' => 'Child Page Test content',
+            'language' => 'en'
         )), 0, true);
 
         $grandchild = $child->appendChild(new Page(array(
             'title' => 'GrandChild Page Test Title',
             'excerpt' => 'GrandChild Page Test Excerpt',
-            'content' => 'GrandChild Page Test content'
+            'content' => 'GrandChild Page Test content',
+            'language' => 'en'
         )), 0, true);
 
-        return array($page, $child, $grandchild);
+        $newPage = Page::create(array(
+            'title' => 'Another Test Title',
+            'excerpt' => 'Another Test Excerpt',
+            'content' => 'Another Test content',
+            'language' => 'ru'
+        ));
+
+        $newChild = $newPage->appendChild(new Page(array(
+            'title' => 'Another Child Page Test Title',
+            'excerpt' => 'Another Child Page Test Excerpt',
+            'content' => 'Another Child Page Test content',
+            'language' => 'ru'
+        )), 0, true);
+
+        $newGrandchild = $newChild->appendChild(new Page(array(
+            'title' => 'Another GrandChild Page Test Title',
+            'excerpt' => 'Another GrandChild Page Test Excerpt',
+            'content' => 'Another GrandChild Page Test content',
+            'language' => 'ru'
+        )), 0, true);
+
+        return array($page, $child, $grandchild, $newPage, $newChild, $newGrandchild);
     }
 
     protected function prepareTestedSiblings()
@@ -246,7 +271,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
     public function testAncestors()
     {
         list($page, $child, $grandchild) = $this->prepareTestedRelationships();
-        $ancestors = $grandchild->ancestors(true);
+        $ancestors = $grandchild->ancestors();
 
         $this->assertInstanceOf('\Illuminate\Database\Eloquent\Collection', $ancestors);
         $this->assertCount(2, $ancestors);
@@ -603,6 +628,20 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($grandchild->id, $tree[0]->nested[0]->firstChild()->id);
     }
 
+    public function testFilteredTree()
+    {
+        list($page, $child, $grandchild, $newPage, $newChild, $newGrandchild) = $this->prepareTestedRelationships();
+        $tree = Page::filteredTree('language','=','ru');
+
+        $this->assertNotNull($tree[0]->nested); 
+        $this->assertInstanceOf('\Illuminate\Database\Eloquent\Collection', $tree[0]->nested);
+        $this->assertCount(1, $tree[0]->nested);
+        $this->assertInstanceOf('\Franzose\ClosureTable\Entity', $tree[0]->nested[0]);
+        $this->assertEquals($newChild->id, $tree[0]->nested[0]->id);
+        $this->assertNotNull($tree[0]->nested[0]->firstChild());
+        $this->assertEquals($newGrandchild->id, $tree[0]->nested[0]->firstChild()->id);
+    }
+
     public function testMoveGivenTo()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
@@ -618,20 +657,27 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
 
     public function testRelationsSyncOnChildInsert()
     {
-        list($page, $child, $grandchild) = $this->prepareTestedRelationships();
+        list($page, $child, $grandchild, $newPage, $newChild, $newGrandchild) = $this->prepareTestedRelationships();
 
         $results = DB::table($page->getClosure())->get();
 
-        // we must have six rows in closure table now
+        // we must have twelve rows in closure table now
         // =============================
         // ancestor | descendant | depth
-        //    1     |     1      |   0
-        //    2     |     2      |   0
-        //    3     |     3      |   0
-        //    1     |     2      |   1
-        //    1     |     3      |   2
-        //    2     |     3      |   1
-        $this->assertCount(6, $results);
+        //    1     |     1      |   0   
+        //    2     |     2      |   0  
+        //    3     |     3      |   0   
+        //    4     |     4      |   0   
+        //    5     |     5      |   0   
+        //    6     |     6      |   0   
+        //    1     |     2      |   1    
+        //    1     |     3      |   2  
+        //    2     |     3      |   1   
+        //    4     |     5      |   1   
+        //    4     |     6      |   2   
+        //    5     |     6      |   1   
+
+        $this->assertCount(12, $results);
 
         // quirky depth count test
         $depthTest = array();
@@ -653,12 +699,12 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
             }
         }
 
-        // we must have 3 nodes with depth = 0
-        //              2 nodes with depth = 1
-        //              1 node with depth  = 2
-        $this->assertCount(3, $depthTest[0]);
-        $this->assertCount(2, $depthTest[1]);
-        $this->assertCount(1, $depthTest[2]);
+        // we must have 6 nodes with depth = 0
+        //              4 nodes with depth = 1
+        //              2 node with depth  = 2
+        $this->assertCount(6, $depthTest[0]);
+        $this->assertCount(4, $depthTest[1]);
+        $this->assertCount(2, $depthTest[2]);
 
         foreach ($depthTest[1] as $dt)
         {
@@ -670,9 +716,16 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
                 case $grandchild->id:
                     $this->assertEquals($child->id, $dt->ancestor);
                     break;
+                case $newChild->id:
+                    $this->assertEquals($newPage->id, $dt->ancestor);
+                    break;
+                case $newGrandchild->id:
+                    $this->assertEquals($newChild->id, $dt->ancestor);
+                    break;
             }
         }
 
         $this->assertEquals($page->id, $depthTest[2][0]->ancestor);
+        $this->assertEquals($newPage->id, $depthTest[2][1]->ancestor);
     }
 }
