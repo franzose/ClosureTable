@@ -67,9 +67,15 @@ class Entity extends Eloquent {
     {
         parent::__construct($attributes);
 
-        if ( ! $this->closure)
+        $tablePrefix = DB::getTablePrefix();
+
+        if ( ! isset($this->closure))
         {
-            $this->closure = $this->getTable().'_closure';
+            $this->closure = $this->getClosure();
+        }
+        elseif ( ! str_contains($this->closure, $tablePrefix))
+        {
+            $this->closure = $tablePrefix.$this->closure;
         }
     }
 
@@ -93,7 +99,9 @@ class Entity extends Eloquent {
      */
     public function getClosure()
     {
-        return $this->closure;
+        if (isset($this->closure)) return $this->closure;
+
+        return DB::geTablePrefix().$this->getTable().'_closure';
     }
 
     /**
@@ -1029,7 +1037,7 @@ class Entity extends Eloquent {
             $results = DB::select($selectQuery);
             array_walk($results, function(&$item){ $item = (array)$item; });
 
-            DB::table($this->closure)->insert($results);
+            DB::table($this->getClosure())->insert($results);
         });
     }
 
