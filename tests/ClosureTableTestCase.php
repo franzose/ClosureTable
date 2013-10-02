@@ -46,7 +46,8 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $page = Page::create(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         ));
 
         return $page;
@@ -104,31 +105,36 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $page = Page::create(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         ));
 
         $child1 = $page->appendChild(new Page(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         )), 0, true);
 
         $child2 = $page->appendChild(new Page(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         )), 1, true);
 
         $child3 = $page->appendChild(new Page(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         )), 2, true);
 
         $child4 = $page->appendChild(new Page(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         )), 3, true);
 
         return array($page, $child1, $child2, $child3, $child4);
@@ -149,7 +155,8 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $page = Page::create(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         ));
 
         $this->assertEquals(true, $page->exists);
@@ -359,7 +366,8 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $page = new Page(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
-            'content' => 'Test content'
+            'content' => 'Test content',
+            'language' => 'en'
         ));
 
         $page->save();
@@ -367,7 +375,8 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $child = new Page(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
-            'content' => 'Child Page Test content'
+            'content' => 'Child Page Test content',
+            'language' => 'en'
         ));
 
         $child = $page->appendChild($child, 0, true);
@@ -387,15 +396,18 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $page->appendChild(new Page(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
-            'content' => 'Child Page Test content'
+            'content' => 'Child Page Test content',
+            'language' => 'en'
         )), 0)->appendChild(new Page(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
-            'content' => 'Child Page Test content'
+            'content' => 'Child Page Test content',
+            'language' => 'en'
         )), 1)->appendChild(new Page(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
-            'content' => 'Child Page Test content'
+            'content' => 'Child Page Test content',
+            'language' => 'en'
         )), 2);
 
         $this->assertEquals(4, Page::count());
@@ -581,7 +593,8 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         Page::find($pagesIds[2])->appendChild(new Page(array(
             'title'   => 'test',
             'excerpt' => 'test',
-            'content' => 'content'
+            'content' => 'content',
+            'language' => 'en'
         )));
 
         $rootsIds = Page::roots()->lists('id');
