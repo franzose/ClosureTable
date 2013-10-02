@@ -101,7 +101,7 @@ class Entity extends Eloquent {
     {
         if (isset($this->closure)) return $this->closure;
 
-        return DB::geTablePrefix().$this->getTable().'_closure';
+        return DB::getTablePrefix().$this->getTable().'_closure';
     }
 
     /**
