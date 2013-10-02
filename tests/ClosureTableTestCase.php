@@ -653,6 +653,22 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         $results = DB::table($page->getClosure())->where('descendant', '=', $child2->id)->count();
 
         $this->assertEquals(3, $results);
+
+        $page = null; $child1 = null;
+        $child2 = null; $child3 = null; $child4 = null;
+        Page::truncate();
+
+        list($page, $child1/*, $child2, $child3, $child4 */) = $this->prepareTestedSiblings();
+
+        $children = Page::find(range(3, 5));
+
+        foreach ($children as $child)
+        {
+            $child->moveTo($child1);
+        }
+
+        $this->assertEquals(3, $child1->countChildren());
+        $this->assertEquals($child1->id, $children[1]->parent()->id);
     }
 
     public function testRelationsSyncOnChildInsert()
