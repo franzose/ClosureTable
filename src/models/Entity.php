@@ -67,19 +67,7 @@ class Entity extends Eloquent {
     {
         parent::__construct($attributes);
 
-        // We have to manually add table prefix to the closure table
-        // because this isn't done automatically by the framework since
-        // we don't use separate model for the closure table.
-        $tablePrefix = DB::getTablePrefix();
-
-        if ( ! isset($this->closure))
-        {
-            $this->closure = $this->getClosure();
-        }
-        elseif ( ! str_contains($this->closure, $tablePrefix))
-        {
-            $this->closure = $tablePrefix.$this->closure;
-        }
+        $this->closure = $this->getClosure();
 
         // Here we add position column to fillables
         $this->fillable(array_merge($this->getFillable(), array($this->getPositionColumn())));
