@@ -82,8 +82,23 @@ class Entity extends Eloquent {
      */
     public static function create(array $attributes)
     {
-        $model = parent::create($attributes);
+        $model = new static();
+
+        // Workaround to set the position
+        if ( ! isset($attributes[static::POSITION]))
+        {
+            // We set depth to 0 because newly created model
+            // via 'create' method has no default closure table
+            // attributes and is inserted as a root node
+            $model->hidden[static::DEPTH] = 0;
+
+            $attributes[static::POSITION] = $model->guessPositionOnCreate();
+        }
+
+        $model->fill($attributes);
+        $model->save();
         $model->setHidden($model->getClosureAttributes());
+
         return $model;
     }
 
@@ -848,12 +863,14 @@ class Entity extends Eloquent {
             $toAndParentEquals = ($to === null && $given->parent() === null);
         }
 
-        if ($toAndParentEquals || $position == $given->{static::POSITION})
+        $guessedPosition = $given->guessPositionOnMoveTo($to, $position);
+
+        if ($toAndParentEquals || $given->{static::POSITION} = $guessedPosition)
         {
             return $given;
         }
 
-        $given->{static::POSITION} = $given->guessPositionOnMoveTo($to, $position);
+        $given->{static::POSITION} = $guessedPosition;
 
         if ($given->exists)
         {
@@ -889,6 +906,18 @@ class Entity extends Eloquent {
         }
 
         return $position;
+    }
+
+    protected function guessPositionOnCreate()
+    {
+        if ($this->count() > 0 && $this->hasSiblings())
+        {
+            return $this->lastSibling()->{static::POSITION}+1;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     /**
