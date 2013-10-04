@@ -68,7 +68,7 @@ class Entity extends Eloquent {
     {
         parent::__construct($attributes);
 
-        $this->closure = $this->getClosure();
+        //$this->closure = $this->getClosure();
 
         // Here we add position column to fillables
         $this->fillable(array_merge($this->getFillable(), array($this->getPositionColumn())));
@@ -94,9 +94,13 @@ class Entity extends Eloquent {
      */
     public function getClosure()
     {
-        if (isset($this->closure)) return $this->closure;
+        if (isset($this->closure)) return DB::getTablePrefix().$this->closure;
 
-        return DB::getTablePrefix().$this->getTable().'_closure';
+        $prefix = DB::getTablePrefix();
+
+        $closure = $this->getTable().'_closure';
+
+        return $closure;
     }
 
     /**
@@ -835,7 +839,10 @@ class Entity extends Eloquent {
      */
     public static function moveGivenTo(Entity $given, Entity $to = null, $position = null)
     {
-        if ($to === $given->parent() && $position == $given->{static::POSITION})
+        $toAndParentKeysEquals = ($to->getKey() == $given->parent()->getKey());
+        $toAndParentEqualsNull = ($to === $given->parent() && $to === null);
+
+        if (($toAndParentKeysEquals || $toAndParentEqualsNull) || $position == $given->{static::POSITION})
         {
             return $given;
         }
@@ -932,7 +939,7 @@ class Entity extends Eloquent {
      * @param  \Illuminate\Database\Eloquent\Builder
      * @return bool
      */
-    protected function performInsert(Builder $query)
+    protected function performInsert($query)
     {
         if (parent::performInsert($query) === true)
         {
@@ -955,7 +962,7 @@ class Entity extends Eloquent {
      * @param  \Illuminate\Database\Eloquent\Builder
      * @return bool
      */
-    protected function performUpdate(Builder $query)
+    protected function performUpdate($query)
     {
         $oldStateEntity = $this;
 
