@@ -865,7 +865,7 @@ class Entity extends Eloquent {
 
         $guessedPosition = $given->guessPositionOnMoveTo($to, $position);
 
-        if ($toAndParentEquals || $given->{static::POSITION} = $guessedPosition)
+        if ($toAndParentEquals && $given->{static::POSITION} = $guessedPosition)
         {
             return $given;
         }
@@ -929,9 +929,11 @@ class Entity extends Eloquent {
      */
     protected function reorderSiblings(Entity $oldStateEntity = null)
     {
+        // 'oldStateEntity' is the entity in state when it hasn't been moved yet
         if ($oldStateEntity !== null && $oldStateEntity->hasSiblings())
         {
-            $origpos = $oldStateEntity->getOriginal('position');
+            // the position at which the 'old' entity was
+            $origpos = $oldStateEntity->getOriginal(static::POSITION);
 
             if ($this->{static::POSITION} != $origpos)
             {
@@ -943,7 +945,7 @@ class Entity extends Eloquent {
 
                 $siblings = $this->whereIn($keyName, $siblingsIds);
 
-                if ($this->{static::POSITION} > $origpos)
+                if ($this->{static::POSITION} > $origpos || ! $this->hasPrevSiblings())
                 {
                     $action = 'decrement';
                     $range = range($origpos, $this->{static::POSITION});
