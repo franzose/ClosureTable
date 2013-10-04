@@ -839,10 +839,16 @@ class Entity extends Eloquent {
      */
     public static function moveGivenTo(Entity $given, Entity $to = null, $position = null)
     {
-        $toAndParentKeysEquals = ($to->getKey() == $given->parent()->getKey());
-        $toAndParentEqualsNull = ($to === $given->parent() && $to === null);
+        if ($to instanceof Entity && $given->parent() instanceof Entity)
+        {
+            $toAndParentEquals = ($to->getKey() == $given->parent()->getKey());
+        }
+        else
+        {
+            $toAndParentEquals = ($to === null && $given->parent() === null);
+        }
 
-        if (($toAndParentKeysEquals || $toAndParentEqualsNull) || $position == $given->{static::POSITION})
+        if ($toAndParentEquals || $position == $given->{static::POSITION})
         {
             return $given;
         }
