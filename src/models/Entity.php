@@ -82,8 +82,23 @@ class Entity extends Eloquent {
      */
     public static function create(array $attributes)
     {
-        $model = parent::create($attributes);
+        $model = new static();
+
+        // Workaround to set the position
+        if ( ! isset($attributes[static::POSITION]))
+        {
+            // We set depth to 0 because newly created model
+            // via 'create' method has no default closure table
+            // attributes and is inserted as a root node
+            $model->hidden[static::DEPTH] = 0;
+
+            $attributes[static::POSITION] = $model->guessPositionOnCreate();
+        }
+
+        $model->fill($attributes);
+        $model->save();
         $model->setHidden($model->getClosureAttributes());
+
         return $model;
     }
 
@@ -848,12 +863,14 @@ class Entity extends Eloquent {
             $toAndParentEquals = ($to === null && $given->parent() === null);
         }
 
-        if ($toAndParentEquals || $position == $given->{static::POSITION})
+        $guessedPosition = $given->guessPositionOnMoveTo($to, $position);
+
+        if ($toAndParentEquals && $given->{static::POSITION} = $guessedPosition)
         {
             return $given;
         }
 
-        $given->{static::POSITION} = $given->guessPositionOnMoveTo($to, $position);
+        $given->{static::POSITION} = $guessedPosition;
 
         if ($given->exists)
         {
@@ -891,6 +908,18 @@ class Entity extends Eloquent {
         return $position;
     }
 
+    protected function guessPositionOnCreate()
+    {
+        if ($this->count() > 0 && $this->hasSiblings())
+        {
+            return $this->lastSibling()->{static::POSITION}+1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
     /**
      * Reorder all of the model siblings when it's moved.
      * When the model is moved from one subtree to another, its 'old' siblings are reordered as well.
@@ -900,9 +929,11 @@ class Entity extends Eloquent {
      */
     protected function reorderSiblings(Entity $oldStateEntity = null)
     {
+        // 'oldStateEntity' is the entity in state when it hasn't been moved yet
         if ($oldStateEntity !== null && $oldStateEntity->hasSiblings())
         {
-            $origpos = $oldStateEntity->getOriginal('position');
+            // the position at which the 'old' entity was
+            $origpos = $oldStateEntity->getOriginal(static::POSITION);
 
             if ($this->{static::POSITION} != $origpos)
             {
@@ -914,7 +945,7 @@ class Entity extends Eloquent {
 
                 $siblings = $this->whereIn($keyName, $siblingsIds);
 
-                if ($this->{static::POSITION} > $origpos)
+                if ($this->{static::POSITION} > $origpos || ! $this->hasPrevSiblings())
                 {
                     $action = 'decrement';
                     $range = range($origpos, $this->{static::POSITION});
