@@ -68,7 +68,10 @@ class Entity extends Eloquent {
     {
         parent::__construct($attributes);
 
-        //$this->closure = $this->getClosure();
+        if ( ! isset($this->closure))
+        {
+            $this->closure = $this->getTable().'_closure';
+        }
 
         // Here we add position column to fillables
         $this->fillable(array_merge($this->getFillable(), array($this->getPositionColumn())));
@@ -109,13 +112,7 @@ class Entity extends Eloquent {
      */
     public function getClosure()
     {
-        if (isset($this->closure)) return DB::getTablePrefix().$this->closure;
-
-        $prefix = DB::getTablePrefix();
-
-        $closure = $this->getTable().'_closure';
-
-        return $closure;
+        return $this->closure;
     }
 
     /**
@@ -1095,9 +1092,11 @@ class Entity extends Eloquent {
         $dpk = static::DEPTH;
 
         DB::transaction(function() use($table, $ak, $dk, $dpk, $descendant, $ancestor){
+            $rawTable = DB::getTablePrefix().$table;
+
             $selectQuery = "
                 SELECT tbl.{$ak} as {$ak}, {$descendant} as {$dk}, tbl.{$dpk}+1 as {$dpk}
-                FROM {$table} AS tbl
+                FROM {$rawTable} AS tbl
                 WHERE tbl.{$dk} = {$ancestor}
                 UNION ALL
                 SELECT {$descendant}, {$descendant}, 0
