@@ -78,6 +78,32 @@ class Entity extends Eloquent {
     }
 
     /**
+     * Create new model and automatically set its position if it's not provided.
+     *
+     * @param array $attributes
+     * @return Entity
+     */
+    public static function make(array $attributes = array())
+    {
+        $model = new static();
+
+        // Workaround to set the position
+        if ( ! isset($attributes[static::POSITION]))
+        {
+            // When making, we assume that the model
+            // will be a root node in the tree,
+            // so we set its depth to zero.
+            $model->hidden[static::DEPTH] = 0;
+
+            $attributes[static::POSITION] = $model->guessPositionOnCreate();
+        }
+
+        $model->fill($attributes);
+
+        return $model;
+    }
+
+    /**
      * Save a new model and return the instance.
      *
      * @param  array  $attributes
@@ -85,20 +111,7 @@ class Entity extends Eloquent {
      */
     public static function create(array $attributes)
     {
-        $model = new static();
-
-        // Workaround to set the position
-        if ( ! isset($attributes[static::POSITION]))
-        {
-            // We set depth to 0 because newly created model
-            // via 'create' method has no default closure table
-            // attributes and is inserted as a root node
-            $model->hidden[static::DEPTH] = 0;
-
-            $attributes[static::POSITION] = $model->guessPositionOnCreate();
-        }
-
-        $model->fill($attributes);
+        $model = static::make($attributes);
         $model->save();
         $model->setHidden($model->getClosureAttributes());
 
@@ -878,6 +891,7 @@ class Entity extends Eloquent {
         {
             $given->save();
             $given->performMoveTo($to);
+            $given->setHidden($given->getClosureAttributes());
         }
 
         return $given;

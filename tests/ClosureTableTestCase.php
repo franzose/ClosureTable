@@ -62,14 +62,14 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
             'language' => 'en'
         ));
 
-        $child = $page->appendChild(new Page(array(
+        $child = $page->appendChild(Page::make(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
             'content' => 'Child Page Test content',
             'language' => 'en'
         )), 0, true);
 
-        $grandchild = $child->appendChild(new Page(array(
+        $grandchild = $child->appendChild(Page::make(array(
             'title' => 'GrandChild Page Test Title',
             'excerpt' => 'GrandChild Page Test Excerpt',
             'content' => 'GrandChild Page Test content',
@@ -83,14 +83,14 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
             'language' => 'ru'
         ));
 
-        $newChild = $newPage->appendChild(new Page(array(
+        $newChild = $newPage->appendChild(Page::make(array(
             'title' => 'Another Child Page Test Title',
             'excerpt' => 'Another Child Page Test Excerpt',
             'content' => 'Another Child Page Test content',
             'language' => 'ru'
         )), 0, true);
 
-        $newGrandchild = $newChild->appendChild(new Page(array(
+        $newGrandchild = $newChild->appendChild(Page::make(array(
             'title' => 'Another GrandChild Page Test Title',
             'excerpt' => 'Another GrandChild Page Test Excerpt',
             'content' => 'Another GrandChild Page Test content',
@@ -109,28 +109,28 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
             'language' => 'en'
         ));
 
-        $child1 = $page->appendChild(new Page(array(
+        $child1 = $page->appendChild(Page::make(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
             'content' => 'Test content',
             'language' => 'en'
         )), 0, true);
 
-        $child2 = $page->appendChild(new Page(array(
+        $child2 = $page->appendChild(Page::make(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
             'content' => 'Test content',
             'language' => 'en'
         )), 1, true);
 
-        $child3 = $page->appendChild(new Page(array(
+        $child3 = $page->appendChild(Page::make(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
             'content' => 'Test content',
             'language' => 'en'
         )), 2, true);
 
-        $child4 = $page->appendChild(new Page(array(
+        $child4 = $page->appendChild(Page::make(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
             'content' => 'Test content',
@@ -142,7 +142,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
 
     public function testNewEntity()
     {
-        $page = new Page;
+        $page = Page::make();
         $this->assertInstanceOf('Franzose\ClosureTable\Entity', $page);
         $this->assertEquals('pages', $page->getTable());
         $this->assertEquals('id', $page->getKeyName());
@@ -218,7 +218,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
 
     public function testGetClosure()
     {
-        $page = new Page;
+        $page = Page::make();
         $this->assertEquals('pages_closure', $page->getClosure());
     }
 
@@ -363,7 +363,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
 
     public function testRemoveChild()
     {
-        $page = new Page(array(
+        $page = Page::make(array(
             'title' => 'Test Title',
             'excerpt' => 'Test Excerpt',
             'content' => 'Test content',
@@ -372,7 +372,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
 
         $page->save();
 
-        $child = new Page(array(
+        $child = Page::make(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
             'content' => 'Child Page Test content',
@@ -393,17 +393,17 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
         // now we will test removing node from the certain position
         //
 
-        $page->appendChild(new Page(array(
+        $page->appendChild(Page::make(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
             'content' => 'Child Page Test content',
             'language' => 'en'
-        )), 0)->appendChild(new Page(array(
+        )), 0)->appendChild(Page::make(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
             'content' => 'Child Page Test content',
             'language' => 'en'
-        )), 1)->appendChild(new Page(array(
+        )), 1)->appendChild(Page::make(array(
             'title' => 'Child Page Test Title',
             'excerpt' => 'Child Page Test Excerpt',
             'content' => 'Child Page Test content',
@@ -590,7 +590,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
             $pagesIds[] = $this->prepareTestedEntity()->id;
         }
 
-        Page::find($pagesIds[2])->appendChild(new Page(array(
+        Page::find($pagesIds[2])->appendChild(Page::make(array(
             'title'   => 'test',
             'excerpt' => 'test',
             'content' => 'content',
