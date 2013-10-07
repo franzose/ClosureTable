@@ -1087,7 +1087,7 @@ class Entity extends Eloquent {
             $results = DB::select($selectQuery);
             array_walk($results, function(&$item){ $item = (array)$item; });
 
-            DB::table($this->getClosure())->insert($results);
+            DB::table($closure)->insert($results);
         });
     }
 
