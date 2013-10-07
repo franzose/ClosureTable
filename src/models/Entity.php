@@ -987,7 +987,7 @@ class Entity extends Eloquent {
      * @param  \Illuminate\Database\Eloquent\Builder
      * @return bool
      */
-    protected function performInsert($query)
+    protected function performInsert(Builder $query)
     {
         if (parent::performInsert($query) === true)
         {
@@ -1010,7 +1010,7 @@ class Entity extends Eloquent {
      * @param  \Illuminate\Database\Eloquent\Builder
      * @return bool
      */
-    protected function performUpdate($query)
+    protected function performUpdate(Builder $query)
     {
         $oldStateEntity = $this;
 
