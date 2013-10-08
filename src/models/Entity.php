@@ -731,26 +731,27 @@ class Entity extends Eloquent {
     public static function roots(array $columns = array('*'))
     {
         $instance   = new static;
-        $table      = $instance->getTable();
         $closure    = $instance->getClosure();
-        $ancestor   = $instance->getQualifiedAncestorKeyName();
-        $descendant = $instance->getQualifiedDescendantKeyName();
+        $ancestor   = static::ANCESTOR;
+        $descendant = static::DESCENDANT;
         $depth      = $instance->getQualifiedDepthKeyName();
         $keyName    = $instance->getQualifiedKeyName();
 
-        $having = "(SELECT COUNT(*) FROM {$closure} WHERE {$descendant} = parentId AND {$depth} > 0) = 0";
+        $whereRaw = "(select count(*) from {$closure}
+                      where {$closure}.{$descendant} = tc.{$ancestor}
+                      and {$depth} > 0) = 0";
 
         $columns = $instance->getSelectedColumns($columns);
-        array_push($columns, $ancestor.' AS parentId');
+
+        array_push($columns, 'tc.'.$ancestor);
 
         return static::select($columns)
             ->distinct()
-            ->join($closure, function($join) use($ancestor, $descendant, $keyName){
-                $join->on($ancestor, '=', $keyName);
-                $join->on($descendant, '=', $keyName);
+            ->join($closure.' as tc', function($join) use($ancestor, $descendant, $keyName){
+                $join->on('tc.'.$ancestor, '=', $keyName);
+                $join->on('tc.'.$descendant, '=', $keyName);
             })
-            ->groupBy($keyName)
-            ->havingRaw($having)
+            ->whereRaw($whereRaw)
             ->get();
     }
 
