@@ -511,6 +511,7 @@ class ClosureTableTestCase extends \PHPUnit_Framework_TestCase {
     public function testHasPrevSiblings()
     {
         list($page, $child1, $child2, $child3, $child4) = $this->prepareTestedSiblings();
+
         $hasPrevs = $child4->hasPrevSiblings();
 
         $this->assertInternalType('bool', $hasPrevs);

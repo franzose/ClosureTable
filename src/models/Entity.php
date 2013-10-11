@@ -536,13 +536,30 @@ class Entity extends Eloquent {
      */
     protected function buildSiblingsSubquery(array $columns = array('*'))
     {
-        $dk = $this->getQualifiedDescendantKeyName();
-        $dpk = $this->getQualifiedDepthKeyName();
+        $primaryKey    = $this->getQualifiedKeyName();
+        $primaryValue  = $this->getKey();
+        $columns       = $this->getSelectedColumns($columns);
+        $closure       = $this->getClosure();
+        $descendantKey = $this->getQualifiedDescendantKeyName();
+        $depthKey      = $this->getQualifiedDepthKeyName();
+        $depthValue    = $this->getDepth();
 
-        return $this->select($this->getSelectedColumns($columns))
-            ->join($this->getClosure(), $dk, '=', $this->getQualifiedKeyName())
-            ->where($dk, '<>', $this->getKey())
-            ->where($dpk, '=', $this->getDepth());
+        // If the model is a root node then we must
+        // query only the roots because the original
+        // siblings query would give us wrong results.
+        if ($this->isRoot())
+        {
+            $query = $this->buildRootsQuery($columns)->where($primaryKey, '<>', $primaryValue);
+        }
+        else
+        {
+            $query = $this->select($columns)
+                ->join($closure, $descendantKey, '=', $primaryKey)
+                ->where($descendantKey, '<>', $primaryValue)
+                ->where($depthKey, '=', $depthValue);
+        }
+
+        return $query;
     }
 
     /**
@@ -657,7 +674,7 @@ class Entity extends Eloquent {
      */
     public function countPrevSiblings()
     {
-        return (int)$this->buildSiblingsQuery('prev')->count();
+        return (int)$this->buildSiblingsQuery('prev', true, $this->{static::POSITION})->count();
     }
 
     /**
@@ -699,7 +716,7 @@ class Entity extends Eloquent {
      */
     public function countNextSiblings()
     {
-        return (int)$this->buildSiblingsQuery('next')->count();
+        return (int)$this->buildSiblingsQuery('next', true, $this->{static::POSITION})->count();
     }
 
     /**
@@ -723,12 +740,12 @@ class Entity extends Eloquent {
     }
 
     /**
-     * Retrieve all models that have no ancestors.
+     * Builds query for the root nodes.
      *
      * @param array $columns
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function roots(array $columns = array('*'))
+    protected function buildRootsQuery(array $columns = array('*'))
     {
         $instance   = new static;
         $closure    = $instance->getClosure();
@@ -748,11 +765,21 @@ class Entity extends Eloquent {
         return static::select($columns)
             ->distinct()
             ->join($closure.' as tc', function($join) use($ancestor, $descendant, $keyName){
-                $join->on('tc.'.$ancestor, '=', $keyName);
-                $join->on('tc.'.$descendant, '=', $keyName);
-            })
-            ->whereRaw($whereRaw)
-            ->get();
+            $join->on('tc.'.$ancestor, '=', $keyName);
+            $join->on('tc.'.$descendant, '=', $keyName);
+        })
+            ->whereRaw($whereRaw);
+    }
+
+    /**
+     * Retrieve all models that have no ancestors.
+     *
+     * @param array $columns
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function roots(array $columns = array('*'))
+    {
+        return with(new static)->buildRootsQuery($columns)->get();
     }
 
     /**
@@ -922,11 +949,18 @@ class Entity extends Eloquent {
 
     protected function guessPositionOnCreate()
     {
-        if ($this->count() > 0 && $this->hasSiblings())
+        try
         {
-            return $this->lastSibling()->{static::POSITION}+1;
+            if ($this->count() > 0 && $this->hasSiblings())
+            {
+                return $this->lastSibling()->{static::POSITION}+1;
+            }
+            else
+            {
+                return 0;
+            }
         }
-        else
+        catch (\Exception $ex)
         {
             return 0;
         }
