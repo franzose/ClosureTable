@@ -1,42 +1,38 @@
 <?php namespace Franzose\ClosureTable\Extensions;
 
-class Collection extends \Illuminate\Database\Eloquent\Collection {
+use Franzose\ClosureTable\Contracts\EntityInterface;
+use \Illuminate\Database\Eloquent\Collection as EloquentCollection;
+
+class Collection extends EloquentCollection {
 
     public function toTree()
     {
-        //
+        $items = $this->items;
+
+        return new EloquentCollection($this->makeTree($items));
     }
 
-    protected function makeTree(&$items)
+    protected function makeTree(array &$items, $parentId = null)
     {
-        //
-    }
+        $tree = [];
 
-    public function toTreeOld()
-    {
-        $tree = new Collection();
-        $args = func_get_args();
-        $items   = (isset($args[0]) ? $args[0] : $this->items);
-        $current = null;
-
-        if (isset($args[1]))
+        foreach($items as $item)
         {
-           $current = $args[1];
-        }
-        elseif (array_key_exists(0, $items) && $items[0]->parent() !== null)
-        {
-           $current = $items[0]->parent()->getKey();
-        }
+            $itemParent = $item->parent([$item->getQualifiedKeyName()])->first();
+            $itemParentId = ($itemParent instanceof EntityInterface ? $itemParent->getKey() : null);
+            $itemKey = $item->getKey();
 
-        foreach($items as $index => $entity)
-        {
-            $parent = ($entity->parent() === null ? null : $entity->parent()->getKey());
-
-            if ($parent === $current)
+            if ($itemParentId == $parentId)
             {
-                unset($items[$index]);
-                $tree->add($entity);
-                $entity->nested = $this->toTree($items, $entity->getKey());
+                $children = $this->makeTree($items, $itemKey);
+
+                if (count($children))
+                {
+                    $item->setRelation('children', new EloquentCollection($children));
+                }
+
+                $tree[] = $item;
+                unset($items[$itemKey]);
             }
         }
 
