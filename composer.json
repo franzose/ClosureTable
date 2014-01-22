@@ -12,20 +12,30 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=5.4.0"
     },
     "require-dev": {
-        "illuminate/support": "4.1.x",
-        "illuminate/database": "4.1.x",
-        "illuminate/events": "4.1.x"
+        "phpunit/phpunit": "dev-master",
+        "way/phpunit-wrappers": "dev-master",
+        "way/laravel-test-helpers": "dev-master",
+        "mockery/mockery": "dev-master",
+        "orchestra/testbench": "dev-master",
+        "doctrine/dbal": "dev-master"
+    },
+    "replace": {
+        "phpseclib/phpseclib": "0.3.*"
     },
     "autoload": {
         "classmap": [
-            "src/models"
+            "src/models",
+            "tests"
         ],
         "psr-0": {
             "Franzose\\ClosureTable": "src/"
         }
+    },
+    "config": {
+        "preferred-install": "dist"
     },
     "minimum-stability": "dev"
 }
