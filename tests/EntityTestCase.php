@@ -59,6 +59,11 @@ class EntityTestCase extends BaseTestCase {
 
     public function testIsParent()
     {
+        $this->assertFalse($this->entity->isParent());
+    }
 
+    public function testIsRoot()
+    {
+        $this->assertTrue($this->entity->isRoot());
     }
 } 

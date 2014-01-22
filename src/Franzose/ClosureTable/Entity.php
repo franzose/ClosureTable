@@ -45,6 +45,28 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Indicates whether the model has children.
+     *
+     * @return bool
+     */
+    public function isParent()
+    {
+        return !!$this->children()->count();
+    }
+
+    /**
+     * Indicates whether the model has no ancestors.
+     *
+     * @return bool
+     */
+    public function isRoot()
+    {
+        return $this->closure->isRoot($this->getKey());
+    }
+
+    /**
+     * Makes the model a child or a root with given position.
+     *
      * @param EntityInterface $ancestor
      * @param int $position
      * @return Entity
