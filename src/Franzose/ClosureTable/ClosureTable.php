@@ -1,12 +1,13 @@
 <?php namespace Franzose\ClosureTable;
 
+use \Illuminate\Database\Eloquent\Model as Eloquent;
 use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
 
 /**
  * Class ClosureTable
  * @package Franzose\ClosureTable
  */
-class ClosureTable extends \Eloquent implements ClosureTableInterface {
+class ClosureTable extends Eloquent implements ClosureTableInterface {
 
     /**
      * @var string
@@ -17,6 +18,7 @@ class ClosureTable extends \Eloquent implements ClosureTableInterface {
      * @var bool
      */
     public $timestamps = false;
+
 
     /**
      * Check if model is a top level one (i.e. has no ancestors).
@@ -37,6 +39,26 @@ class ClosureTable extends \Eloquent implements ClosureTableInterface {
         return !!$this->where(static::DESCENDANT, '=', $id)
             ->where(static::DEPTH, '>', 0)
             ->count() == 0;
+    }
+
+    public function getRealAttributes()
+    {
+        $closure = static::where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
+            ->orderBy(static::DEPTH, 'desc')
+            ->first();
+
+        $parentId = static::select([static::ANCESTOR])
+            ->where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
+            ->where(static::DEPTH, '=', 1)
+            ->first()
+            ->{static::ANCESTOR};
+
+        return [
+            static::ANCESTOR   => $closure->{static::ANCESTOR},
+            'parent'           => $parentId,
+            static::DESCENDANT => $this->{static::DESCENDANT},
+            static::DEPTH      => $closure->{static::DEPTH}
+        ];
     }
 
     /**

@@ -13,18 +13,16 @@ class EntityTestCase extends BaseTestCase {
     /**
      * @var Mockery\MockInterface|\Yay_MockObject
      */
-    protected $ctableMock;
+    protected $closure;
 
     public function setUp()
     {
         parent::setUp();
 
         $this->entity = new Entity;
-        $this->ctableMock = Mockery::mock('Franzose\ClosureTable\ClosureTable');
+        $this->closure = Mockery::mock('Franzose\ClosureTable\ClosureTable');
 
-        $this->app->instance('Franzose\ClosureTable\Contracts\ClosureTableInterface', $this->ctableMock);
-
-        $this->entity->setClosureTable($this->ctableMock);
+        $this->app->instance('Franzose\ClosureTable\Contracts\ClosureTableInterface', $this->closure);
     }
 
     public function testPositionIsFillable()
@@ -47,8 +45,7 @@ class EntityTestCase extends BaseTestCase {
 
     public function testMoveTo()
     {
-        $this->ctableMock->shouldReceive('moveNodeTo')
-            ->once()
+        $this->closure->shouldReceive('moveNodeTo')
             ->with(Mockery::type('int'))
             ->andReturn(Mockery::type('bool'));
 
@@ -58,5 +55,10 @@ class EntityTestCase extends BaseTestCase {
         $result = $this->entity->moveTo($ancestor, 5);
         $this->assertSame($this->entity, $result);
         $this->assertEquals(5, $result->{Entity::POSITION});
+    }
+
+    public function testIsParent()
+    {
+
     }
 } 

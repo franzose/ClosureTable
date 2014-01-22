@@ -1,6 +1,7 @@
 <?php namespace Franzose\ClosureTable\Tests;
 
-use Franzose\ClosureTable\ClosureTable;
+use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
+use \Franzose\ClosureTable\ClosureTable;
 
 class ClosureTableTestCase extends BaseTestCase {
     /**
@@ -41,7 +42,7 @@ class ClosureTableTestCase extends BaseTestCase {
     public function testInsertNode()
     {
         $this->ctable->insertNode(12, 12);
-        $item = ClosureTable::find(12);
+        $item = ClosureTable::where(ClosureTableInterface::DESCENDANT, '=', 12)->first();
 
         $this->assertNotNull($item);
         $this->assertEquals(12, $item->{ClosureTable::ANCESTOR});
@@ -54,8 +55,10 @@ class ClosureTableTestCase extends BaseTestCase {
         $this->ctable->insertNode(12, 12);
         $this->ctable->insertNode(12, 13);
 
-        $item = ClosureTable::find(13);
+        $item = ClosureTable::where(ClosureTableInterface::DESCENDANT, '=', 13)
+                    ->where(ClosureTableInterface::ANCESTOR, '=', 12)->first();
 
+        $this->assertNotNull($item);
         $this->assertEquals(1, $item->{ClosureTable::DEPTH});
     }
 
@@ -64,13 +67,8 @@ class ClosureTableTestCase extends BaseTestCase {
         $this->ctable->insertNode(12, 12);
         $this->ctable->insertNode(12, 13);
 
-        $ancestorRows = \DB::table($this->ctable->getTable())
-            ->where(ClosureTable::DESCENDANT, '=', 12)
-            ->count();
-
-        $descendantRows = \DB::table($this->ctable->getTable())
-            ->where(ClosureTable::DESCENDANT, '=', 13)
-            ->count();
+        $ancestorRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 12)->count();
+        $descendantRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 13)->count();
 
         $this->assertEquals(1, $ancestorRows);
         $this->assertEquals(2, $descendantRows);
@@ -89,16 +87,11 @@ class ClosureTableTestCase extends BaseTestCase {
         $item = ClosureTable::find(1);
         $item->moveNodeTo(2);
 
-        $descendantRows = \DB::table($this->ctable->getTable())
-            ->where(ClosureTable::DESCENDANT, '=', 1)
-            ->count();
+        $ancestors = ClosureTable::where(ClosureTable::DESCENDANT, '=', 2)->count();
+        $descendants = ClosureTable::where(ClosureTable::DESCENDANT, '=', 1)->count();
 
-        $ancestorRows = \DB::table($this->ctable->getTable())
-            ->where(ClosureTable::DESCENDANT, '=', 2)
-            ->count();
-
-        $this->assertEquals(1, $ancestorRows);
-        $this->assertEquals(2, $descendantRows);
+        $this->assertEquals(1, $ancestors);
+        $this->assertEquals(2, $descendants);
     }
 
     public function testMoveNodeToDeepNesting()
@@ -115,13 +108,8 @@ class ClosureTableTestCase extends BaseTestCase {
         $item = ClosureTable::find(4);
         $item->moveNodeTo(5);
 
-        $descendantRows = \DB::table($this->ctable->getTable())
-            ->where(ClosureTable::DESCENDANT, '=', 1)
-            ->count();
-
-        $ancestorRows = \DB::table($this->ctable->getTable())
-            ->where(ClosureTable::DESCENDANT, '=', 2)
-            ->count();
+        $descendantRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 1)->count();
+        $ancestorRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 2)->count();
 
         $this->assertEquals(4, $ancestorRows);
         $this->assertEquals(5, $descendantRows);
@@ -145,6 +133,29 @@ class ClosureTableTestCase extends BaseTestCase {
         $item->moveNodeTo();
 
         $this->assertTrue($item->isRoot());
+        $this->assertFalse(ClosureTable::find(3)->isRoot());
+    }
+
+    public function testGetRealAttributes()
+    {
+        $deepest = ClosureTable::where(ClosureTableInterface::ANCESTOR, '=', 1)
+                    ->where(ClosureTableInterface::DESCENDANT, '=', 1)
+                    ->first();
+
+        $deepest->moveNodeTo(2);
+
+        $item = ClosureTable::where(ClosureTableInterface::ANCESTOR, '=', 2)
+                    ->where(ClosureTableInterface::DESCENDANT, '=', 2)
+                    ->first();
+
+        $item->moveNodeTo(3);
+
+        $result = $deepest->getRealAttributes();
+
+        $this->assertEquals(3, $result[ClosureTableInterface::ANCESTOR]);
+        $this->assertEquals(2, $result['parent']);
+        $this->assertEquals(1, $result[ClosureTableInterface::DESCENDANT]);
+        $this->assertEquals(2, $result[ClosureTableInterface::DEPTH]);
     }
 
     public function testAncestorQualifiedKeyName()

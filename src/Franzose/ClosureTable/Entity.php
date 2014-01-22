@@ -1,6 +1,7 @@
 <?php namespace Franzose\ClosureTable;
 
 use \Illuminate\Database\Eloquent\Model as Eloquent;
+use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use \Franzose\ClosureTable\Extensions\Collection;
 use \Franzose\ClosureTable\Extensions\QueryBuilder;
 use \Franzose\ClosureTable\Contracts\EntityInterface;
@@ -44,33 +45,64 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * @param EntityInterface $target
+     * @param EntityInterface $ancestor
      * @param int $position
      * @return Entity
      * @throws \InvalidArgumentException
      */
-    public function moveTo(EntityInterface $target = null, $position)
+    public function moveTo(EntityInterface $ancestor = null, $position)
     {
-        if ($this === $target)
+        if ($this === $ancestor)
         {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
         $this->{static::POSITION} = $position;
-        $targetId = (is_null($target) ?: $target->getKey());
+
+        $this->save([
+            'ancestor' => (is_null($ancestor) ? $ancestor : $ancestor->getKey())
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Save the model to the database.
+     *
+     * @param  array  $options
+     * @return bool
+     */
+    public function save(array $options = array())
+    {
+        $query = $this->newQueryWithDeleted();
+
+        if ($this->fireModelEvent('saving') === false)
+        {
+            return false;
+        }
 
         if ($this->exists)
         {
-            $this->closure->moveNodeTo($targetId);
-            $this->save();
+            if (isset($options['ancestor']))
+            {
+                $this->closure->moveNodeTo($options['ancestor']);
+            }
+
+            $saved = $this->performUpdate($query);
         }
         else
         {
-            $this->save();
-            $this->closure->moveNodeTo($targetId);
+            $saved = $this->performInsert($query);
+
+            $primary  = $this->getKey();
+            $ancestor = (isset($options['ancestor']) ? $options['ancestor'] : $primary);
+
+            $this->closure->insertNode($ancestor, $primary);
         }
 
-        return $this;
+        if ($saved) $this->finishSave($options);
+
+        return $saved;
     }
 
     /**

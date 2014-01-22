@@ -10,9 +10,9 @@ interface EntityInterface {
     const POSITION = 'position';
 
     /**
-     * @param EntityInterface $target
+     * @param EntityInterface $ancestor
      * @param int $position
      * @return EntityInterface
      */
-    public function moveTo(EntityInterface $target = null, $position);
+    public function moveTo(EntityInterface $ancestor = null, $position);
 }

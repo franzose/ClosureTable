@@ -4,6 +4,16 @@ class Collection extends \Illuminate\Database\Eloquent\Collection {
 
     public function toTree()
     {
+        //
+    }
+
+    protected function makeTree(&$items)
+    {
+        //
+    }
+
+    public function toTreeOld()
+    {
         $tree = new Collection();
         $args = func_get_args();
         $items   = (isset($args[0]) ? $args[0] : $this->items);
