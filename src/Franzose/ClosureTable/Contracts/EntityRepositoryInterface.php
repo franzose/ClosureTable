@@ -248,8 +248,9 @@ interface EntityRepositoryInterface {
     public function destroy($forceDelete = false);
 
     /**
+     * @param bool $withAncestor
      * @param bool $forceDelete
      * @return mixed
      */
-    public function deleteSubtree($forceDelete = false);
+    public function destroySubtree($withAncestor = false, $forceDelete = false);
 } 

@@ -346,4 +346,21 @@ class EntityRepositoryTestCase extends BaseTestCase {
         $this->assertInternalType('bool', $result);
         $this->assertTrue($result);
     }
+
+    public function testDestroySubtree()
+    {
+        $builder = Mockery::mock('Franzose\ClosureTable\Extensions\QueryBuilder');
+
+        $this->entity->shouldReceive('getKeyName')->andReturn('foo');
+        $this->entity->shouldReceive('getKey')->andReturn(1);
+        $this->entity->shouldReceive('descendants->get')->andReturn([2, 3, 4]);
+        $this->entity->shouldReceive('whereIn')->andReturn($builder);
+
+        $builder->shouldReceive('delete')->andReturn(true);
+
+        $result = $this->repository->destroySubtree();
+
+        $this->assertInternalType('bool', $result);
+        $this->assertTrue($result);
+    }
 } 

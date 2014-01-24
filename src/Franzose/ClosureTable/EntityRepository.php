@@ -432,15 +432,28 @@ class EntityRepository implements EntityRepositoryInterface {
      */
     public function destroy($forceDelete = false)
     {
-        return $this->entity->where($this->entity->getKeyName(), '=', $this->entity->getKey())->delete($forceDelete);
+        $query = $this->entity->where($this->entity->getKeyName(), '=', $this->entity->getKey());
+
+        return ($forceDelete === true ? $query->forceDelete() : $query->delete());
     }
 
     /**
+     * @param bool $withAncestor
      * @param bool $forceDelete
      * @return mixed
      */
-    public function deleteSubtree($forceDelete = false)
+    public function destroySubtree($withAncestor = false, $forceDelete = false)
     {
-        //
+        $keyName = $this->entity->getKeyName();
+        $keys    = $this->entity->descendants($keyName)->get();
+
+        if ($withAncestor === true)
+        {
+            $keys[]  = $this->entity->getKey();
+        }
+        
+        $query = $this->entity->whereIn($keyName, $keys);
+
+        return ($forceDelete === true ? $query->forceDelete() : $query->delete());
     }
 } 
