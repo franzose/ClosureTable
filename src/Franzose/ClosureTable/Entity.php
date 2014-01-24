@@ -46,11 +46,24 @@ class Entity extends Eloquent implements EntityInterface {
             $attributes[static::POSITION] = 0;
         }
 
-        $this->closure = \App::make('Franzose\ClosureTable\Contracts\ClosureTableInterface');
+        $this->makeClosureTable();
 
         parent::__construct($attributes);
     }
 
+    /**
+     * Makes closure table from an interface.
+     */
+    protected function makeClosureTable()
+    {
+        $this->closure = \App::make('Franzose\ClosureTable\Contracts\ClosureTableInterface');
+    }
+
+    /**
+     * Sets closure table.
+     *
+     * @param ClosureTableInterface $closure
+     */
     public function setClosureTable(ClosureTableInterface $closure)
     {
         $this->closure = $closure;
