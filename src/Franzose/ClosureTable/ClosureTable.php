@@ -41,11 +41,13 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             ->count() == 0;
     }
 
-    public function getRealAttributes()
+    public function getRealAttributes(array $attributes = ['*'])
     {
         $closure = static::where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
             ->orderBy(static::DEPTH, 'desc')
-            ->first();
+            ->first($attributes)->toArray();
+
+        //var_dump($closure);
 
         $parentId = static::select([static::ANCESTOR])
             ->where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
@@ -53,12 +55,9 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             ->first()
             ->{static::ANCESTOR};
 
-        return [
-            static::ANCESTOR   => $closure->{static::ANCESTOR},
-            'parent'           => $parentId,
-            static::DESCENDANT => $this->{static::DESCENDANT},
-            static::DEPTH      => $closure->{static::DEPTH}
-        ];
+        $result = array_merge($closure, ['parent' => $parentId]);
+
+        return $result;
     }
 
     /**
