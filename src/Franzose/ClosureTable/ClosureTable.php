@@ -47,8 +47,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             ->orderBy(static::DEPTH, 'desc')
             ->first($attributes)->toArray();
 
-        //var_dump($closure);
-
         $parentId = static::select([static::ANCESTOR])
             ->where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
             ->where(static::DEPTH, '=', 1)
