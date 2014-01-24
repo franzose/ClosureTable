@@ -104,7 +104,12 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             $results = \DB::select($query);
             array_walk($results, function(&$item){ $item = (array)$item; });
 
-            \DB::table($t)->insert($results);
+            if (\DB::table($t)->insert($results))
+            {
+                $this->{$ak} = $results[0][$ak];
+                $this->{$dk} = $results[0][$dk];
+                $this->{$dpk} = $results[0][$dpk];
+            }
         });
     }
 

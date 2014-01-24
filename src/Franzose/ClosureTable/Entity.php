@@ -120,10 +120,13 @@ class Entity extends Eloquent implements EntityInterface {
 
         if ($this->exists)
         {
-            $primaryKey = $this->getKey();
-            $this->closure->{ClosureTableInterface::ANCESTOR} = $primaryKey;
-            $this->closure->{ClosureTableInterface::DESCENDANT} = $primaryKey;
-            $this->closure->{ClosureTableInterface::DEPTH} = 0;
+            if (is_null($this->closure->{ClosureTableInterface::ANCESTOR}))
+            {
+                $primaryKey = $this->getKey();
+                $this->closure->{ClosureTableInterface::ANCESTOR} = $primaryKey;
+                $this->closure->{ClosureTableInterface::DESCENDANT} = $primaryKey;
+                $this->closure->{ClosureTableInterface::DEPTH} = 0;
+            }
 
             if (isset($options['ancestor']))
             {
