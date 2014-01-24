@@ -47,13 +47,18 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             ->orderBy(static::DEPTH, 'desc')
             ->first($attributes)->toArray();
 
-        $parentId = static::select([static::ANCESTOR])
-            ->where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
-            ->where(static::DEPTH, '=', 1)
-            ->first()
-            ->{static::ANCESTOR};
+        $result = $closure;
 
-        $result = array_merge($closure, ['parent' => $parentId]);
+        if (array_key_exists('parent', $attributes))
+        {
+            $parentId = static::select([static::ANCESTOR])
+                ->where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
+                ->where(static::DEPTH, '=', 1)
+                ->first()
+                ->{static::ANCESTOR};
+
+            $result = array_merge($closure, ['parent' => $parentId]);
+        }
 
         return $result;
     }
