@@ -49,7 +49,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
         $result = (count($closure) == 1 ? $closure[$attributes[0]] : $closure);
 
-        if (array_key_exists('parent', $attributes))
+        if (array_key_exists('parent', $attributes) || $attributes == ['*'])
         {
             $parentId = static::select([static::ANCESTOR])
                 ->where(static::DESCENDANT, '=', $this->{static::DESCENDANT})

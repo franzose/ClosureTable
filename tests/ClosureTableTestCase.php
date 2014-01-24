@@ -156,6 +156,10 @@ class ClosureTableTestCase extends BaseTestCase {
         $this->assertEquals(2, $result['parent']);
         $this->assertEquals(1, $result[ClosureTableInterface::DESCENDANT]);
         $this->assertEquals(2, $result[ClosureTableInterface::DEPTH]);
+
+        $result = $deepest->getRealAttributes([ClosureTableInterface::ANCESTOR]);
+
+        $this->assertInternalType('string', $result);
     }
 
     public function testAncestorQualifiedKeyName()
