@@ -423,7 +423,7 @@ class EntityRepository implements EntityRepositoryInterface {
      */
     public function save()
     {
-        return false;
+        return $this->entity->save();
     }
 
     /**
