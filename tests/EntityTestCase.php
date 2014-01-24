@@ -40,7 +40,7 @@ class EntityTestCase extends BaseTestCase {
      */
     public function testMoveToThrowsException()
     {
-        $this->entity->moveTo($this->entity, 0);
+        $this->entity->moveTo(0, $this->entity);
     }
 
     public function testMoveTo()
@@ -52,7 +52,7 @@ class EntityTestCase extends BaseTestCase {
         $ancestor = Mockery::mock('Franzose\ClosureTable\Entity');
         $ancestor->shouldReceive('getKey')->andReturn(1);
 
-        $result = $this->entity->moveTo($ancestor, 5);
+        $result = $this->entity->moveTo(5, $ancestor);
         $this->assertSame($this->entity, $result);
         $this->assertEquals(5, $result->{Entity::POSITION});
     }

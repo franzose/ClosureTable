@@ -51,7 +51,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         {
             return null;
         }
-        
+
         $closure = $closure->toArray();
 
         $result = (count($closure) == 1 ? $closure[$attributes[0]] : $closure);

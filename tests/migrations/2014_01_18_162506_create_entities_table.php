@@ -17,9 +17,8 @@ class CreateEntitiesTable extends Migration {
 			$table->increments('id');
             $table->string('title')->default('The Title');
             $table->text('excerpt')->default('The excerpt');
-            $table->longText('body')->default('The body');
+            $table->longText('body')->default('The content');
             $table->integer('position');
-			$table->timestamps();
             $table->softDeletes();
 		});
 	}

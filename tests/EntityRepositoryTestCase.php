@@ -170,11 +170,11 @@ class EntityRepositoryTestCase extends BaseTestCase {
     public function testMoveTo()
     {
         $this->entity->shouldReceive('moveTo')->once()->withArgs([
-            Mockery::type('Franzose\ClosureTable\Entity'), Mockery::type('int')
+            Mockery::type('int'), Mockery::type('Franzose\ClosureTable\Entity')
         ])->andReturn($this->entity);
 
         $entity = Mockery::mock('Franzose\ClosureTable\Entity');
-        $result = $this->repository->moveTo($entity, 0);
+        $result = $this->repository->moveTo(0, $entity);
 
         $this->assertInstanceOf('Franzose\ClosureTable\Entity', $result);
     }

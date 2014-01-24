@@ -10,8 +10,8 @@ class CollectionTestCase extends BaseTestCase {
     {
         $rootEntity  = new Entity;
         $rootEntity->save();
-        $childEntity = with(new Entity)->moveTo($rootEntity, 0);
-        $grandEntity = with(new Entity)->moveTo($childEntity, 0);
+        $childEntity = with(new Entity)->moveTo(0, $rootEntity);
+        $grandEntity = with(new Entity)->moveTo(0, $childEntity);
 
         $tree  = with(new Collection([$rootEntity, $childEntity, $grandEntity]))->toTree();
         $rootItem = $tree->get(0);

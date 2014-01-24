@@ -409,13 +409,13 @@ class EntityRepository implements EntityRepositoryInterface {
     }
 
     /**
-     * @param EntityInterface $target
      * @param int $position
+     * @param EntityInterface $ancestor
      * @return Entity
      */
-    public function moveTo(EntityInterface $target = null, $position)
+    public function moveTo($position, EntityInterface $ancestor = null)
     {
-        return $this->entity->moveTo($target, $position);
+        return $this->entity->moveTo($position, $ancestor);
     }
 
     /**
@@ -451,7 +451,7 @@ class EntityRepository implements EntityRepositoryInterface {
         {
             $keys[]  = $this->entity->getKey();
         }
-        
+
         $query = $this->entity->whereIn($keyName, $keys);
 
         return ($forceDelete === true ? $query->forceDelete() : $query->delete());

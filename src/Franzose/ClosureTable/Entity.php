@@ -28,6 +28,13 @@ class Entity extends Eloquent implements EntityInterface {
     protected $softDelete = true;
 
     /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
+    /**
      * @param array $attributes
      */
     public function __construct(array $attributes = array())
@@ -42,6 +49,11 @@ class Entity extends Eloquent implements EntityInterface {
         $this->closure = \App::make('Franzose\ClosureTable\Contracts\ClosureTableInterface');
 
         parent::__construct($attributes);
+    }
+
+    public function setClosureTable(ClosureTableInterface $closure)
+    {
+        $this->closure = $closure;
     }
 
     /**
@@ -67,22 +79,25 @@ class Entity extends Eloquent implements EntityInterface {
     /**
      * Makes the model a child or a root with given position.
      *
-     * @param EntityInterface $ancestor
      * @param int $position
+     * @param EntityInterface $ancestor
      * @return Entity
      * @throws \InvalidArgumentException
      */
-    public function moveTo(EntityInterface $ancestor = null, $position)
+    public function moveTo($position, EntityInterface $ancestor = null)
     {
         if ($this === $ancestor)
         {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
+        $self = clone $this;
+
         $this->{static::POSITION} = $position;
 
         $this->save([
-            'ancestor' => (is_null($ancestor) ? $ancestor : $ancestor->getKey())
+            'ancestor' => (is_null($ancestor) ? $ancestor : $ancestor->getKey()),
+            'self' => $self
         ]);
 
         return $this;
@@ -105,6 +120,11 @@ class Entity extends Eloquent implements EntityInterface {
 
         if ($this->exists)
         {
+            $primaryKey = $this->getKey();
+            $this->closure->{ClosureTableInterface::ANCESTOR} = $primaryKey;
+            $this->closure->{ClosureTableInterface::DESCENDANT} = $primaryKey;
+            $this->closure->{ClosureTableInterface::DEPTH} = 0;
+
             if (isset($options['ancestor']))
             {
                 $this->closure->moveNodeTo($options['ancestor']);
@@ -116,15 +136,85 @@ class Entity extends Eloquent implements EntityInterface {
         {
             $saved = $this->performInsert($query);
 
-            $primary  = $this->getKey();
-            $ancestor = (isset($options['ancestor']) ? $options['ancestor'] : $primary);
+            if ($saved)
+            {
+                $descendant = $this->getKey();
+                $ancestor = (isset($options['ancestor']) ? $options['ancestor'] : $descendant);
 
-            $this->closure->insertNode($ancestor, $primary);
+                $this->closure->insertNode($ancestor, $descendant);
+            }
         }
 
-        if ($saved) $this->finishSave($options);
+        if ($saved)
+        {
+            $this->finishSave($options);
+
+            if (isset($options['self']))
+            {
+                $this->reorderSiblings($options['self']);
+            }
+        }
 
         return $saved;
+    }
+
+    protected function reorderSiblings(EntityInterface $unsavedEntity)
+    {
+        $position = [
+            'original' => $unsavedEntity->getOriginal(static::POSITION),
+            'current'  => $this->{static::POSITION}
+        ];
+
+        $depth = [
+            'original' => $unsavedEntity->closure->getRealAttributes([ClosureTableInterface::DEPTH]),
+            'current'  => $this->closure->getRealAttributes([ClosureTableInterface::DEPTH])
+        ];
+
+        if (   $depth['current'] != $depth['original']
+            || $position['current'] != $position['original'])
+        {
+            $isSQLite = (\DB::getDriverName() == 'sqlite');
+            $keyName  = $this->getQualifiedKeyName();
+            $siblings = $this->siblings();
+
+            if ($position['current'] > $position['original'])
+            {
+                $action = 'decrement';
+                $range  = range($position['original'], $position['current']);
+            }
+            else
+            {
+                $action = 'increment';
+                $range  = range($position['current'], $position['original']-1);
+            }
+
+            if ($isSQLite)
+            {
+                $siblingsIds = $siblings->whereIn(static::POSITION, $range)->lists($keyName);
+                $siblings = $this->whereIn($keyName, $siblingsIds);
+            }
+            else
+            {
+                $siblings->whereIn(static::POSITION, $range);
+            }
+
+            $siblings->$action(static::POSITION);
+
+            if ($depth['current'] != $depth['original'])
+            {
+                if ($isSQLite)
+                {
+                    $nextSiblingsIds = $unsavedEntity->nextSiblings([$keyName])->get();
+                    $nextSiblings = $this->whereIn($keyName, $nextSiblingsIds);
+                }
+                else
+                {
+                    $nextSiblings = $unsavedEntity->nextSiblings();
+                }
+
+                $nextSiblings->decrement(static::POSITION);
+            }
+        }
     }
 
     /**
@@ -161,7 +251,7 @@ class Entity extends Eloquent implements EntityInterface {
             'descendantShort' => ClosureTableInterface::DESCENDANT,
             'depth'           => $this->closure->getQualifiedDepthColumn(),
             'depthShort'      => ClosureTableInterface::DEPTH,
-            'depthValue'      => $this->closure->{ClosureTableInterface::DEPTH}
+            'depthValue'      => $this->closure->getRealAttributes([ClosureTableInterface::DEPTH])
         ];
 
         return new QueryBuilder($conn, $grammar, $conn->getPostProcessor(), $attrs);

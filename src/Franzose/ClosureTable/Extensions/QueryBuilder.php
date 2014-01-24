@@ -97,12 +97,12 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     protected function getSiblingsQuery($find = 'all', $direction = 'both', array $columns = ['*'])
     {
         $query = $this->select($columns)
-            ->join($this->qattrs['closure'], $this->qattrs['descendant'], '=', $this->qattrs['pk'])
-            ->where($this->qattrs['depth'], '=', $this->qattrs['depthValue']);
+            ->join($this->qattrs['closure'].' as c', 'c.'.$this->qattrs['descendantShort'], '=', $this->qattrs['pk'])
+            ->where($this->qattrs['depthShort'], '=', $this->qattrs['depthValue']);
 
         if ($find == 'all' && $direction == 'both')
         {
-            $query->where($this->qattrs['descendant'], '<>', $this->qattrs['pkValue']);
+            $query->where($this->qattrs['descendantShort'], '<>', $this->qattrs['pkValue']);
         }
         else if ($find == 'one' && $direction == 'both')
         {
@@ -131,6 +131,11 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
             $operand = ($find == 'all' ? $operand : '=');
 
             $query->where($this->qattrs['position'], $operand, $position);
+        }
+
+        if ($this->qattrs['depthValue'] == 0)
+        {
+            $query->whereRaw($this->getRootCheckQuery());
         }
 
         return $query;
@@ -190,13 +195,16 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
         return $this->getSiblingsQuery('one', 'next', $columns);
     }
 
+    protected function getRootCheckQuery($closureTableAlias = 'c')
+    {
+        return '(select count(*) from '.$this->qattrs['closure'].' as ct '.
+               'where ct.'.$this->qattrs['descendantShort'].' = '.$closureTableAlias.'.'.$this->qattrs['ancestorShort'].' '.
+               'and ct.'.$this->qattrs['depthShort'].' > 0) = 0';
+    }
+
     public function roots(array $columns = ['*'])
     {
         array_push($columns, 'c.'.$this->qattrs['ancestorShort']);
-
-        $whereRaw = '(select count(*) from '.$this->qattrs['closure'].' '.
-                    'where '.$this->qattrs['descendantShort'].' = c.'.$this->qattrs['ancestorShort'].' '.
-                    'and '.$this->qattrs['depthShort'].' > 0) = 0';
 
         return $this->select($columns)
             ->distinct()
@@ -205,7 +213,7 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
                     $join->on('c.'.$this->qattrs['ancestorShort'], '=', $this->qattrs['pk']);
                     $join->on('c.'.$this->qattrs['descendantShort'], '=', $this->qattrs['pk']);
                 })
-            ->whereRaw($whereRaw);
+            ->whereRaw($this->getRootCheckQuery());
     }
 
     public function tree(array $columns = ['*'])

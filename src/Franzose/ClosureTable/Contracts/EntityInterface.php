@@ -24,9 +24,9 @@ interface EntityInterface {
     public function isRoot();
 
     /**
-     * @param EntityInterface $ancestor
      * @param int $position
+     * @param EntityInterface $ancestor
      * @return EntityInterface
      */
-    public function moveTo(EntityInterface $ancestor = null, $position);
+    public function moveTo($position, EntityInterface $ancestor = null);
 }

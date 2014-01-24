@@ -230,11 +230,12 @@ interface EntityRepositoryInterface {
     public function tree(array $columns = ['*']);
 
     /**
-     * @param EntityInterface $target
+     *
      * @param int $position
+     * @param EntityInterface $ancestor
      * @return mixed
      */
-    public function moveTo(EntityInterface $target = null, $position);
+    public function moveTo($position, EntityInterface $ancestor = null);
 
     /**
      * @return bool
