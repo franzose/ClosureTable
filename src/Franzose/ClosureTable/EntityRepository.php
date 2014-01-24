@@ -24,7 +24,7 @@ class EntityRepository implements EntityRepositoryInterface {
 
     /**
      * @param array $columns
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function all(array $columns = ['*'])
     {
@@ -58,18 +58,8 @@ class EntityRepository implements EntityRepositoryInterface {
     }
 
     /**
-     * @param $perPage
      * @param array $columns
-     * @return mixed
-     */
-    public function paginate($perPage, array $columns = ['*'])
-    {
-        //
-    }
-
-    /**
-     * @param array $columns
-     * @return mixed
+     * @return Entity
      */
     public function parent(array $columns = ['*'])
     {
@@ -428,14 +418,21 @@ class EntityRepository implements EntityRepositoryInterface {
         return $this->entity->moveTo($target, $position);
     }
 
+    /**
+     * @return bool
+     */
     public function save()
     {
-        //
+        return false;
     }
 
+    /**
+     * @param bool $forceDelete
+     * @return bool
+     */
     public function destroy($forceDelete = false)
     {
-        //
+        return $this->entity->where($this->entity->getKeyName(), '=', $this->entity->getKey())->delete($forceDelete);
     }
 
     /**

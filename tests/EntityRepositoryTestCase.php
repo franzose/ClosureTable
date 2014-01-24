@@ -324,4 +324,15 @@ class EntityRepositoryTestCase extends BaseTestCase {
 
         $this->assertInstanceOf('Illuminate\Database\Eloquent\Collection', $result);
     }
+
+    public function testDestroy()
+    {
+        $this->entity->shouldReceive('getKeyName')->andReturn('foo');
+        $this->entity->shouldReceive('getKey')->andReturn(1);
+        $this->entity->shouldReceive('where->delete')->andReturn(true);
+
+        $result = $this->repository->destroy();
+
+        $this->assertInternalType('bool', $result);
+    }
 } 

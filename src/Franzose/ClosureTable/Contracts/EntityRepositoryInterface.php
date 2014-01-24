@@ -26,13 +26,6 @@ interface EntityRepositoryInterface {
     public function findByAttributes(array $attributes);
 
     /**
-     * @param $perPage
-     * @param array $columns
-     * @return mixed
-     */
-    public function paginate($perPage, array $columns = ['*']);
-
-    /**
      * @param array $columns
      * @return EntityInterface
      */
@@ -243,6 +236,9 @@ interface EntityRepositoryInterface {
      */
     public function moveTo(EntityInterface $target = null, $position);
 
+    /**
+     * @return bool
+     */
     public function save();
 
     /**
