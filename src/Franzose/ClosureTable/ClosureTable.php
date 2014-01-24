@@ -47,7 +47,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             ->orderBy(static::DEPTH, 'desc')
             ->first($attributes)->toArray();
 
-        $result = $closure;
+        $result = (count($closure) == 1 ? $closure[$attributes[0]] : $closure);
 
         if (array_key_exists('parent', $attributes))
         {
