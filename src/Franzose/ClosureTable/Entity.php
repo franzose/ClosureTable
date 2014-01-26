@@ -157,6 +157,17 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves all descendants of a model as a tree-like collection.
+     *
+     * @param array $columns
+     * @return \Franzose\ClosureTable\Extensions\Collection
+     */
+    public function getDescendantsTree(array $columns = ['*'])
+    {
+        return $this->getDescendants($columns)->toTree($this->getKey());
+    }
+
+    /**
      * Returns a number of model's descendants.
      *
      * @return int

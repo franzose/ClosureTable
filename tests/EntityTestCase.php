@@ -107,6 +107,16 @@ class EntityTestCase extends BaseTestCase {
         $this->assertCount(6, $descendants);
     }
 
+    public function testGetDescendantsTree()
+    {
+        $entity = Entity::find(9);
+        $descendants = $entity->getDescendantsTree();
+
+        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $descendants);
+        $this->assertCount(1, $descendants);
+        $this->assertArrayHasKey('children', $descendants->get(0)->getRelations());
+    }
+
     public function testCountDescendants()
     {
         $entity = Entity::find(9);

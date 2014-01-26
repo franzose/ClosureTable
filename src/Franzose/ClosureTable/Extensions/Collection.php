@@ -6,11 +6,11 @@ use \Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class Collection extends EloquentCollection {
 
-    public function toTree()
+    public function toTree($parentId = null)
     {
         $items = $this->items;
 
-        return new EloquentCollection($this->makeTree($items));
+        return new static($this->makeTree($items, $parentId));
     }
 
     protected function makeTree(array &$items, $parentId = null)
@@ -29,7 +29,7 @@ class Collection extends EloquentCollection {
 
                 if (count($children))
                 {
-                    $item->setRelation('children', new EloquentCollection($children));
+                    $item->setRelation('children', new static($children));
                 }
 
                 $tree[] = $item;
