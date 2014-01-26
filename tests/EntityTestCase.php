@@ -365,4 +365,15 @@ class EntityTestCase extends BaseTestCase {
         $this->assertNull(Entity::find(11));
         $this->assertNull(Entity::find(12));
     }
+
+    public function testDeleteSubtreeWithAncestor()
+    {
+        $entity = Entity::find(9);
+        $entity->deleteSubtree(true);
+
+        $this->assertNull(Entity::find(9));
+        $this->assertNull(Entity::find(10));
+        $this->assertNull(Entity::find(11));
+        $this->assertNull(Entity::find(12));
+    }
 } 

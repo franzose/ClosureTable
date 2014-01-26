@@ -84,13 +84,13 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * Indicates whether the model has children.
+     * Indicates whether the model is a parent.
      *
      * @return bool
      */
     public function isParent()
     {
-        return !!$this->children()->count();
+        return $this->hasChildren();
     }
 
     /**
@@ -104,6 +104,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves direct ancestor of a model.
+     *
      * @param array $columns
      * @return Entity
      */
@@ -113,6 +115,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves all ancestors of a model.
+     *
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
@@ -122,6 +126,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Returns a number of model's ancestors.
+     *
      * @return int
      */
     public function countAncestors()
@@ -130,6 +136,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Indicates whether a model has ancestors.
+     *
      * @return bool
      */
     public function hasAncestors()
@@ -138,6 +146,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves all descendants of a model.
+     *
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
@@ -147,6 +157,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Returns a number of model's descendants.
+     *
      * @return int
      */
     public function countDescendants()
@@ -155,6 +167,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Indicates whether a model has descendants.
+     *
      * @return bool
      */
     public function hasDescendants()
@@ -163,6 +177,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves all children of a model.
+     *
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
@@ -181,6 +197,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Returns a number of model's children.
+     *
      * @return int
      */
     public function countChildren()
@@ -198,6 +216,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     *  Indicates whether a model has children.
+     *
      * @return bool
      */
     public function hasChildren()
@@ -206,6 +226,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Indicates whether a model has children as a relation.
+     *
      * @return bool
      */
     protected function hasChildrenRelation()
@@ -214,6 +236,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves a child with given position.
+     *
      * @param $position
      * @param array $columns
      * @return Entity
@@ -224,6 +248,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves the first child.
+     *
      * @param array $columns
      * @return Entity
      */
@@ -233,6 +259,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves the last child.
+     *
      * @param array $columns
      * @return Entity
      */
@@ -242,9 +270,11 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Appends a child to the model.
+     *
      * @param EntityInterface $child
      * @param int $position
-     * @return Entity
+     * @return $this
      */
     public function appendChild(EntityInterface $child, $position = null)
     {
@@ -254,8 +284,10 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Appends a collection of children to the model.
+     *
      * @param array|\Illuminate\Database\Eloquent\Collection $children
-     * @return Entity
+     * @return $this
      * @throws \InvalidArgumentException
      */
     public function appendChildren($children)
@@ -290,9 +322,11 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Removes a model's child with given position.
+     *
      * @param int $position
      * @param bool $forceDelete
-     * @return Entity
+     * @return $this
      */
     public function removeChild($position = null, $forceDelete = false)
     {
@@ -308,8 +342,10 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Removes model's children within a range of positions.
+     *
      * @param int $from
-     * @param null $to
+     * @param int $to
      * @param bool $forceDelete
      * @return Entity
      * @throws \InvalidArgumentException
@@ -335,6 +371,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrives all siblings of a model.
+     *
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
@@ -344,6 +382,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Returns number of model's siblings.
+     *
      * @return int
      */
     public function countSiblings()
@@ -352,6 +392,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Indicates whether a model has siblings.
+     *
      * @return bool
      */
     public function hasSiblings()
@@ -360,6 +402,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves neighbors (immediate previous and immmediate next models) of a model.
+     *
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
@@ -369,6 +413,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves a model's sibling with given position.
+     *
      * @param int $position
      * @param array $columns
      * @return Entity
@@ -379,6 +425,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves the first model's sibling.
+     *
      * @param array $columns
      * @return Entity
      */
@@ -388,6 +436,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves the last model's sibling.
+     *
      * @param array $columns
      * @return Entity
      */
@@ -397,6 +447,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves immediate previous sibling of a model.
+     *
      * @param array $columns
      * @return Entity
      */
@@ -406,6 +458,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves all previous siblings of a model.
+     *
      * @param array $columns
      * @return mixed
      */
@@ -415,6 +469,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Returns number of previous siblings of a model.
+     *
      * @return int
      */
     public function countPrevSiblings()
@@ -423,6 +479,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Indicates whether a model has previous siblings.
+     *
      * @return bool
      */
     public function hasPrevSiblings()
@@ -431,6 +489,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves immediate next sibling of a model.
+     *
      * @param array $columns
      * @return Entity
      */
@@ -440,6 +500,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves all next siblings of a model.
+     *
      * @param array $columns
      * @return mixed
      */
@@ -449,6 +511,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Returns number of next siblings of a model.
+     *
      * @return int
      */
     public function countNextSiblings()
@@ -457,6 +521,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Indicates whether a model has next siblings.
+     *
      * @return bool
      */
     public function hasNextSiblings()
@@ -465,6 +531,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves root (with no ancestors) models.
+     *
      * @param array $columns
      * @return mixed
      */
@@ -474,6 +542,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Makes model a root with given position.
+     *
      * @param int $position
      * @return Entity
      */
@@ -483,6 +553,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves entire tree.
+     *
      * @param array $columns
      * @return mixed
      */
@@ -571,6 +643,9 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Reorders siblings when a model is moved
+     * to another position or ancestor.
+     *
      * @param EntityInterface $unsavedEntity
      */
     protected function reorderSiblings(EntityInterface $unsavedEntity)
@@ -633,6 +708,8 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Deletes a subtree from database.
+     *
      * @param bool $withAncestor
      * @param bool $forceDelete
      * @return mixed
@@ -640,11 +717,11 @@ class Entity extends Eloquent implements EntityInterface {
     public function deleteSubtree($withAncestor = false, $forceDelete = false)
     {
         $keyName = $this->getKeyName();
-        $keys    = $this->getDescendants([$keyName]);
+        $keys    = $this->getDescendants([$keyName])->lists($keyName);
 
         if ($withAncestor === true)
         {
-            $keys[]  = $this->getKey();
+            $keys[] = $this->getKey();
         }
 
         $query = $this->whereIn($keyName, $keys);
