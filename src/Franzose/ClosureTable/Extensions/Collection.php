@@ -1,6 +1,7 @@
 <?php namespace Franzose\ClosureTable\Extensions;
 
-use Franzose\ClosureTable\Contracts\EntityInterface;
+use \Franzose\ClosureTable\Contracts\EntityInterface;
+use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
 use \Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class Collection extends EloquentCollection {
@@ -16,9 +17,9 @@ class Collection extends EloquentCollection {
     {
         $tree = [];
 
-        foreach($items as $item)
+        foreach($items as $idx => $item)
         {
-            $itemParent = $item->parent([$item->getQualifiedKeyName()])->first();
+            $itemParent = $item->getParent();
             $itemParentId = ($itemParent instanceof EntityInterface ? $itemParent->getKey() : null);
             $itemKey = $item->getKey();
 
@@ -32,8 +33,10 @@ class Collection extends EloquentCollection {
                 }
 
                 $tree[] = $item;
-                unset($items[$itemKey]);
+                unset($items[$idx]);
             }
+
+
         }
 
         return $tree;

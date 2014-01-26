@@ -58,13 +58,15 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
         if (array_key_exists('parent', $attributes) || $attributes == ['*'])
         {
-            $parentId = static::select([static::ANCESTOR])
+            $parent = static::select([static::ANCESTOR])
                 ->where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
                 ->where(static::DEPTH, '=', 1)
-                ->first()
-                ->{static::ANCESTOR};
+                ->first();
 
-            $result = array_merge($closure, ['parent' => $parentId]);
+            if ( ! is_null($parent))
+            {
+                $result = array_merge($closure, ['parent' => $parent->{static::ANCESTOR}]);
+            }
         }
 
         return $result;
@@ -80,7 +82,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function insertNode($ancestorId, $descendantId)
     {
-        if ( ! is_int($ancestorId) || ! is_int($descendantId))
+        if ( ! is_numeric($ancestorId) || ! is_numeric($descendantId))
         {
             throw new \InvalidArgumentException('`ancestorId` and `descendantId` arguments must be of type int.');
         }
@@ -122,7 +124,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function moveNodeTo($ancestorId = null)
     {
-        if ( ! is_null($ancestorId) && ! is_int($ancestorId))
+        if ( ! is_null($ancestorId) && ! is_numeric($ancestorId))
         {
             throw new \InvalidArgumentException('`ancestor` argument must be of type int.');
         }

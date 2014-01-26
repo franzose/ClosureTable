@@ -3,6 +3,8 @@
 use \Illuminate\Database\ConnectionInterface;
 use \Illuminate\Database\Query\Grammars\Grammar;
 use \Illuminate\Database\Query\Processors\Processor;
+use \Franzose\ClosureTable\Contracts\EntityInterface;
+use \DB;
 
 /**
  * Class QueryBuilder
@@ -89,6 +91,16 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     }
 
     /**
+     * @param $position
+     * @param array $columns
+     * @return \Illuminate\Database\Query\Builder|static
+     */
+    public function childAt($position, array $columns = ['*'])
+    {
+        return $this->children($columns)->where(EntityInterface::POSITION, '=', $position);
+    }
+
+    /**
      * @param string $find
      * @param string $direction
      * @param array $columns
@@ -98,7 +110,8 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     {
         $query = $this->select($columns)
             ->join($this->qattrs['closure'].' as c', 'c.'.$this->qattrs['descendantShort'], '=', $this->qattrs['pk'])
-            ->where($this->qattrs['depthShort'], '=', $this->qattrs['depthValue']);
+            ->where($this->qattrs['depthShort'], '=', $this->qattrs['depthValue'])
+            ->where($this->qattrs['ancestorShort'], '=', $this->qattrs['ancestorValue']);
 
         if ($find == 'all' && $direction == 'both')
         {
@@ -119,16 +132,21 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
             {
                 case 'prev':
                     $operand = '<';
-                    $position = $this->qattrs['positionValue']--;
+                    $position = $this->qattrs['positionValue']-1;
                     break;
 
                 case 'next':
                     $operand = '>';
-                    $position = $this->qattrs['positionValue']++;
+                    $position = $this->qattrs['positionValue']+1;
                     break;
             }
 
             $operand = ($find == 'all' ? $operand : '=');
+
+            if ($find == 'all')
+            {
+                $position = $this->qattrs['positionValue'];
+            }
 
             $query->where($this->qattrs['position'], $operand, $position);
         }
@@ -148,6 +166,11 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     public function siblings(array $columns = ['*'])
     {
         return $this->getSiblingsQuery('all', 'both', $columns);
+    }
+
+    public function siblingAt($position, array $columns = ['*'])
+    {
+        return $this->siblings($columns)->where(EntityInterface::POSITION, '=', $position);
     }
 
     /**
@@ -195,6 +218,10 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
         return $this->getSiblingsQuery('one', 'next', $columns);
     }
 
+    /**
+     * @param string $closureTableAlias
+     * @return string
+     */
     protected function getRootCheckQuery($closureTableAlias = 'c')
     {
         return '(select count(*) from '.$this->qattrs['closure'].' as ct '.
@@ -202,6 +229,10 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
                'and ct.'.$this->qattrs['depthShort'].' > 0) = 0';
     }
 
+    /**
+     * @param array $columns
+     * @return \Illuminate\Database\Query\Builder|static
+     */
     public function roots(array $columns = ['*'])
     {
         array_push($columns, 'c.'.$this->qattrs['ancestorShort']);
@@ -216,17 +247,32 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
             ->whereRaw($this->getRootCheckQuery());
     }
 
+    /**
+     * @param array $columns
+     * @return \Illuminate\Database\Query\Builder|static
+     */
     public function tree(array $columns = ['*'])
     {
-        $ak  = 'c1.'.$this->qattrs['ancestorShort'];
-        $dk  = 'c1.'.$this->qattrs['descendantShort'];
+        $whereIn = function(QueryBuilder $q){
+            return $q->select($this->qattrs['ancestor'])
+                ->from($q->qattrs['closure'])
+                ->whereRaw($q->getRootCheckQuery($q->qattrs['closure']));
+        };
 
-        $columns = array_merge($columns, [$ak, $dk, 'c1.'.$this->qattrs['depthShort']]);
+        $query = $this->select($columns)
+            ->join($this->qattrs['closure'], $this->qattrs['descendant'], '=', $this->qattrs['pk'])
+            ->whereIn($this->qattrs['ancestor'], $whereIn);
 
-        return $this->select($columns)
-            ->distinct()
-            ->join($this->qattrs['closure'].' as c1', $this->qattrs['pk'], '=', $ak)
-            ->join($this->qattrs['closure'].' as c2', $this->qattrs['pk'], '=', 'c2.'.$this->qattrs['descendantShort'])
-            ->whereRaw($ak.' = '.$dk);
+        return $query;
+    }
+
+    /**
+     * Get a new instance of the query builder.
+     *
+     * @return \Franzose\ClosureTable\Extensions\QueryBuilder
+     */
+    public function newQuery()
+    {
+        return new static($this->connection, $this->grammar, $this->processor, $this->qattrs);
     }
 } 

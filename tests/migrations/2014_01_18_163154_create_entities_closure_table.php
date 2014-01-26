@@ -14,7 +14,7 @@ class CreateEntitiesClosureTable extends Migration {
 	{
 		Schema::create('entities_closure', function(Blueprint $table)
 		{
-            $table->increments('id');
+            $table->increments('ctid');
             $table->integer('ancestor');
             $table->integer('descendant');
             $table->integer('depth');

@@ -23,6 +23,7 @@ class QueryBuilderTestCase extends BaseTestCase {
             'closure'         => 'entities_closure',
             'ancestor'        => 'entities_closure.ancestor',
             'ancestorShort'   => 'ancestor',
+            'ancestorValue'   => 2,
             'descendant'      => 'entities_closure.descendant',
             'descendantShort' => 'descendant',
             'depth'           => 'entities_closure.depth',
@@ -82,12 +83,12 @@ class QueryBuilderTestCase extends BaseTestCase {
         $qb  = $this->getBuilder();
         $sql = 'select * from "entities" '.
                'inner join "entities_closure" as "c" on "c"."descendant" = "entities"."id" '.
-               'where "depth" = ? and "descendant" <> ? '.
+               'where "depth" = ? and "ancestor" = ? and "descendant" <> ? '.
                'and (select count(*) from entities_closure as ct '.
                'where ct.descendant = c.ancestor and ct.depth > 0) = 0';
 
         $this->assertEquals($sql, $qb->from('entities')->siblings()->toSql());
-        $this->assertEquals([0, 5], $qb->getBindings());
+        $this->assertEquals([0, 2, 5], $qb->getBindings());
     }
 
     public function testNeighbors()
@@ -95,12 +96,12 @@ class QueryBuilderTestCase extends BaseTestCase {
         $qb  = $this->getBuilder();
         $sql = 'select * from "entities" '.
                'inner join "entities_closure" as "c" on "c"."descendant" = "entities"."id" '.
-               'where "depth" = ? and "position" in (?, ?) '.
+               'where "depth" = ? and "ancestor" = ? and "position" in (?, ?) '.
                'and (select count(*) from entities_closure as ct '.
                'where ct.descendant = c.ancestor and ct.depth > 0) = 0';
 
         $this->assertEquals($sql, $qb->from('entities')->neighbors()->toSql());
-        $this->assertEquals([0, 3, 5], $qb->getBindings());
+        $this->assertEquals([0, 2, 3, 5], $qb->getBindings());
     }
 
     public function testPrevSiblings()
@@ -108,12 +109,12 @@ class QueryBuilderTestCase extends BaseTestCase {
         $qb  = $this->getBuilder();
         $sql = 'select * from "entities" '.
                'inner join "entities_closure" as "c" on "c"."descendant" = "entities"."id" '.
-               'where "depth" = ? and "position" < ? '.
+               'where "depth" = ? and "ancestor" = ? and "position" < ? '.
                'and (select count(*) from entities_closure as ct '.
                'where ct.descendant = c.ancestor and ct.depth > 0) = 0';
 
         $this->assertEquals($sql, $qb->from('entities')->prevSiblings()->toSql());
-        $this->assertEquals([0, 4], $qb->getBindings());
+        $this->assertEquals([0, 2, 4], $qb->getBindings());
     }
 
     public function testPrevSibling()
@@ -121,12 +122,12 @@ class QueryBuilderTestCase extends BaseTestCase {
         $qb  = $this->getBuilder();
         $sql = 'select * from "entities" '.
                'inner join "entities_closure" as "c" on "c"."descendant" = "entities"."id" '.
-               'where "depth" = ? and "position" = ? '.
+               'where "depth" = ? and "ancestor" = ? and "position" = ? '.
                'and (select count(*) from entities_closure as ct '.
                'where ct.descendant = c.ancestor and ct.depth > 0) = 0';
 
         $this->assertEquals($sql, $qb->from('entities')->prevSibling()->toSql());
-        $this->assertEquals([0, 4], $qb->getBindings());
+        $this->assertEquals([0, 2, 3], $qb->getBindings());
     }
 
     public function testNextSiblings()
@@ -134,12 +135,12 @@ class QueryBuilderTestCase extends BaseTestCase {
         $qb  = $this->getBuilder();
         $sql = 'select * from "entities" '.
                'inner join "entities_closure" as "c" on "c"."descendant" = "entities"."id" '.
-               'where "depth" = ? and "position" > ? '.
+               'where "depth" = ? and "ancestor" = ? and "position" > ? '.
                'and (select count(*) from entities_closure as ct '.
                'where ct.descendant = c.ancestor and ct.depth > 0) = 0';
 
         $this->assertEquals($sql, $qb->from('entities')->nextSiblings()->toSql());
-        $this->assertEquals([0, 4], $qb->getBindings());
+        $this->assertEquals([0, 2, 4], $qb->getBindings());
     }
 
     public function testNextSibling()
@@ -147,12 +148,12 @@ class QueryBuilderTestCase extends BaseTestCase {
         $qb  = $this->getBuilder();
         $sql = 'select * from "entities" '.
                'inner join "entities_closure" as "c" on "c"."descendant" = "entities"."id" '.
-               'where "depth" = ? and "position" = ? '.
+               'where "depth" = ? and "ancestor" = ? and "position" = ? '.
                'and (select count(*) from entities_closure as ct '.
                'where ct.descendant = c.ancestor and ct.depth > 0) = 0';
 
         $this->assertEquals($sql, $qb->from('entities')->nextSibling()->toSql());
-        $this->assertEquals([0, 4], $qb->getBindings());
+        $this->assertEquals([0, 2, 5], $qb->getBindings());
     }
 
     public function testRoots()
@@ -170,11 +171,13 @@ class QueryBuilderTestCase extends BaseTestCase {
     public function testTree()
     {
         $qb  = $this->getBuilder();
-        $sql = 'select distinct *, "c1"."ancestor", "c1"."descendant", "c1"."depth" '.
-               'from "entities" '.
-               'inner join "entities_closure" as "c1" on "entities"."id" = "c1"."ancestor" '.
-               'inner join "entities_closure" as "c2" on "entities"."id" = "c2"."descendant" '.
-               'where c1.ancestor = c1.descendant';
+        $sql = 'select * from "entities" '.
+               'inner join "entities_closure" on "entities_closure"."descendant" = "entities"."id" '.
+               'where "entities_closure"."ancestor" in '.
+               '(select "entities_closure"."ancestor" from "entities_closure" '.
+               'where (select count(*) from entities_closure as ct '.
+               'where ct.descendant = entities_closure.ancestor '.
+               'and ct.depth > 0) = 0)';
 
         $this->assertEquals($sql, $qb->from('entities')->tree()->toSql());
     }
