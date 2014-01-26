@@ -4,7 +4,6 @@ use \Illuminate\Database\ConnectionInterface;
 use \Illuminate\Database\Query\Grammars\Grammar;
 use \Illuminate\Database\Query\Processors\Processor;
 use \Franzose\ClosureTable\Contracts\EntityInterface;
-use \DB;
 
 /**
  * Class QueryBuilder
