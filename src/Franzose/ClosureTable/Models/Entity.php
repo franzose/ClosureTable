@@ -1,11 +1,11 @@
-<?php namespace Franzose\ClosureTable;
+<?php namespace Franzose\ClosureTable\Models;
 
 use \Illuminate\Database\Eloquent\Model as Eloquent;
 use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use \Franzose\ClosureTable\Extensions\Collection;
-use \Franzose\ClosureTable\Extensions\QueryBuilder;
 use \Franzose\ClosureTable\Contracts\EntityInterface;
 use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
+use \Franzose\ClosureTable\Extensions\Collection;
+use \Franzose\ClosureTable\Extensions\QueryBuilder;
 
 /**
  * Class Entity

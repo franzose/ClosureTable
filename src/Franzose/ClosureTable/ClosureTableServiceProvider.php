@@ -37,9 +37,8 @@ class ClosureTableServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-        $this->app->bind('Franzose\ClosureTable\Contracts\EntityInterface', 'Franzose\ClosureTable\Entity');
-        $this->app->bind('Franzose\ClosureTable\Contracts\ClosureTableInterface', 'Franzose\ClosureTable\ClosureTable');
-        $this->app->bind('Franzose\ClosureTable\Contracts\EntityRepositoryInterface', 'Franzose\ClosureTable\EntityRepository');
+        $this->app->bind('Franzose\ClosureTable\Contracts\EntityInterface', 'Franzose\ClosureTable\Models\Entity');
+        $this->app->bind('Franzose\ClosureTable\Contracts\ClosureTableInterface', 'Franzose\ClosureTable\Models\ClosureTable');
 
         $this->app['command.closuretable'] = $this->app->share(function($app){
             return new ClosureTableCommand;

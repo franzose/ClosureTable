@@ -1,11 +1,10 @@
 <?php namespace Franzose\ClosureTable\Tests;
 
-
-use \Illuminate\Container\Container as App;
 use \Mockery;
-use Franzose\ClosureTable\Entity;
-use Franzose\ClosureTable\Contracts\EntityInterface;
-use Franzose\ClosureTable\ClosureTable;
+use \Illuminate\Container\Container as App;
+use \Franzose\ClosureTable\Contracts\EntityInterface;
+use \Franzose\ClosureTable\Models\Entity;
+use \Franzose\ClosureTable\Models\ClosureTable;
 
 class EntityTestCase extends BaseTestCase {
     /**

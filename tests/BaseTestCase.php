@@ -14,9 +14,8 @@ class BaseTestCase extends TestCase {
     {
         parent::setUp();
 
-        $this->app->bind('Franzose\ClosureTable\Contracts\EntityInterface', 'Franzose\ClosureTable\Entity');
-        $this->app->bind('Franzose\ClosureTable\Contracts\ClosureTableInterface', 'Franzose\ClosureTable\ClosureTable');
-        $this->app->bind('Franzose\ClosureTable\Contracts\EntityRepositoryInterface', 'Franzose\ClosureTable\EntityRepository');
+        $this->app->bind('Franzose\ClosureTable\Contracts\EntityInterface', 'Franzose\ClosureTable\Models\Entity');
+        $this->app->bind('Franzose\ClosureTable\Contracts\ClosureTableInterface', 'Franzose\ClosureTable\Models\ClosureTable');
 
         $artisan = $this->app->make('artisan');
         $artisan->call('migrate', [

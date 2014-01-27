@@ -1,7 +1,7 @@
 <?php namespace Franzose\ClosureTable\Tests;
 
 use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
-use \Franzose\ClosureTable\ClosureTable;
+use \Franzose\ClosureTable\Models\ClosureTable;
 
 class ClosureTableTestCase extends BaseTestCase {
     /**

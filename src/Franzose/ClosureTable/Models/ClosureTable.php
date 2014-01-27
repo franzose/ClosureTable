@@ -1,4 +1,4 @@
-<?php namespace Franzose\ClosureTable;
+<?php namespace Franzose\ClosureTable\Models;
 
 use \Illuminate\Database\Eloquent\Model as Eloquent;
 use \Franzose\ClosureTable\Contracts\ClosureTableInterface;

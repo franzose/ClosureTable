@@ -2,7 +2,7 @@
 
 use \Franzose\ClosureTable\Extensions\Collection;
 use \Franzose\ClosureTable\Contracts\EntityInterface;
-use \Franzose\ClosureTable\Entity;
+use \Franzose\ClosureTable\Models\Entity;
 use \Mockery;
 
 class CollectionTestCase extends BaseTestCase {
