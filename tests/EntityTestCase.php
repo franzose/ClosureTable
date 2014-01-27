@@ -55,14 +55,14 @@ class EntityTestCase extends BaseTestCase {
 
     public function testMoveTo()
     {
-        $closure = Mockery::mock('Franzose\ClosureTable\ClosureTable');
+        $closure = Mockery::mock('Franzose\ClosureTable\Models\ClosureTable');
         $this->app->instance('Franzose\ClosureTable\Contracts\ClosureTableInterface', $closure);
 
         $closure->shouldReceive('moveNodeTo')
             ->with(Mockery::type('int'))
             ->andReturn(Mockery::type('bool'));
 
-        $ancestor = Mockery::mock('Franzose\ClosureTable\Entity');
+        $ancestor = Mockery::mock('Franzose\ClosureTable\Models\Entity');
         $ancestor->shouldReceive('getKey')->andReturn(1);
 
         $result = $this->entity->moveTo(5, $ancestor);
@@ -75,7 +75,7 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(10);
         $parent = $entity->getParent();
 
-        $this->assertInstanceOf('Franzose\ClosureTable\Entity', $parent);
+        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $parent);
         $this->assertEquals(9, $parent->getKey());
     }
 
@@ -148,7 +148,7 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(9);
         $child  = $entity->getChildAt(2);
 
-        $this->assertInstanceOf('Franzose\ClosureTable\Entity', $child);
+        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
         $this->assertEquals(2, $child->{EntityInterface::POSITION});
     }
 
@@ -157,7 +157,7 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(9);
         $child  = $entity->getFirstChild();
 
-        $this->assertInstanceOf('Franzose\ClosureTable\Entity', $child);
+        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
         $this->assertEquals(0, $child->{EntityInterface::POSITION});
     }
 
@@ -166,7 +166,7 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(9);
         $child  = $entity->getLastChild();
 
-        $this->assertInstanceOf('Franzose\ClosureTable\Entity', $child);
+        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
         $this->assertEquals(3, $child->{EntityInterface::POSITION});
     }
 
@@ -224,7 +224,7 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(9);
         $entity->removeChildren(1);
 
-        $this->assertInstanceOf('Franzose\ClosureTable\Entity', $entity->getFirstChild());
+        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $entity->getFirstChild());
         $this->assertEquals(1, $entity->countChildren());
     }
 
@@ -359,9 +359,9 @@ class EntityTestCase extends BaseTestCase {
         $this->assertCount(9, $tree);
 
         $ninth = $tree->get(8);
-        $this->assertArrayHasKey('children', $ninth->getRelations());
+        $this->assertArrayHasKey(EntityInterface::CHILDREN, $ninth->getRelations());
 
-        $tenth = $ninth->getRelation('children');
+        $tenth = $ninth->getRelation(EntityInterface::CHILDREN);
         $this->assertCount(1, $tenth);
     }
 
