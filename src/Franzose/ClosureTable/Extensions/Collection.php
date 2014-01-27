@@ -10,6 +10,27 @@ use \Illuminate\Database\Eloquent\Collection as EloquentCollection;
  */
 class Collection extends EloquentCollection {
 
+    public function getChildrenOf($position)
+    {
+        if ( ! $this->hasChildren($position))
+        {
+            return null;
+        }
+
+        return $this->get($position)->getRelation(EntityInterface::CHILDREN);
+    }
+
+    /**
+     * Indicates whether an item has children.
+     *
+     * @param $position
+     * @return bool
+     */
+    public function hasChildren($position)
+    {
+        return array_key_exists(EntityInterface::CHILDREN, $this->get($position)->getRelations());
+    }
+
     /**
      * Makes tree-like collection.
      *
@@ -46,7 +67,7 @@ class Collection extends EloquentCollection {
 
                 if (count($children))
                 {
-                    $item->setRelation('children', new static($children));
+                    $item->setRelation(EntityInterface::CHILDREN, new static($children));
                 }
 
                 $tree[] = $item;
