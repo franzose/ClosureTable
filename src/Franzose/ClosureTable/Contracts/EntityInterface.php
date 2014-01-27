@@ -10,6 +10,13 @@ interface EntityInterface {
     const POSITION = 'position';
 
     /**
+     * Relations array key that stores children collection.
+     *
+     * @var string
+     */
+    const CHILDREN = 'children';
+
+    /**
      * Indicates whether the model has children.
      *
      * @return bool

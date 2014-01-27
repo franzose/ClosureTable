@@ -39,11 +39,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function __construct(array $attributes = array())
     {
-        $this->fillable(array_merge($this->getFillable(), array(static::POSITION)));
+        $this->fillable(array_merge($this->getFillable(), array(EntityInterface::POSITION)));
 
-        if ( ! isset($attributes[static::POSITION]))
+        if ( ! isset($attributes[EntityInterface::POSITION]))
         {
-            $attributes[static::POSITION] = 0;
+            $attributes[EntityInterface::POSITION] = 0;
         }
 
         $this->makeClosureTable();
@@ -197,7 +197,7 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if ($this->hasChildrenRelation())
         {
-            $result = $this->getRelation('children');
+            $result = $this->getRelation(EntityInterface::CHILDREN);
         }
         else
         {
@@ -216,7 +216,7 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if ($this->hasChildrenRelation())
         {
-            $result = $this->getRelation('children')->count();
+            $result = $this->getRelation(EntityInterface::CHILDREN)->count();
         }
         else
         {
@@ -243,7 +243,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function hasChildrenRelation()
     {
-        return array_key_exists('children', $this->getRelations());
+        return array_key_exists(EntityInterface::CHILDREN, $this->getRelations());
     }
 
     /**
@@ -255,7 +255,16 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getChildAt($position, array $columns = ['*'])
     {
-        return $this->childAt($position, $columns)->first();
+        if ($this->hasChildrenRelation())
+        {
+            $result = $this->getRelation(EntityInterface::CHILDREN)->get($position);
+        }
+        else
+        {
+            $result = $this->childAt($position, $columns)->first();
+        }
+
+        return $result;
     }
 
     /**
@@ -591,7 +600,7 @@ class Entity extends Eloquent implements EntityInterface {
 
         $self = clone $this;
 
-        $this->{static::POSITION} = $position;
+        $this->{EntityInterface::POSITION} = $position;
 
         $this->save([
             'ancestor' => (is_null($ancestor) ? $ancestor : $ancestor->getKey()),
@@ -662,8 +671,8 @@ class Entity extends Eloquent implements EntityInterface {
     protected function reorderSiblings(EntityInterface $unsavedEntity)
     {
         $position = [
-            'original' => $unsavedEntity->getOriginal(static::POSITION),
-            'current'  => $this->{static::POSITION}
+            'original' => $unsavedEntity->getOriginal(EntityInterface::POSITION),
+            'current'  => $this->{EntityInterface::POSITION}
         ];
 
         $depth = [
@@ -691,15 +700,15 @@ class Entity extends Eloquent implements EntityInterface {
 
             if ($isSQLite)
             {
-                $siblingsIds = $siblings->whereIn(static::POSITION, $range)->lists($keyName);
+                $siblingsIds = $siblings->whereIn(EntityInterface::POSITION, $range)->lists($keyName);
                 $siblings = $this->whereIn($keyName, $siblingsIds);
             }
             else
             {
-                $siblings->whereIn(static::POSITION, $range);
+                $siblings->whereIn(EntityInterface::POSITION, $range);
             }
 
-            $siblings->$action(static::POSITION);
+            $siblings->$action(EntityInterface::POSITION);
 
             if ($depth['current'] != $depth['original'])
             {
@@ -713,7 +722,7 @@ class Entity extends Eloquent implements EntityInterface {
                     $nextSiblings = $unsavedEntity->nextSiblings();
                 }
 
-                $nextSiblings->decrement(static::POSITION);
+                $nextSiblings->decrement(EntityInterface::POSITION);
             }
         }
     }
