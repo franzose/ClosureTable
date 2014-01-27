@@ -15,6 +15,11 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     protected $table = 'entities_closure';
 
     /**
+     * @var string
+     */
+    protected $primaryKey = 'ctid';
+
+    /**
      * @var bool
      */
     public $timestamps = false;

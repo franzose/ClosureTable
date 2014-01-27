@@ -41,22 +41,22 @@ class ClosureTableTestCase extends BaseTestCase {
 
     public function testInsertNode()
     {
-        $this->ctable->insertNode(12, 12);
-        $item = ClosureTable::where(ClosureTableInterface::DESCENDANT, '=', 12)->first();
+        $this->ctable->insertNode(16, 16);
+        $item = ClosureTable::where(ClosureTableInterface::DESCENDANT, '=', 16)->first();
 
         $this->assertNotNull($item);
-        $this->assertEquals(12, $item->{ClosureTable::ANCESTOR});
-        $this->assertEquals(12, $item->{ClosureTable::DESCENDANT});
+        $this->assertEquals(16, $item->{ClosureTable::ANCESTOR});
+        $this->assertEquals(16, $item->{ClosureTable::DESCENDANT});
         $this->assertEquals(0, $item->{ClosureTable::DEPTH});
     }
 
     public function testInsertedNodeDepth()
     {
-        $this->ctable->insertNode(12, 12);
-        $this->ctable->insertNode(12, 13);
+        $this->ctable->insertNode(16, 16);
+        $this->ctable->insertNode(13, 16);
 
-        $item = ClosureTable::where(ClosureTableInterface::DESCENDANT, '=', 13)
-                    ->where(ClosureTableInterface::ANCESTOR, '=', 12)->first();
+        $item = ClosureTable::where(ClosureTableInterface::DESCENDANT, '=', 16)
+                    ->where(ClosureTableInterface::ANCESTOR, '=', 13)->first();
 
         $this->assertNotNull($item);
         $this->assertEquals(1, $item->{ClosureTable::DEPTH});
@@ -64,11 +64,12 @@ class ClosureTableTestCase extends BaseTestCase {
 
     public function testValidNumberOfRowsInsertedByInsertNode()
     {
-        $this->ctable->insertNode(12, 12);
-        $this->ctable->insertNode(12, 13);
+        $this->ctable->insertNode(1, 17);
 
-        $ancestorRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 12)->count();
-        $descendantRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 13)->count();
+        $ancestorRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 1)->count();
+        $descendantRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 17)->count();
+
+        var_dump(ClosureTable::where(ClosureTable::DESCENDANT, '=', 17)->get()->toArray());
 
         $this->assertEquals(1, $ancestorRows);
         $this->assertEquals(2, $descendantRows);
