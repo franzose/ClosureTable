@@ -69,8 +69,6 @@ class ClosureTableTestCase extends BaseTestCase {
         $ancestorRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 1)->count();
         $descendantRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 17)->count();
 
-        var_dump(ClosureTable::where(ClosureTable::DESCENDANT, '=', 17)->get()->toArray());
-
         $this->assertEquals(1, $ancestorRows);
         $this->assertEquals(2, $descendantRows);
     }
