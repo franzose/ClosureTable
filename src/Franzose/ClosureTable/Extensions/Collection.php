@@ -10,6 +10,12 @@ use \Illuminate\Database\Eloquent\Collection as EloquentCollection;
  */
 class Collection extends EloquentCollection {
 
+    /**
+     * Retrieves children relation.
+     *
+     * @param $position
+     * @return Collection|null
+     */
     public function getChildrenOf($position)
     {
         if ( ! $this->hasChildren($position))
