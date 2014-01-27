@@ -1,11 +1,21 @@
 <?php namespace Franzose\ClosureTable\Extensions;
 
 use \Franzose\ClosureTable\Contracts\EntityInterface;
-use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
 use \Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
+/**
+ * Extended Collection class. Provides some useful methods.
+ *
+ * @package Franzose\ClosureTable\Extensions
+ */
 class Collection extends EloquentCollection {
 
+    /**
+     * Makes tree-like collection.
+     *
+     * @param int $parentId
+     * @return Collection
+     */
     public function toTree($parentId = null)
     {
         $items = $this->items;
@@ -13,6 +23,13 @@ class Collection extends EloquentCollection {
         return new static($this->makeTree($items, $parentId));
     }
 
+    /**
+     * Performs actual tree building.
+     *
+     * @param array $items
+     * @param int $parentId
+     * @return array
+     */
     protected function makeTree(array &$items, $parentId = null)
     {
         $tree = [];
