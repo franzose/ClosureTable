@@ -55,19 +55,12 @@ class EntityTestCase extends BaseTestCase {
 
     public function testMoveTo()
     {
-        $closure = Mockery::mock('Franzose\ClosureTable\Models\ClosureTable');
-        $this->app->instance('Franzose\ClosureTable\Contracts\ClosureTableInterface', $closure);
-
-        $closure->shouldReceive('moveNodeTo')
-            ->with(Mockery::type('int'))
-            ->andReturn(Mockery::type('bool'));
-
-        $ancestor = Mockery::mock('Franzose\ClosureTable\Models\Entity');
-        $ancestor->shouldReceive('getKey')->andReturn(1);
-
+        $ancestor = Entity::find(1);
         $result = $this->entity->moveTo(5, $ancestor);
+        
         $this->assertSame($this->entity, $result);
         $this->assertEquals(5, $result->{Entity::POSITION});
+        $this->assertEquals($this->entity->getParent()->getKey(), $ancestor->getKey());
     }
 
     public function testGetParent()
