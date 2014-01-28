@@ -318,7 +318,16 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getLastChild(array $columns = ['*'])
     {
-        return $this->children($columns)->orderBy(EntityInterface::POSITION, 'desc')->first();
+        if ($this->hasChildrenRelation())
+        {
+            $result = $this->getRelation(EntityInterface::CHILDREN)->last();
+        }
+        else
+        {
+            $result = $this->children($columns)->orderBy(EntityInterface::POSITION, 'desc')->first();
+        }
+
+        return $result;
     }
 
     /**
@@ -344,18 +353,25 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function appendChildren($children)
     {
-        if ( ! is_array($children) && ! $children instanceof \Illuminate\Database\Eloquent\Collection)
+        $validInstance = (   $children instanceof \Illuminate\Database\Eloquent\Collection
+                          || $children instanceof Collection);
+
+        if ( ! is_array($children) && ! $validInstance)
         {
             throw new \InvalidArgumentException('Children argument must be of type array or \Illuminate\Database\Eloquent\Collection.');
         }
 
         \DB::transaction(function() use($children)
         {
-            $lastChildPosition = $this->getLastChild([EntityInterface::POSITION]);
+            $lastChild = $this->getLastChild([EntityInterface::POSITION]);
 
-            if (is_null($lastChildPosition))
+            if (is_null($lastChild))
             {
                 $lastChildPosition = 0;
+            }
+            else
+            {
+                $lastChildPosition = $lastChild->{EntityInterface::POSITION};
             }
 
             foreach($children as $child)
@@ -404,7 +420,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function removeChildren($from, $to = null, $forceDelete = false)
     {
-        if ( ! is_int($from) || ( ! is_null($to) && ! is_int($to)))
+        if ( ! is_numeric($from) || ( ! is_null($to) && ! is_numeric($to)))
         {
             throw new \InvalidArgumentException('`from` and `to` are the position boundaries. They must be of type int.');
         }
