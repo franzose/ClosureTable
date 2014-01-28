@@ -3,6 +3,7 @@
 use \Mockery;
 use \Illuminate\Container\Container as App;
 use \Franzose\ClosureTable\Contracts\EntityInterface;
+use \Franzose\ClosureTable\Extensions\Collection;
 use \Franzose\ClosureTable\Models\Entity;
 use \Franzose\ClosureTable\Models\ClosureTable;
 
@@ -186,7 +187,7 @@ class EntityTestCase extends BaseTestCase {
         $child3 = new Entity;
         $child3->save();
 
-        $array = [$child1, $child2, $child3];
+        $array = new Collection([$child1, $child2, $child3]);
         $result = $entity->appendChildren($array);
 
         $this->assertSame($entity, $result);
@@ -368,6 +369,7 @@ class EntityTestCase extends BaseTestCase {
         $this->assertNull(Entity::find(10));
         $this->assertNull(Entity::find(11));
         $this->assertNull(Entity::find(12));
+        $this->assertNotNull(Entity::find(8));
     }
 
     public function testDeleteSubtreeWithAncestor()

@@ -347,7 +347,7 @@ class Entity extends Eloquent implements EntityInterface {
     /**
      * Appends a collection of children to the model.
      *
-     * @param array|\Illuminate\Database\Eloquent\Collection $children
+     * @param Collection|\Illuminate\Database\Eloquent\Collection $children
      * @return $this
      * @throws \InvalidArgumentException
      */
@@ -356,9 +356,9 @@ class Entity extends Eloquent implements EntityInterface {
         $validInstance = (   $children instanceof \Illuminate\Database\Eloquent\Collection
                           || $children instanceof Collection);
 
-        if ( ! is_array($children) && ! $validInstance)
+        if ( ! $validInstance)
         {
-            throw new \InvalidArgumentException('Children argument must be of type array or \Illuminate\Database\Eloquent\Collection.');
+            throw new \InvalidArgumentException('Children argument must be a collection type');
         }
 
         \DB::transaction(function() use($children)
@@ -399,12 +399,9 @@ class Entity extends Eloquent implements EntityInterface {
     public function removeChild($position = null, $forceDelete = false)
     {
         $action = ($forceDelete === true ? 'forceDelete' : 'delete');
-        $child  = $this->getChildAt($position);
 
-        if ( ! is_null($child))
-        {
-            $child->$action();
-        }
+        $this->children([$this->getQualifiedKeyName(), EntityInterface::POSITION], true)
+            ->where(EntityInterface::POSITION, '=', $position)->$action();
 
         return $this;
     }
@@ -425,15 +422,17 @@ class Entity extends Eloquent implements EntityInterface {
             throw new \InvalidArgumentException('`from` and `to` are the position boundaries. They must be of type int.');
         }
 
-        if (is_null($to))
+        $query = $this->children([$this->getQualifiedKeyName(), EntityInterface::POSITION], true)
+            ->where(EntityInterface::POSITION, '>=', $from);
+
+        if ( ! is_null($to))
         {
-            $to = $this->getLastChild([EntityInterface::POSITION])->{EntityInterface::POSITION};
+            $query->where(EntityInterface::POSITION, '<=', $to);
         }
 
-        foreach(range($from, $to) as $position)
-        {
-            $this->removeChild($position, $forceDelete);
-        }
+        $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+
+        $query->$action();
 
         return $this;
     }
@@ -760,23 +759,15 @@ class Entity extends Eloquent implements EntityInterface {
     /**
      * Deletes a subtree from database.
      *
-     * @param bool $withAncestor
+     * @param bool $withSelf
      * @param bool $forceDelete
      * @return mixed
      */
-    public function deleteSubtree($withAncestor = false, $forceDelete = false)
+    public function deleteSubtree($withSelf = false, $forceDelete = false)
     {
-        $keyName = $this->getKeyName();
-        $keys    = $this->getDescendants([$keyName])->lists($keyName);
+        $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-        if ($withAncestor === true)
-        {
-            $keys[] = $this->getKey();
-        }
-
-        $query = $this->whereIn($keyName, $keys);
-
-        return ($forceDelete === true ? $query->forceDelete() : $query->delete());
+        return $this->descendants([$this->getQualifiedKeyName()], $withSelf, false, true)->$action();
     }
 
     /**

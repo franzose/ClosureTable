@@ -67,6 +67,41 @@ class QueryBuilderTestCase extends BaseTestCase {
         $this->assertEquals([5, 0], $qb->getBindings());
     }
 
+    public function testDescendantsBySubquery()
+    {
+        $qb  = $this->getBuilder();
+        $sql = 'select * from "entities" '.
+               'where "entities"."id" in '.
+               '(select "descendant" from "entities_closure" '.
+                'where "ancestor" = ? and "depth" > ?)';
+
+        $this->assertEquals($sql, $qb->from('entities')->descendants(['*'], false, false, true)->toSql());
+        $this->assertEquals([5, 0], $qb->getBindings());
+    }
+
+    public function testDescendantsWithSelfByJoin()
+    {
+        $qb  = $this->getBuilder();
+        $sql = 'select * from "entities" '.
+            'inner join "entities_closure" on "entities_closure"."descendant" = "entities"."id" '.
+            'where "entities_closure"."ancestor" = ? and "entities_closure"."depth" >= ?';
+
+        $this->assertEquals($sql, $qb->from('entities')->descendants(['*'], true, false, false)->toSql());
+        $this->assertEquals([5, 0], $qb->getBindings());
+    }
+
+    public function testDescendantsWithSelfBySubquery()
+    {
+        $qb  = $this->getBuilder();
+        $sql = 'select * from "entities" '.
+               'where "entities"."id" in '.
+               '(select "descendant" from "entities_closure" '.
+                'where "ancestor" = ? and "depth" >= ?)';
+
+        $this->assertEquals($sql, $qb->from('entities')->descendants(['*'], true, false, true)->toSql());
+        $this->assertEquals([5, 0], $qb->getBindings());
+    }
+
     public function testChildren()
     {
         $qb  = $this->getBuilder();
@@ -75,6 +110,18 @@ class QueryBuilderTestCase extends BaseTestCase {
                'where "entities_closure"."ancestor" = ? and "entities_closure"."depth" = ?';
 
         $this->assertEquals($sql, $qb->from('entities')->children()->toSql());
+        $this->assertEquals([5, 1], $qb->getBindings());
+    }
+
+    public function testChildrenBySubquery()
+    {
+        $qb  = $this->getBuilder();
+        $sql = 'select * from "entities" '.
+               'where "entities"."id" in '.
+               '(select "descendant" from "entities_closure" '.
+                'where "ancestor" = ? and "depth" = ?)';
+
+        $this->assertEquals($sql, $qb->from('entities')->children(['*'], true)->toSql());
         $this->assertEquals([5, 1], $qb->getBindings());
     }
 

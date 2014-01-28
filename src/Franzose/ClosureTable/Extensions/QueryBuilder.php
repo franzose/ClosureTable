@@ -60,12 +60,13 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
 
     /**
      * @param array $columns
+     * @param bool $withSelf
      * @param bool $queryChildren
+     * @param bool $useSubquery
      * @return \Illuminate\Database\Query\Builder|static
      */
-    public function descendants(array $columns = ['*'], $queryChildren = false)
+    public function descendants(array $columns = ['*'], $withSelf = false, $queryChildren = false, $useSubquery = false)
     {
-        $depthOperator = '>';
         $depthValue = 0;
 
         if ($queryChildren === true)
@@ -73,20 +74,71 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
             $depthOperator = '=';
             $depthValue = 1;
         }
+        else if ($withSelf === true)
+        {
+            $depthOperator = '>=';
+        }
+        else
+        {
+            $depthOperator = '>';
+        }
 
-        return $this->select($columns)
+        $method = ($useSubquery === true ? 'Subquery' : 'Join');
+
+        return $this->{'descendantsBy'.$method}($columns, $depthOperator, $depthValue);
+    }
+
+    /**
+     * Builds descendants query using inner join.
+     *
+     * @param array $columns
+     * @param $depthOperator
+     * @param $depthValue
+     * @return \Illuminate\Database\Query\Builder|static
+     */
+    protected function descendantsByJoin(array $columns = ['*'], $depthOperator, $depthValue)
+    {
+        $query = $this->select($columns)
             ->join($this->qattrs['closure'], $this->qattrs['descendant'], '=', $this->qattrs['pk'])
             ->where($this->qattrs['ancestor'], '=', $this->qattrs['pkValue'])
             ->where($this->qattrs['depth'], $depthOperator, $depthValue);
+
+        return $query;
+    }
+
+    /**
+     * Builds descendants query using sub-select query.
+     *
+     * @param array $columns
+     * @param $depthOperator
+     * @param $depthValue
+     * @return \Illuminate\Database\Query\Builder|static
+     */
+    protected function descendantsBySubquery(array $columns = ['*'], $depthOperator, $depthValue)
+    {
+        return $this->select($columns)
+            ->whereIn($this->qattrs['pk'], function(QueryBuilder $q) use($depthOperator, $depthValue)
+            {
+                $q->select($this->qattrs['descendantShort'])
+                  ->from($this->qattrs['closure'])
+                  ->where($this->qattrs['ancestorShort'], '=', $this->qattrs['pkValue'])
+                  ->where($this->qattrs['depthShort'], $depthOperator, $depthValue);
+            });
+    }
+
+    public function descendantsWithSelf(array $columns = ['*'], $useSubquery = false)
+    {
+        return $this->descendants($columns, true, false, $useSubquery);
     }
 
     /**
      * @param array $columns
+     * @param bool $useSubquery
      * @return \Illuminate\Database\Query\Builder|static
      */
-    public function children(array $columns = ['*'])
+    public function children(array $columns = ['*'], $useSubquery = false)
     {
-        return $this->descendants($columns, true);
+        return $this->descendants($columns, false, true, $useSubquery);
     }
 
     /**
@@ -98,6 +150,11 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     {
         return $this->children($columns)->where(EntityInterface::POSITION, '=', $position);
     }
+
+    /*public function performRemoveChild($position)
+    {
+        return $this->childrenWithSubquery(EntityInterface::POSITION, '=', $position);
+    }*/
 
     /**
      * @param string $find
@@ -252,7 +309,8 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      */
     public function tree(array $columns = ['*'])
     {
-        $whereIn = function(QueryBuilder $q){
+        $whereIn = function(QueryBuilder $q)
+        {
             return $q->select($this->qattrs['ancestor'])
                 ->from($q->qattrs['closure'])
                 ->whereRaw($q->getRootCheckQuery($q->qattrs['closure']));
