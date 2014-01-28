@@ -21,6 +21,8 @@ class EntityTestCase extends BaseTestCase {
     {
         parent::setUp();
 
+        Entity::boot();
+
         $this->entity = new Entity;
         $this->app->instance('Franzose\ClosureTable\Contracts\ClosureTableInterface', new ClosureTable);
     }
@@ -57,7 +59,7 @@ class EntityTestCase extends BaseTestCase {
     {
         $ancestor = Entity::find(1);
         $result = $this->entity->moveTo(5, $ancestor);
-        
+
         $this->assertSame($this->entity, $result);
         $this->assertEquals(5, $result->{Entity::POSITION});
         $this->assertEquals($this->entity->getParent()->getKey(), $ancestor->getKey());

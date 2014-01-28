@@ -14,6 +14,16 @@ use \Franzose\ClosureTable\Extensions\QueryBuilder;
 class Entity extends Eloquent implements EntityInterface {
 
     /**
+     * @var Entity
+     */
+    protected $oldInstance;
+
+    /**
+     * @var Entity|int
+     */
+    protected $ancestor;
+
+    /**
      * ClosureTable model instance.
      *
      * @var ClosureTable
@@ -49,6 +59,42 @@ class Entity extends Eloquent implements EntityInterface {
         $this->makeClosureTable();
 
         parent::__construct($attributes);
+    }
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    public static function boot()
+    {
+        parent::boot();
+
+        static::saving(function($entity){
+            if ($entity->exists)
+            {
+                $entity->initClosureTable();
+
+                if (isset($entity->ancestor))
+                {
+                    $entity->closure->moveNodeTo($entity->ancestor);
+                }
+            }
+        });
+
+        static::created(function($entity){
+            $descendant = $entity->getKey();
+            $ancestor = (isset($entity->ancestor) ? $entity->ancestor : $descendant);
+
+            $entity->closure->insertNode($ancestor, $descendant);
+        });
+
+        static::saved(function($entity){
+            if ( ! is_null($entity->oldInstance))
+            {
+                $entity->reorderSiblings();
+            }
+        });
     }
 
     /**
@@ -587,96 +633,44 @@ class Entity extends Eloquent implements EntityInterface {
      * Makes the model a child or a root with given position.
      *
      * @param int $position
-     * @param EntityInterface $ancestor
+     * @param EntityInterface|int $ancestor
      * @return Entity
      * @throws \InvalidArgumentException
      */
-    public function moveTo($position, EntityInterface $ancestor = null)
+    public function moveTo($position, $ancestor = null)
     {
-        if ($this === $ancestor)
+        $ancestor = ($ancestor instanceof EntityInterface ? $ancestor->getKey() : $ancestor);
+
+        if ($this->getKey() == $ancestor)
         {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
-        $self = clone $this;
-
+        $this->oldInstance = clone $this;
+        $this->ancestor = $ancestor;
         $this->{EntityInterface::POSITION} = $position;
 
-        $this->save([
-            'ancestor' => (is_null($ancestor) ? $ancestor : $ancestor->getKey()),
-            'self' => $self
-        ]);
+        $this->save();
+
+        $this->oldInstance = null;
+        $this->ancestor = null;
 
         return $this;
     }
 
     /**
-     * Save the model to the database.
+     * Reorders siblings when a model is moved to another position or ancestor.
      *
-     * @param  array  $options
-     * @return bool
      */
-    public function save(array $options = array())
-    {
-        $query = $this->newQueryWithDeleted();
-
-        if ($this->fireModelEvent('saving') === false)
-        {
-            return false;
-        }
-
-        if ($this->exists)
-        {
-            $this->initClosureTable();
-
-            if (isset($options['ancestor']))
-            {
-                $this->closure->moveNodeTo($options['ancestor']);
-            }
-
-            $saved = $this->performUpdate($query);
-        }
-        else
-        {
-            $saved = $this->performInsert($query);
-
-            if ($saved)
-            {
-                $descendant = $this->getKey();
-                $ancestor = (isset($options['ancestor']) ? $options['ancestor'] : $descendant);
-
-                $this->closure->insertNode((int)$ancestor, (int)$descendant);
-            }
-        }
-
-        if ($saved)
-        {
-            $this->finishSave($options);
-
-            if (isset($options['self']))
-            {
-                $this->reorderSiblings($options['self']);
-            }
-        }
-
-        return $saved;
-    }
-
-    /**
-     * Reorders siblings when a model is moved
-     * to another position or ancestor.
-     *
-     * @param EntityInterface $unsavedEntity
-     */
-    protected function reorderSiblings(EntityInterface $unsavedEntity)
+    protected function reorderSiblings()
     {
         $position = [
-            'original' => $unsavedEntity->getOriginal(EntityInterface::POSITION),
+            'original' => $this->oldInstance->getOriginal(EntityInterface::POSITION),
             'current'  => $this->{EntityInterface::POSITION}
         ];
 
         $depth = [
-            'original' => $unsavedEntity->closure->getRealAttributes([ClosureTableInterface::DEPTH]),
+            'original' => $this->oldInstance->closure->getRealAttributes([ClosureTableInterface::DEPTH]),
             'current'  => $this->closure->getRealAttributes([ClosureTableInterface::DEPTH])
         ];
 
@@ -714,12 +708,12 @@ class Entity extends Eloquent implements EntityInterface {
             {
                 if ($isSQLite)
                 {
-                    $nextSiblingsIds = $unsavedEntity->nextSiblings([$keyName])->get();
+                    $nextSiblingsIds = $this->oldInstance->nextSiblings([$keyName])->get();
                     $nextSiblings = $this->whereIn($keyName, $nextSiblingsIds);
                 }
                 else
                 {
-                    $nextSiblings = $unsavedEntity->nextSiblings();
+                    $nextSiblings = $this->oldInstance->nextSiblings();
                 }
 
                 $nextSiblings->decrement(EntityInterface::POSITION);

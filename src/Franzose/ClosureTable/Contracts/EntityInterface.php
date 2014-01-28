@@ -32,8 +32,8 @@ interface EntityInterface {
 
     /**
      * @param int $position
-     * @param EntityInterface $ancestor
+     * @param EntityInterface|int $ancestor
      * @return EntityInterface
      */
-    public function moveTo($position, EntityInterface $ancestor = null);
+    public function moveTo($position, $ancestor = null);
 }
