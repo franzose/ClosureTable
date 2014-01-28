@@ -71,29 +71,15 @@ class Entity extends Eloquent implements EntityInterface {
         parent::boot();
 
         static::saving(function($entity){
-            if ($entity->exists)
-            {
-                $entity->initClosureTable();
-
-                if (isset($entity->ancestor))
-                {
-                    $entity->closure->moveNodeTo($entity->ancestor);
-                }
-            }
+            $entity->moveNode();
         });
 
         static::created(function($entity){
-            $descendant = $entity->getKey();
-            $ancestor = (isset($entity->ancestor) ? $entity->ancestor : $descendant);
-
-            $entity->closure->insertNode($ancestor, $descendant);
+            $entity->insertNode();
         });
 
         static::saved(function($entity){
-            if ( ! is_null($entity->oldInstance))
-            {
-                $entity->reorderSiblings();
-            }
+            $entity->reorderSiblings();
         });
     }
 
@@ -664,59 +650,93 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function reorderSiblings()
     {
-        $position = [
-            'original' => $this->oldInstance->getOriginal(EntityInterface::POSITION),
-            'current'  => $this->{EntityInterface::POSITION}
-        ];
-
-        $depth = [
-            'original' => $this->oldInstance->closure->getRealAttributes([ClosureTableInterface::DEPTH]),
-            'current'  => $this->closure->getRealAttributes([ClosureTableInterface::DEPTH])
-        ];
-
-        if (   $depth['current'] != $depth['original']
-            || $position['current'] != $position['original'])
+        if ( ! is_null($this->oldInstance))
         {
-            $isSQLite = (\DB::getDriverName() == 'sqlite');
-            $keyName  = $this->getQualifiedKeyName();
-            $siblings = $this->siblings();
+            $position = [
+                'original' => $this->oldInstance->getOriginal(EntityInterface::POSITION),
+                'current'  => $this->{EntityInterface::POSITION}
+            ];
 
-            if ($position['current'] > $position['original'])
-            {
-                $action = 'decrement';
-                $range  = range($position['original'], $position['current']);
-            }
-            else
-            {
-                $action = 'increment';
-                $range  = range($position['current'], $position['original']-1);
-            }
+            $depth = [
+                'original' => $this->oldInstance->closure->getRealAttributes([ClosureTableInterface::DEPTH]),
+                'current'  => $this->closure->getRealAttributes([ClosureTableInterface::DEPTH])
+            ];
 
-            if ($isSQLite)
+            if (   $depth['current'] != $depth['original']
+                || $position['current'] != $position['original'])
             {
-                $siblingsIds = $siblings->whereIn(EntityInterface::POSITION, $range)->lists($keyName);
-                $siblings = $this->whereIn($keyName, $siblingsIds);
-            }
-            else
-            {
-                $siblings->whereIn(EntityInterface::POSITION, $range);
-            }
+                $isSQLite = (\DB::getDriverName() == 'sqlite');
+                $keyName  = $this->getQualifiedKeyName();
+                $siblings = $this->siblings();
 
-            $siblings->$action(EntityInterface::POSITION);
-
-            if ($depth['current'] != $depth['original'])
-            {
-                if ($isSQLite)
+                if ($position['current'] > $position['original'])
                 {
-                    $nextSiblingsIds = $this->oldInstance->nextSiblings([$keyName])->get();
-                    $nextSiblings = $this->whereIn($keyName, $nextSiblingsIds);
+                    $action = 'decrement';
+                    $range  = range($position['original'], $position['current']);
                 }
                 else
                 {
-                    $nextSiblings = $this->oldInstance->nextSiblings();
+                    $action = 'increment';
+                    $range  = range($position['current'], $position['original']-1);
                 }
 
-                $nextSiblings->decrement(EntityInterface::POSITION);
+                if ($isSQLite)
+                {
+                    $siblingsIds = $siblings->whereIn(EntityInterface::POSITION, $range)->lists($keyName);
+                    $siblings = $this->whereIn($keyName, $siblingsIds);
+                }
+                else
+                {
+                    $siblings->whereIn(EntityInterface::POSITION, $range);
+                }
+
+                $siblings->$action(EntityInterface::POSITION);
+
+                if ($depth['current'] != $depth['original'])
+                {
+                    if ($isSQLite)
+                    {
+                        $nextSiblingsIds = $this->oldInstance->nextSiblings([$keyName])->get();
+                        $nextSiblings = $this->whereIn($keyName, $nextSiblingsIds);
+                    }
+                    else
+                    {
+                        $nextSiblings = $this->oldInstance->nextSiblings();
+                    }
+
+                    $nextSiblings->decrement(EntityInterface::POSITION);
+                }
+            }
+        }
+    }
+
+    /**
+     * Inserts new node to closure table.
+     *
+     * @return void
+     */
+    protected function insertNode()
+    {
+        $descendant = $this->getKey();
+        $ancestor = (isset($this->ancestor) ? $this->ancestor : $descendant);
+
+        $this->closure->insertNode($ancestor, $descendant);
+    }
+
+    /**
+     * Moves node no another ancestor.
+     *
+     * @return void
+     */
+    protected function moveNode()
+    {
+        if ($this->exists)
+        {
+            $this->initClosureTable();
+
+            if (isset($this->ancestor))
+            {
+                $this->closure->moveNodeTo($this->ancestor);
             }
         }
     }
