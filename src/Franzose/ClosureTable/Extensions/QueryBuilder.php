@@ -12,9 +12,81 @@ use \Franzose\ClosureTable\Contracts\EntityInterface;
 class QueryBuilder extends \Illuminate\Database\Query\Builder {
 
     /**
+     * Various entity and closure attributes.
+     *
      * @var array
      */
     protected $qattrs;
+
+    /**
+     * 'Find all but self' flag.
+     *
+     * @var int
+     */
+    const ALL_BUT_SELF  = 1;
+
+    /**
+     * 'Find all including self' flag.
+     *
+     * @var int
+     */
+    const ALL_INC_SELF  = 2;
+
+    /**
+     * 'Find children' flag.
+     *
+     * @var int
+     */
+    const CHILDREN      = 4;
+
+    /**
+     * 'Find neighbors' flag.
+     *
+     * @var int
+     */
+    const NEIGHBORS     = 8;
+
+    /**
+     * 'Find one previous sibling' flag.
+     *
+     * @var int
+     */
+    const PREV_ONE      = 16;
+
+    /**
+     * 'Find all previous siblings' flag.
+     *
+     * @var int
+     */
+    const PREV_ALL      = 32;
+
+    /**
+     * 'Find one next sibling' flag.
+     *
+     * @var int
+     */
+    const NEXT_ONE      = 64;
+
+    /**
+     * 'Find all next siblings' flag.
+     *
+     * @var int
+     */
+    const NEXT_ALL      = 128;
+
+    /**
+     * 'Find using where in clause' flag.
+     *
+     * @var int
+     */
+    const BY_WHERE_IN   = 256;
+
+    /**
+     * 'Find using join clause' flag.
+     *
+     * @var int
+     */
+    const BY_JOIN       = 512;
 
     /**
      * Create a new query builder instance.
@@ -35,8 +107,10 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     }
 
     /**
+     * Builds parent query.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @return QueryBuilder
      */
     public function parent(array $columns = ['*'])
     {
@@ -47,8 +121,10 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     }
 
     /**
+     * Builds ancestors query.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @return QueryBuilder
      */
     public function ancestors(array $columns = ['*'])
     {
@@ -59,42 +135,58 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     }
 
     /**
-     * @param array $columns
-     * @param bool $withSelf
-     * @param bool $queryChildren
-     * @param bool $useSubquery
-     * @return \Illuminate\Database\Query\Builder|static
+     * Determines query method by given 'type'.
+     *
+     * @param string $method
+     * @param int $type
+     * @return string
      */
-    public function descendants(array $columns = ['*'], $withSelf = false, $queryChildren = false, $useSubquery = false)
+    protected function getQueryMethodType($method, $type)
+    {
+        return $method . ($type == static::BY_WHERE_IN ? 'Subquery' : 'Join');
+    }
+
+
+    /**
+     * Builds descendants query.
+     *
+     * @param array $columns
+     * @param int $what
+     * @param int $type
+     * @return QueryBuilder
+     */
+    public function descendants(array $columns = ['*'], $what = self::ALL_BUT_SELF, $type = self::BY_JOIN)
     {
         $depthValue = 0;
 
-        if ($queryChildren === true)
+        switch($what)
         {
-            $depthOperator = '=';
-            $depthValue = 1;
-        }
-        else if ($withSelf === true)
-        {
-            $depthOperator = '>=';
-        }
-        else
-        {
-            $depthOperator = '>';
+            case static::CHILDREN:
+                $depthOperator = '=';
+                $depthValue = 1;
+                break;
+
+            case static::ALL_INC_SELF:
+                $depthOperator = '>=';
+                break;
+
+            default:
+                $depthOperator = '>';
+                break;
         }
 
-        $method = ($useSubquery === true ? 'Subquery' : 'Join');
+        $method = $this->getQueryMethodType('descendantsBy', $type);
 
-        return $this->{'descendantsBy'.$method}($columns, $depthOperator, $depthValue);
+        return $this->{$method}($columns, $depthOperator, $depthValue);
     }
 
     /**
      * Builds descendants query using inner join.
      *
      * @param array $columns
-     * @param $depthOperator
-     * @param $depthValue
-     * @return \Illuminate\Database\Query\Builder|static
+     * @param string $depthOperator
+     * @param int $depthValue
+     * @return QueryBuilder
      */
     protected function descendantsByJoin(array $columns = ['*'], $depthOperator, $depthValue)
     {
@@ -110,9 +202,9 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      * Builds descendants query using sub-select query.
      *
      * @param array $columns
-     * @param $depthOperator
-     * @param $depthValue
-     * @return \Illuminate\Database\Query\Builder|static
+     * @param string $depthOperator
+     * @param int $depthValue
+     * @return QueryBuilder
      */
     protected function descendantsBySubquery(array $columns = ['*'], $depthOperator, $depthValue)
     {
@@ -126,155 +218,342 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
             });
     }
 
-    public function descendantsWithSelf(array $columns = ['*'], $useSubquery = false)
-    {
-        return $this->descendants($columns, true, false, $useSubquery);
-    }
-
     /**
+     * Builds descendants query that includes the ancestor.
+     *
      * @param array $columns
-     * @param bool $useSubquery
-     * @return \Illuminate\Database\Query\Builder|static
+     * @param int $what
+     * @param int $type
+     * @return QueryBuilder
      */
-    public function children(array $columns = ['*'], $useSubquery = false)
+    public function descendantsWithSelf(array $columns = ['*'], $what = self::ALL_INC_SELF, $type = self::BY_JOIN)
     {
-        return $this->descendants($columns, false, true, $useSubquery);
+        return $this->descendants($columns, $what, $type);
     }
 
     /**
+     * Builds children query.
+     *
+     * @param array $columns
+     * @param int $type
+     * @return QueryBuilder
+     */
+    public function children(array $columns = ['*'], $type = self::BY_JOIN)
+    {
+        return $this->descendants($columns, static::CHILDREN, $type);
+    }
+
+    /**
+     * Builds a child query with given position.
+     *
      * @param $position
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @param int $type
+     * @return QueryBuilder
      */
-    public function childAt($position, array $columns = ['*'])
+    public function childAt($position, array $columns = ['*'], $type = self::BY_JOIN)
     {
-        return $this->children($columns)->where(EntityInterface::POSITION, '=', $position);
+        return $this->children($columns, $type)->where($this->qattrs['position'], '=', $position);
     }
 
-    /*public function performRemoveChild($position)
+    /**
+     * Performs removing a child with given position.
+     *
+     * @param int $position
+     * @param bool $forceDelete
+     * @return bool
+     */
+    public function removeChildAt($position, $forceDelete = false)
     {
-        return $this->childrenWithSubquery(EntityInterface::POSITION, '=', $position);
-    }*/
+        $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+        $columns = [$this->qattrs['pk'], $this->qattrs['position']];
+
+        return $this->childAt($position, $columns, static::BY_WHERE_IN)->$action();
+    }
 
     /**
-     * @param string $find
-     * @param string $direction
-     * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * Performs removing children within a range of positions.
+     *
+     * @param int $from
+     * @param int $to
+     * @param bool $forceDelete
+     * @return bool
      */
-    protected function getSiblingsQuery($find = 'all', $direction = 'both', array $columns = ['*'])
+    public function removeChildrenRange($from, $to = null, $forceDelete = false)
     {
-        $query = $this->select($columns)
-            ->join($this->qattrs['closure'].' as c', 'c.'.$this->qattrs['descendantShort'], '=', $this->qattrs['pk'])
-            ->where($this->qattrs['depthShort'], '=', $this->qattrs['depthValue'])
-            ->where($this->qattrs['ancestorShort'], '=', $this->qattrs['ancestorValue']);
+        $query = $this->children([$this->qattrs['pk'], $this->qattrs['position']], static::BY_WHERE_IN)
+            ->where($this->qattrs['position'], '>=', $from);
 
-        if ($find == 'all' && $direction == 'both')
+        if ( ! is_null($to))
         {
-            $query->where($this->qattrs['descendantShort'], '<>', $this->qattrs['pkValue']);
+            $query->where($this->qattrs['position'], '<=', $to);
         }
-        else if ($find == 'one' && $direction == 'both')
-        {
-            $position = [
-                $this->qattrs['positionValue']-1,
-                $this->qattrs['positionValue']+1
-            ];
 
-            $query->whereIn($this->qattrs['position'], $position);
-        }
-        else
-        {
-            switch($direction)
-            {
-                case 'prev':
-                    $operand = '<';
-                    $position = $this->qattrs['positionValue']-1;
-                    break;
+        $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-                case 'next':
-                    $operand = '>';
-                    $position = $this->qattrs['positionValue']+1;
-                    break;
-            }
+        return $query->$action();
+    }
 
-            $operand = ($find == 'all' ? $operand : '=');
+    /**
+     * Builds various siblings query.
+     *
+     * @param array $columns
+     * @param int $what
+     * @param int $type
+     * @return QueryBuilder
+     */
+    protected function getSiblingsQuery(array $columns = ['*'], $what = self::ALL_BUT_SELF, $type = self::BY_JOIN)
+    {
+        $args = [
+            'operand'  => $this->getOperandForSiblingsQuery($what),
+            'position' => $this->getPositionForSiblingsQuery($what)
+        ];
 
-            if ($find == 'all')
-            {
-                $position = $this->qattrs['positionValue'];
-            }
+        $method = $this->getQueryMethodType('siblingsBy', $type);
 
-            $query->where($this->qattrs['position'], $operand, $position);
-        }
+        $query = $this->{$method}($columns, $what);
 
         if ($this->qattrs['depthValue'] == 0)
         {
-            $query->whereRaw($this->getRootCheckQuery());
+            $this->whereRaw($this->getRootCheckQuery());
+        }
+
+        switch($what)
+        {
+            case static::NEIGHBORS:
+                $query->whereIn($this->qattrs['position'], $args['position']);
+                break;
+
+            case static::PREV_ONE:
+            case static::PREV_ALL:
+            case static::NEXT_ONE:
+            case static::NEXT_ALL:
+                $query->where($this->qattrs['position'], $args['operand'], $args['position']);
+                break;
         }
 
         return $query;
     }
 
     /**
-     * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * Determines operand that is used in 'where position' clause.
+     *
+     * @param int $what
+     * @return string
      */
-    public function siblings(array $columns = ['*'])
+    protected function getOperandForSiblingsQuery($what)
     {
-        return $this->getSiblingsQuery('all', 'both', $columns);
-    }
+        switch($what)
+        {
+            case static::ALL_BUT_SELF:
+                return '<>';
 
-    public function siblingAt($position, array $columns = ['*'])
-    {
-        return $this->siblings($columns)->where(EntityInterface::POSITION, '=', $position);
+            case static::PREV_ALL:
+                return '<';
+
+            case static::NEXT_ALL:
+                return '>';
+
+            default:
+                return '=';
+        }
     }
 
     /**
+     * Determines position that is used in 'where position' clause.
+     *
+     * @param int $what
+     * @return mixed
+     */
+    protected function getPositionForSiblingsQuery($what)
+    {
+        switch($what)
+        {
+            case static::PREV_ONE:
+                return $this->qattrs['positionValue']-1;
+
+            case static::NEXT_ONE:
+                return $this->qattrs['positionValue']+1;
+
+            case static::NEIGHBORS:
+                return [
+                    $this->qattrs['positionValue']-1,
+                    $this->qattrs['positionValue']+1
+                ];
+
+            default:
+                return $this->qattrs['positionValue'];
+        }
+    }
+
+    /**
+     * Builds siblings query made by inner join.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @param int $type
+     * @return QueryBuilder
+     */
+    protected function siblingsByJoin($columns, $type)
+    {
+        $query = $this->select($columns)
+            ->join($this->qattrs['closure'].' as c',
+                   'c.'.$this->qattrs['descendantShort'],
+                   '=',
+                   $this->qattrs['pk'])
+            ->finalizeSiblingsQuery($type);
+
+        return $query;
+    }
+
+    /**
+     * Builds siblings query made by subquery.
+     *
+     * @param array $columns
+     * @param int $type
+     * @return QueryBuilder
+     */
+    protected function siblingsBySubquery($columns, $type)
+    {
+        $query = $this->select($columns)
+            ->whereIn($this->qattrs['pk'], function(QueryBuilder $q) use($type)
+            {
+                $q->select($this->qattrs['descendantShort'])
+                  ->from($this->qattrs['closure'].' as c')
+                  ->finalizeSiblingsQuery($type);
+            });
+
+        return $query;
+    }
+
+    /**
+     * Incapsulates a part that is repeated part in both types of siblings queries.
+     *
+     * @param int $type
+     * @return QueryBuilder
+     */
+    protected function finalizeSiblingsQuery($type)
+    {
+        $this->where('c.'.$this->qattrs['depthShort'], '=', $this->qattrs['depthValue'])
+            ->where('c.'.$this->qattrs['ancestorShort'], '=', $this->qattrs['ancestorValue']);
+
+        if ($type == static::ALL_BUT_SELF)
+        {
+            $this->where('c.'.$this->qattrs['descendantShort'], '<>', $this->qattrs['pkValue']);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Wrapper for siblings query builder method.
+     *
+     * @param array $columns
+     * @param int $what
+     * @param int $type
+     * @return QueryBuilder
+     */
+    public function siblings(array $columns = ['*'], $what = self::ALL_BUT_SELF, $type = self::BY_JOIN)
+    {
+        return $this->getSiblingsQuery($columns, $what, $type);
+    }
+
+    /**
+     * Builds a query for a sibling with given position.
+     *
+     * @param int $position
+     * @param array $columns
+     * @return QueryBuilder
+     */
+    public function siblingAt($position, array $columns = ['*'])
+    {
+        return $this->siblings($columns)->where($this->qattrs['position'], '=', $position);
+    }
+
+    /**
+     * Builds neighbors query.
+     *
+     * @param array $columns
+     * @return QueryBuilder
      */
     public function neighbors(array $columns = ['*'])
     {
-        return $this->getSiblingsQuery('one', 'both', $columns);
+        return $this->getSiblingsQuery($columns, static::NEIGHBORS);
     }
 
     /**
+     * Builds a query for all previous siblings.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @return QueryBuilder
      */
     public function prevSiblings(array $columns = ['*'])
     {
-        return $this->getSiblingsQuery('all', 'prev', $columns);
+        return $this->getSiblingsQuery($columns, static::PREV_ALL);
     }
 
     /**
+     * Builds a query for the previous sibling.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @return QueryBuilder
      */
     public function prevSibling(array $columns = ['*'])
     {
-        return $this->getSiblingsQuery('one', 'prev', $columns);
+        return $this->getSiblingsQuery($columns, static::PREV_ONE);
     }
 
     /**
+     * Builds a query for all next siblings.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @param int $type
+     * @return QueryBuilder
      */
-    public function nextSiblings(array $columns = ['*'])
+    public function nextSiblings(array $columns = ['*'], $type = self::BY_JOIN)
     {
-        return $this->getSiblingsQuery('all', 'next', $columns);
+        return $this->getSiblingsQuery($columns, static::NEXT_ALL, $type);
     }
 
     /**
+     * Builds a query for the next sibling.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @return QueryBuilder
      */
     public function nextSibling(array $columns = ['*'])
     {
-        return $this->getSiblingsQuery('one', 'next', $columns);
+        return $this->getSiblingsQuery($columns, static::NEXT_ONE);
     }
 
     /**
+     * Builds a query for siblings within a range of positions.
+     *
+     * @param array|int $rangeOrPos
+     * @param int $type
+     * @return QueryBuilder
+     */
+    public function siblingsRange($rangeOrPos, $type = self::BY_JOIN)
+    {
+        $query = $this->siblings([$this->qattrs['pk'], $this->qattrs['position']], static::ALL_BUT_SELF, $type);
+
+        if (is_array($rangeOrPos))
+        {
+            $query->whereIn($this->qattrs['position'], $rangeOrPos);
+        }
+        else
+        {
+            $query->where($this->qattrs['position'], '>=', $rangeOrPos);
+        }
+
+        return $query;
+    }
+
+    //public function
+
+    /**
+     * Builds a query that checks if a node is root.
+     *
      * @param string $closureTableAlias
      * @return string
      */
@@ -286,8 +565,10 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     }
 
     /**
+     * Builds roots query.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @return QueryBuilder
      */
     public function roots(array $columns = ['*'])
     {
@@ -304,8 +585,10 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     }
 
     /**
+     * Builds an entire tree query.
+     *
      * @param array $columns
-     * @return \Illuminate\Database\Query\Builder|static
+     * @return QueryBuilder
      */
     public function tree(array $columns = ['*'])
     {

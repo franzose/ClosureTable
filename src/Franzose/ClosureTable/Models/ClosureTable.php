@@ -24,6 +24,15 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public $timestamps = false;
 
+    /**
+     * @var array
+     */
+    protected $real = array();
+
+    /**
+     * @var
+     */
+    protected $oldReal = array();
 
     /**
      * Check if model is a top level one (i.e. has no ancestors).
@@ -46,8 +55,26 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             ->count() == 0;
     }
 
-    public function getRealAttributes(array $attributes = ['*'])
+    public function getRealAttributes($attributes = ['*'])
     {
+        if ( ! is_array($attributes))
+        {
+            $attributes = [$attributes];
+        }
+
+        if ( ! empty($this->real))
+        {
+            if ($attributes != ['*'])
+            {
+                return array_where($this->real, function($key) use($attributes)
+                {
+                    return in_array($key, $attributes);
+                });
+            }
+
+            return $this->real;
+        }
+
         $closure = static::where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
             ->orderBy(static::DEPTH, 'desc')
             ->first($attributes);
@@ -61,20 +88,30 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
         $result = (count($closure) == 1 ? $closure[$attributes[0]] : $closure);
 
-        if (array_key_exists('parent', $attributes) || $attributes == ['*'])
-        {
-            $parent = static::select([static::ANCESTOR])
-                ->where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
-                ->where(static::DEPTH, '=', 1)
-                ->first();
+        return $result;
+    }
 
-            if ( ! is_null($parent))
+    public function getOldRealAttributes($attribute = null)
+    {
+        if ( ! is_null($attribute))
+        {
+            if (is_array($attribute))
             {
-                $result = array_merge($closure, ['parent' => $parent->{static::ANCESTOR}]);
+                return array_where($this->oldReal, function($key) use($attribute)
+                {
+                    return in_array($key, $attribute);
+                });
             }
+
+            if (isset($this->oldReal[$attribute]))
+            {
+                return $this->oldReal[$attribute];
+            }
+
+            return null;
         }
 
-        return $result;
+        return $this->oldReal;
     }
 
     /**
@@ -158,6 +195,8 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             return false;
         }
 
+        $this->oldReal = $this->real;
+
         \DB::transaction(function() use($ak, $dk, $dpk, $t, $ancestorId, $thisDescendantId){
             $query = "
                 SELECT supertbl.{$ak}, subtbl.{$dk}, supertbl.{$dpk}+subtbl.{$dpk}+1 as {$dpk}
@@ -169,6 +208,8 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
             $results = \DB::select($query);
             array_walk($results, function(&$item){ $item = (array)$item; });
+
+            $this->real = $results[0];
 
             \DB::table($t)->insert($results);
         });
