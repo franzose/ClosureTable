@@ -14,27 +14,32 @@ use \Franzose\ClosureTable\Extensions\QueryBuilder;
 class Entity extends Eloquent implements EntityInterface {
 
     /**
-     * Temporary copy of the 'before saved' model.
+     * ClosureTable model instance.
      *
-     * @var Entity
+     * @var ClosureTable
      */
-    protected $oldInstance;
+    protected $closure = 'Franzose\ClosureTable\Models\ClosureTable';
 
     /**
-     * Cached direct ancestor id of this model. Used to simplify the query.
+     * Cached direct ancestor id of this model. It is used to simplify query for parent model.
      *
      * @var int
      */
     protected $parentId;
 
-    protected $oldPosition;
+    /**
+     * Cached "previous" (i.e. before the model is moved) direct ancestor id of this model.
+     *
+     * @var int
+     */
+    protected $oldParentId;
 
     /**
-     * ClosureTable model instance.
+     * Cached "previous" (i.e. before the model is moved) model position.
      *
-     * @var ClosureTable
+     * @var int
      */
-    protected $closure;
+    protected $oldPosition;
 
     /**
      * Indicates if the model should soft delete.
@@ -51,18 +56,20 @@ class Entity extends Eloquent implements EntityInterface {
     public $timestamps = false;
 
     /**
+     * Entity constructor.
+     *
      * @param array $attributes
      */
     public function __construct(array $attributes = array())
     {
-        $this->fillable(array_merge($this->getFillable(), array(EntityInterface::POSITION)));
+        $this->fillable(array_merge($this->getFillable(), array(static::POSITION)));
 
-        if ( ! isset($attributes[EntityInterface::POSITION]))
+        if ( ! isset($attributes[static::POSITION]))
         {
-            $attributes[EntityInterface::POSITION] = 0;
+            $attributes[static::POSITION] = 0;
         }
 
-        $this->makeClosureTable();
+        $this->closure = new $this->closure;
 
         parent::__construct($attributes);
     }
@@ -76,48 +83,26 @@ class Entity extends Eloquent implements EntityInterface {
     {
         parent::boot();
 
-        static::saving(function($entity){
-            //static::newPositionSet(function($entity){
-            //    $entity->reorderSiblings();
-            //});
-            //var_dump($entity->closure->getOldRealAttributes());
-            //var_dump($entity->closure->getRealAttributes());
+        static::saving(function($entity)
+        {
             $entity->moveNode();
-            //var_dump($entity->closure->getOldRealAttributes());
         });
 
-        static::created(function($entity){
+        static::created(function($entity)
+        {
             $entity->insertNode();
         });
 
-        static::saved(function($entity){
+        static::saved(function($entity)
+        {
             $entity->reorderSiblings();
         });
     }
 
-    public static function newPositionSet($callback)
-    {
-        static::registerModelEvent('new-position-set', $callback);
-    }
-
-    public function setPositionAttribute($value)
-    {
-        $this->oldPosition = $this->getAttribute(EntityInterface::POSITION);
-        $this->attributes[EntityInterface::POSITION] = $value;
-
-        $this->fireModelEvent('new-position-set');
-    }
-
     /**
-     * Makes closure table.
-     */
-    protected function makeClosureTable()
-    {
-        $this->closure = new ClosureTable;
-    }
-
-    /**
-     * //
+     * Applies base attributes to closure table object.
+     *
+     * @return void
      */
     protected function initClosureTable()
     {
@@ -131,22 +116,17 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * Sets closure table.
-     *
-     * @param ClosureTableInterface $closure
-     */
-    public function setClosureTable(ClosureTableInterface $closure)
-    {
-        $this->closure = $closure;
-    }
-
-    /**
      * Indicates whether the model is a parent.
      *
      * @return bool
      */
     public function isParent()
     {
+        if ( ! $this->exists)
+        {
+            return false;
+        }
+
         return $this->hasChildren();
     }
 
@@ -157,6 +137,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function isRoot()
     {
+        if ( ! $this->exists)
+        {
+            return false;
+        }
+
         return $this->closure->isRoot($this->getKey());
     }
 
@@ -168,7 +153,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getParent(array $columns = ['*'])
     {
-        if ( ! is_null($this->parentId))
+        if ( ! $this->exists)
+        {
+            $result = null;
+        }
+        else if ( ! is_null($this->parentId))
         {
             $result = static::find($this->parentId);
         }
@@ -188,6 +177,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getAncestors(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return new Collection;
+        }
+
         return $this->ancestors($columns)->get();
     }
 
@@ -198,6 +192,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countAncestors()
     {
+        if ( ! $this->exists)
+        {
+            return 0;
+        }
+
         return (int)$this->ancestors()->count();
     }
 
@@ -219,6 +218,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getDescendants(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return new Collection;
+        }
+
         return $this->descendants($columns)->get();
     }
 
@@ -230,6 +234,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getDescendantsTree(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return new Collection;
+        }
+
         return $this->getDescendants($columns)->toTree($this->getKey());
     }
 
@@ -240,6 +249,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countDescendants()
     {
+        if ( ! $this->exists)
+        {
+            return 0;
+        }
+
         return (int)$this->descendants()->count();
     }
 
@@ -261,7 +275,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getChildren(array $columns = ['*'])
     {
-        if ($this->hasChildrenRelation())
+        if ( ! $this->exists)
+        {
+            $result = new Collection;
+        }
+        else if ($this->hasChildrenRelation())
         {
             $result = $this->getRelation(EntityInterface::CHILDREN);
         }
@@ -280,7 +298,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countChildren()
     {
-        if ($this->hasChildrenRelation())
+        if ( ! $this->exists)
+        {
+            $result = 0;
+        }
+        else if ($this->hasChildrenRelation())
         {
             $result = $this->getRelation(EntityInterface::CHILDREN)->count();
         }
@@ -321,7 +343,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getChildAt($position, array $columns = ['*'])
     {
-        if ($this->hasChildrenRelation())
+        if ( ! $this->exists)
+        {
+            $result = null;
+        }
+        else if ($this->hasChildrenRelation())
         {
             $result = $this->getRelation(EntityInterface::CHILDREN)->get($position);
         }
@@ -352,13 +378,17 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getLastChild(array $columns = ['*'])
     {
-        if ($this->hasChildrenRelation())
+        if ( ! $this->exists)
+        {
+            $result = null;
+        }
+        else if ($this->hasChildrenRelation())
         {
             $result = $this->getRelation(EntityInterface::CHILDREN)->last();
         }
         else
         {
-            $result = $this->children($columns)->orderBy(EntityInterface::POSITION, 'desc')->first();
+            $result = $this->children($columns)->orderBy(static::POSITION, 'desc')->first();
         }
 
         return $result;
@@ -373,7 +403,10 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function appendChild(EntityInterface $child, $position = null)
     {
-        $child->moveTo($position, $this);
+        if ($this->exists)
+        {
+            $child->moveTo($position, $this);
+        }
 
         return $this;
     }
@@ -395,30 +428,33 @@ class Entity extends Eloquent implements EntityInterface {
             throw new \InvalidArgumentException('Children argument must be a collection type');
         }
 
-        \DB::transaction(function() use($children)
+        if ($this->exists)
         {
-            $lastChild = $this->getLastChild([EntityInterface::POSITION]);
+            \DB::transaction(function() use($children)
+            {
+                $lastChild = $this->getLastChild([static::POSITION]);
 
-            if (is_null($lastChild))
-            {
-                $lastChildPosition = 0;
-            }
-            else
-            {
-                $lastChildPosition = $lastChild->{EntityInterface::POSITION};
-            }
-
-            foreach($children as $child)
-            {
-                if ( ! $child instanceof EntityInterface)
+                if (is_null($lastChild))
                 {
-                    throw new \InvalidArgumentException('Array items must be of type EntityInterface.');
+                    $lastChildPosition = 0;
+                }
+                else
+                {
+                    $lastChildPosition = $lastChild->{static::POSITION};
                 }
 
-                $this->appendChild($child, $lastChildPosition);
-                $lastChildPosition++;
-            }
-        });
+                foreach($children as $child)
+                {
+                    if ( ! $child instanceof EntityInterface)
+                    {
+                        throw new \InvalidArgumentException('Array items must be of type EntityInterface.');
+                    }
+
+                    $this->appendChild($child, $lastChildPosition);
+                    $lastChildPosition++;
+                }
+            });
+        }
 
         return $this;
     }
@@ -432,7 +468,10 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function removeChild($position = null, $forceDelete = false)
     {
-        $this->removeChildAt($position, $forceDelete);
+        if ($this->exists)
+        {
+            $this->removeChildAt($position, $forceDelete);
+        }
 
         return $this;
     }
@@ -453,7 +492,10 @@ class Entity extends Eloquent implements EntityInterface {
             throw new \InvalidArgumentException('`from` and `to` are the position boundaries. They must be of type int.');
         }
 
-        $this->removeChildrenRange($from, $to, $forceDelete);
+        if ($this->exists)
+        {
+            $this->removeChildrenRange($from, $to, $forceDelete);
+        }
 
         return $this;
     }
@@ -466,6 +508,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getSiblings(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return new Collection;
+        }
+
         return $this->siblings($columns)->get();
     }
 
@@ -476,6 +523,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countSiblings()
     {
+        if ( ! $this->exists)
+        {
+            return 0;
+        }
+
         return $this->siblings()->count();
     }
 
@@ -497,6 +549,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getNeighbors(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return new Collection;
+        }
+
         return $this->neighbors($columns)->get();
     }
 
@@ -509,6 +566,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getSiblingAt($position, array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return null;
+        }
+
         return $this->siblingAt($position, $columns)->first();
     }
 
@@ -531,7 +593,12 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getLastSibling(array $columns = ['*'])
     {
-        return $this->siblings($columns)->orderBy(EntityInterface::POSITION, 'desc')->first();
+        if ( ! $this->exists)
+        {
+            return new Collection;
+        }
+
+        return $this->siblings($columns)->orderBy(static::POSITION, 'desc')->first();
     }
 
     /**
@@ -542,6 +609,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getPrevSibling(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return null;
+        }
+
         return $this->prevSibling($columns)->first();
     }
 
@@ -553,6 +625,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getPrevSiblings(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return new Collection;
+        }
+
         return $this->prevSiblings($columns)->get();
     }
 
@@ -563,6 +640,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countPrevSiblings()
     {
+        if ( ! $this->exists)
+        {
+            return 0;
+        }
+
         return $this->prevSiblings()->count();
     }
 
@@ -584,6 +666,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getNextSibling(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return null;
+        }
+
         return $this->nextSibling($columns)->first();
     }
 
@@ -595,6 +682,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getNextSiblings(array $columns = ['*'])
     {
+        if ( ! $this->exists)
+        {
+            return new Collection;
+        }
+
         return $this->nextSiblings($columns)->get();
     }
 
@@ -605,6 +697,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countNextSiblings()
     {
+        if ( ! $this->exists)
+        {
+            return 0;
+        }
+
         return $this->nextSiblings()->count();
     }
 
@@ -668,74 +765,77 @@ class Entity extends Eloquent implements EntityInterface {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
+        $this->oldParentId = $this->parentId;
         $this->parentId = $ancestor;
-        $this->{EntityInterface::POSITION} = $position;
+
+        $this->oldPosition = $this->{static::POSITION};
+        $this->{static::POSITION} = $position;
 
         $this->save();
 
         return $this;
     }
 
-    /*protected function reorderSiblingsOnSaving()
-    {
-        if ( ! is_null($this->oldPosition))
-        {
-            //
-        }
-    }*/
-
     /**
-     * Reorders siblings when a model is moved to another position or ancestor.
+     * Reorders model's siblings when one is moved to another position or ancestor.
      *
+     * @param bool $parentIdChanged
      * @return void
      */
-    protected function reorderSiblings()
+    protected function reorderSiblings($parentIdChanged = false)
     {
         if ( ! is_null($this->oldPosition))
         {
             $position = [
                 'old' => $this->oldPosition,
-                'now' => $this->{EntityInterface::POSITION}
+                'now' => $this->{static::POSITION}
             ];
 
-            //$depth = [
-            //    'old' => $this->closure->getOldRealAttributes(ClosureTableInterface::DEPTH),
-            //    'now' => $this->closure->getRealAttributes(ClosureTableInterface::DEPTH)
-            //];
+            list($range, $action) = $this->setupReordering($position, $parentIdChanged);
 
-            list($range, $action) = $this->getReorderingRangeAndAction($position['old'], $position['now']);
-
-            $this->siblingsRange($range, QueryBuilder::BY_WHERE_IN)->$action(EntityInterface::POSITION);
-
-            //if ($depth['now'] != $depth['old'])
-            //{
-                //$this->
-                //var_dump($this->oldInstance->closure->getOldRealAttributes([ClosureTableInterface::DEPTH]));
-                //$this->oldInstance->reorderSiblingsWithin($this->oldPosition, 'decrement');
-            //}
-
-            //var_dump(\DB::getQueryLog());
+            $this->siblingsRange($range, QueryBuilder::BY_WHERE_IN)->$action(static::POSITION);
         }
     }
 
-    protected function getReorderingRangeAndAction($oldPosition, $curPosition)
+    /**
+     * Setups model's siblings reordering.
+     *
+     * Actually, the method determines siblings that will be reordered
+     * by creating range of theirs positions and determining the action
+     * that will be used in reordering ('increment' or 'decrement').
+     *
+     * @param array $position
+     * @param bool $parentIdChanged
+     * @return array
+     */
+    protected function setupReordering($position, $parentIdChanged)
     {
-        if ($curPosition > $oldPosition)
+        // If the model's parent was changed, firstly we decrement
+        // positions of the 'old' next siblings of the model.
+        if ($parentIdChanged === true)
         {
-            $range  = range($oldPosition, $curPosition);
+            $range  = $position['old'];
             $action = 'decrement';
-        }
-        elseif ($curPosition == $oldPosition && $curPosition == 0)
-        {
-            $range = $curPosition;
-            $action = 'increment';
         }
         else
         {
-            if ($oldPosition != 0) $oldPosition--;
+            if ($position['now'] > $position['old'])
+            {
+                $range  = range($position['old'], $position['now']);
+                $action = 'decrement';
+            }
+            elseif ($position['now'] == $position['old'] && $position['now'] == 0)
+            {
+                $range = $position['now'];
+                $action = 'increment';
+            }
+            else
+            {
+                if ($position['old'] != 0) $position['old']--;
 
-            $range = range($curPosition, $oldPosition);
-            $action = 'increment';
+                $range = range($position['now'], $position['old']);
+                $action = 'increment';
+            }
         }
 
         return [$range, $action];
@@ -761,14 +861,16 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function moveNode()
     {
-        if ($this->exists)
+        if ($this->exists && isset($this->parentId))
         {
             $this->initClosureTable();
 
-            if (isset($this->parentId))
+            if ($this->parentId != $this->oldParentId)
             {
-                $this->closure->moveNodeTo($this->parentId);
+                $this->reorderSiblings(true);
             }
+
+            $this->closure->moveNodeTo($this->parentId);
         }
     }
 
@@ -788,9 +890,14 @@ class Entity extends Eloquent implements EntityInterface {
         return $this->descendants([$this->getQualifiedKeyName()], $what, $type)->$action();
     }
 
+    /**
+     *
+     *
+     * @return string
+     */
     public function getQualifiedPositionColumn()
     {
-        return $this->getTable() . '.' . EntityInterface::POSITION;
+        return $this->getTable() . '.' . static::POSITION;
     }
 
     /**
@@ -813,27 +920,36 @@ class Entity extends Eloquent implements EntityInterface {
     {
         $conn = $this->getConnection();
         $grammar = $conn->getQueryGrammar();
+        $queryBuilder = null;
 
-        $this->initClosureTable();
-
-        $ctableAttrs = $this->closure->getRealAttributes();
-
-        // Here we do a workaround to simplify QueryBuilder tests
         $attrs = [
             'pk' => $this->getQualifiedKeyName(),
-            'pkValue' => $this->getKey(),
             'position' => $this->getQualifiedPositionColumn(),
-            'positionValue'   => $this->{EntityInterface::POSITION},
             'closure'         => $this->closure->getTable(),
             'ancestor'        => $this->closure->getQualifiedAncestorColumn(),
             'ancestorShort'   => ClosureTableInterface::ANCESTOR,
-            'ancestorValue'   => $ctableAttrs[ClosureTableInterface::ANCESTOR],
             'descendant'      => $this->closure->getQualifiedDescendantColumn(),
             'descendantShort' => ClosureTableInterface::DESCENDANT,
             'depth'           => $this->closure->getQualifiedDepthColumn(),
             'depthShort'      => ClosureTableInterface::DEPTH,
-            'depthValue'      => $ctableAttrs[ClosureTableInterface::DEPTH]
         ];
+
+        // We create the extended query builder only
+        // if the model 'exists' to reduce database queries.
+        if ( ! is_null($this->getKey()))
+        {
+            $this->initClosureTable();
+
+            $ctableAttrs = $this->closure->getActualAttrs();
+
+            // Workaround to simplify QueryBuilder queries construction.
+            $attrs = array_merge($attrs, [
+                'pkValue' => $this->getKey(),
+                'positionValue'   => $this->{static::POSITION},
+                'ancestorValue'   => $ctableAttrs[ClosureTableInterface::ANCESTOR],
+                'depthValue'      => $ctableAttrs[ClosureTableInterface::DEPTH]
+            ]);
+        }
 
         return new QueryBuilder($conn, $grammar, $conn->getPostProcessor(), $attrs);
     }

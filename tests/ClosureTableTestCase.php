@@ -135,7 +135,7 @@ class ClosureTableTestCase extends BaseTestCase {
         $this->assertFalse(ClosureTable::find(3)->isRoot());
     }
 
-    public function testGetRealAttributes()
+    public function testGetActualAttributes()
     {
         $deepest = ClosureTable::where(ClosureTableInterface::ANCESTOR, '=', 1)
                     ->where(ClosureTableInterface::DESCENDANT, '=', 1)
@@ -149,14 +149,13 @@ class ClosureTableTestCase extends BaseTestCase {
 
         $item->moveNodeTo(3);
 
-        $result = $deepest->getRealAttributes();
+        $result = $deepest->getActualAttrs();
 
         $this->assertEquals(3, $result[ClosureTableInterface::ANCESTOR]);
-        $this->assertEquals(2, $result['parent']);
         $this->assertEquals(1, $result[ClosureTableInterface::DESCENDANT]);
         $this->assertEquals(2, $result[ClosureTableInterface::DEPTH]);
 
-        $result = $deepest->getRealAttributes([ClosureTableInterface::ANCESTOR]);
+        $result = $deepest->getActualAttrs([ClosureTableInterface::ANCESTOR]);
 
         $this->assertInternalType('string', $result);
     }

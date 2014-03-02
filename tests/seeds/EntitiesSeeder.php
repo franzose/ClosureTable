@@ -9,6 +9,19 @@ class EntitiesSeeder extends \Seeder {
         $entitiesSql = 'insert into entities (id, title, excerpt, body, position) values(?, ?, ?, ?, ?)';
         $closuresSql = 'insert into entities_closure (ancestor, descendant, depth) values(?, ?, ?)';
 
+        // 1
+        // 2
+        // 3
+        // 4
+        // 5
+        // 6
+        // 7
+        // 8
+        // 9 > 10 > 11 > 12
+        // 9 > 13
+        // 9 > 14
+        // 9 > 15
+
         foreach(range(0, 8) as $idx)
         {
             DB::insert($entitiesSql, [$idx+1, 'The title', 'The excerpt', 'The body', $idx]);
@@ -26,10 +39,9 @@ class EntitiesSeeder extends \Seeder {
         DB::insert($closuresSql, [10, 11, 1]);
         DB::insert($closuresSql, [11, 12, 1]);
 
+        DB::insert($closuresSql, [9, 11, 2]);
         DB::insert($closuresSql, [10, 12, 2]);
         DB::insert($closuresSql, [9, 12, 3]);
-
-        DB::insert($closuresSql, [9, 11, 2]);
 
         DB::insert($entitiesSql, [13, 'The title', 'The excerpt', 'The body', 1]);
         DB::insert($closuresSql, [13, 13, 0]);

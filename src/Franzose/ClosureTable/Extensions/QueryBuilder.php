@@ -37,56 +37,63 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      *
      * @var int
      */
-    const CHILDREN      = 4;
+    const CHILDREN      = 3;
 
     /**
      * 'Find neighbors' flag.
      *
      * @var int
      */
-    const NEIGHBORS     = 8;
+    const NEIGHBORS     = 4;
 
     /**
      * 'Find one previous sibling' flag.
      *
      * @var int
      */
-    const PREV_ONE      = 16;
+    const PREV_ONE      = 5;
 
     /**
      * 'Find all previous siblings' flag.
      *
      * @var int
      */
-    const PREV_ALL      = 32;
+    const PREV_ALL      = 6;
 
     /**
      * 'Find one next sibling' flag.
      *
      * @var int
      */
-    const NEXT_ONE      = 64;
+    const NEXT_ONE      = 7;
 
     /**
      * 'Find all next siblings' flag.
      *
      * @var int
      */
-    const NEXT_ALL      = 128;
+    const NEXT_ALL      = 8;
+
+    /**
+     * 'Find within range' flag.
+     *
+     * @var int
+     */
+    const IN_RANGE      = 9;
 
     /**
      * 'Find using where in clause' flag.
      *
      * @var int
      */
-    const BY_WHERE_IN   = 256;
+    const BY_WHERE_IN   = 10;
 
     /**
      * 'Find using join clause' flag.
      *
      * @var int
      */
-    const BY_JOIN       = 512;
+    const BY_JOIN       = 11;
 
     /**
      * Create a new query builder instance.
@@ -99,7 +106,7 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     public function __construct(ConnectionInterface $connection,
                                 Grammar $grammar,
                                 Processor $processor,
-                                array $queriedAttributes)
+                                array $queriedAttributes = [])
     {
         parent::__construct($connection, $grammar, $processor);
 
@@ -222,13 +229,12 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      * Builds descendants query that includes the ancestor.
      *
      * @param array $columns
-     * @param int $what
      * @param int $type
      * @return QueryBuilder
      */
-    public function descendantsWithSelf(array $columns = ['*'], $what = self::ALL_INC_SELF, $type = self::BY_JOIN)
+    public function descendantsWithSelf(array $columns = ['*'], $type = self::BY_JOIN)
     {
-        return $this->descendants($columns, $what, $type);
+        return $this->descendants($columns, self::ALL_INC_SELF, $type);
     }
 
     /**
@@ -313,10 +319,10 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
 
         $query = $this->{$method}($columns, $what);
 
-        if ($this->qattrs['depthValue'] == 0)
-        {
-            $this->whereRaw($this->getRootCheckQuery());
-        }
+        //if ($this->qattrs['depthValue'] == 0)
+        //{
+        //    $this->whereRaw($this->getRootCheckQuery());
+        //}
 
         switch($what)
         {
@@ -433,12 +439,21 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      */
     protected function finalizeSiblingsQuery($type)
     {
-        $this->where('c.'.$this->qattrs['depthShort'], '=', $this->qattrs['depthValue'])
-            ->where('c.'.$this->qattrs['ancestorShort'], '=', $this->qattrs['ancestorValue']);
+        $this->where('c.'.$this->qattrs['depthShort'], '=', $this->qattrs['depthValue']);
 
-        if ($type == static::ALL_BUT_SELF)
+        if ($type != static::IN_RANGE)
+        {
+            $this->where('c.'.$this->qattrs['ancestorShort'], '=', $this->qattrs['ancestorValue']);
+        }
+
+        if ($type == static::IN_RANGE || $type == static::ALL_BUT_SELF)
         {
             $this->where('c.'.$this->qattrs['descendantShort'], '<>', $this->qattrs['pkValue']);
+        }
+
+        if ($this->qattrs['depthValue'] == 0)
+        {
+            $this->whereRaw($this->getRootCheckQuery());
         }
 
         return $this;
@@ -535,7 +550,7 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      */
     public function siblingsRange($rangeOrPos, $type = self::BY_JOIN)
     {
-        $query = $this->siblings([$this->qattrs['pk'], $this->qattrs['position']], static::ALL_BUT_SELF, $type);
+        $query = $this->siblings([$this->qattrs['pk'], $this->qattrs['position']], static::IN_RANGE, $type);
 
         if (is_array($rangeOrPos))
         {
@@ -559,8 +574,10 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      */
     protected function getRootCheckQuery($closureTableAlias = 'c')
     {
+        $ancestor = $closureTableAlias.'.'.$this->qattrs['ancestorShort'];
+
         return '(select count(*) from '.$this->qattrs['closure'].' as ct '.
-               'where ct.'.$this->qattrs['descendantShort'].' = '.$closureTableAlias.'.'.$this->qattrs['ancestorShort'].' '.
+               'where ct.'.$this->qattrs['descendantShort'].' = '.$ancestor.' '.
                'and ct.'.$this->qattrs['depthShort'].' > 0) = 0';
     }
 

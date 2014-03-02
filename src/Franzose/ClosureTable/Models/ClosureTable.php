@@ -25,16 +25,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     public $timestamps = false;
 
     /**
-     * @var array
-     */
-    protected $real = array();
-
-    /**
-     * @var
-     */
-    protected $oldReal = array();
-
-    /**
      * Check if model is a top level one (i.e. has no ancestors).
      *
      * @param null $id
@@ -55,24 +45,17 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             ->count() == 0;
     }
 
-    public function getRealAttributes($attributes = ['*'])
+    /**
+     * Retrieves node attributes from its actual depth.
+     *
+     * @param array $attributes
+     * @return array|null
+     */
+    public function getActualAttrs($attributes = ['*'])
     {
         if ( ! is_array($attributes))
         {
             $attributes = [$attributes];
-        }
-
-        if ( ! empty($this->real))
-        {
-            if ($attributes != ['*'])
-            {
-                return array_where($this->real, function($key) use($attributes)
-                {
-                    return in_array($key, $attributes);
-                });
-            }
-
-            return $this->real;
         }
 
         $closure = static::where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
@@ -89,29 +72,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $result = (count($closure) == 1 ? $closure[$attributes[0]] : $closure);
 
         return $result;
-    }
-
-    public function getOldRealAttributes($attribute = null)
-    {
-        if ( ! is_null($attribute))
-        {
-            if (is_array($attribute))
-            {
-                return array_where($this->oldReal, function($key) use($attribute)
-                {
-                    return in_array($key, $attribute);
-                });
-            }
-
-            if (isset($this->oldReal[$attribute]))
-            {
-                return $this->oldReal[$attribute];
-            }
-
-            return null;
-        }
-
-        return $this->oldReal;
     }
 
     /**
@@ -182,7 +142,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         // Prevent constraint collision
         if ( ! is_null($ancestorId) && $thisAncestorId === $ancestorId)
         {
-            return false;
+            return;
         }
 
         $this->unbindRelationships();
@@ -192,10 +152,8 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         // because now the node is already root.
         if (is_null($ancestorId))
         {
-            return false;
+            return;
         }
-
-        $this->oldReal = $this->real;
 
         \DB::transaction(function() use($ak, $dk, $dpk, $t, $ancestorId, $thisDescendantId){
             $query = "
@@ -208,8 +166,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
             $results = \DB::select($query);
             array_walk($results, function(&$item){ $item = (array)$item; });
-
-            $this->real = $results[0];
 
             \DB::table($t)->insert($results);
         });

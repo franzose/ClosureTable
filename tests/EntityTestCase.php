@@ -45,7 +45,7 @@ class EntityTestCase extends BaseTestCase {
 
     public function testIsRoot()
     {
-        $this->assertTrue($this->entity->isRoot());
+        $this->assertFalse($this->entity->isRoot());
     }
 
     /**
