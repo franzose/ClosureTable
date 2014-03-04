@@ -9,6 +9,7 @@ class {{entity_class}} extends Migration {
     {
         Schema::create('{{entity_table}}', function(Blueprint $table){
             $table->increments('id');
+            $table->integer('position', false, true);
         });
     }
 
