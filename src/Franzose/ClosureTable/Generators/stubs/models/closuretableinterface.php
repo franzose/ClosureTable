@@ -1,3 +1,3 @@
 <?php
 
-class {{closure_class}}Interface extends Franzose\ClosureTable\Contracts\ClosureTableInterface {}
+interface {{closure_class}}Interface extends \Franzose\ClosureTable\Contracts\ClosureTableInterface {}

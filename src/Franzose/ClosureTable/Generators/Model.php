@@ -6,53 +6,62 @@ class Model extends Generator {
     /**
      * @param array $names
      * @param string $path
-     * @return string
+     * @return array
      */
     public function create(array $names, $path)
     {
+        $allPaths = [];
+
+        // Initial models path
+        $modelsPath = $path;
+
+        // Entity class name
         $entityClass = $this->classify($names['entity']);
+
+        // Closure table class name
         $closureTableClass = $this->classify($names['closure']);
 
-        $path = $this->getPath($names['closure'], $path);
-        $stub = $this->getStub('closuretable', 'models');
+        // Closure table interface name
+        $closureTableInterface = $closureTableClass.'Interface';
 
-        $this->filesystem->put($path, $this->parseStub($stub, [
-            'closure_class' => $closureTableClass,
-            'closure_table' => $this->tableize($names['closure'])
-        ]));
+        $closureTableName = $this->tableize($names['closure']);
 
-        $ctinterface = $names['closure'].'Interface';
-        $path = $this->getPath($names['closure'].'Interface', $path);
-        $stub = $this->getStub('closuretableinterface', 'models');
-
-        $this->filesystem->put($path, $this->parseStub($stub, [
-            'closure_class' => $closureTableClass
-        ]));
-
-        $path = $this->getPath($names['entity'], $path);
+        // First, we make entity classes
+        $allPaths[] = $path = $this->getPath($names['entity'], $modelsPath);
         $stub = $this->getStub('entity', 'models');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'entity_class' => $entityClass,
             'entity_table' => $this->tableize($names['entity']),
-            'closure_interface' => $this->classify($ctinterface)
+            'closure_class' => $closureTableClass,
+            'closure_interface' => $this->classify($closureTableInterface)
         ]));
 
-        $path = $this->getPath($names['entity'].'Interface', $path);
+        $allPaths[] = $path = $this->getPath($entityClass.'Interface', $modelsPath);
         $stub = $this->getStub('entityinterface', 'models');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'entity_class' => $entityClass
         ]));
 
-        $path = $this->getPath($names['entity'].'Repository', $path);
-        $stub = $this->getStub('entity', 'models');
+        // Second, we make closure classes
+        $allPaths[] = $path = $this->getPath($closureTableClass, $modelsPath);
+        $stub = $this->getStub('closuretable', 'models');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
-            'entity_class' => $entityClass
+            'closure_class' => $closureTableClass,
+            'closure_table' => $closureTableName
         ]));
 
-        return $path;
+
+        $allPaths[] = $path = $this->getPath($closureTableInterface, $modelsPath);
+        $stub = $this->getStub('closuretableinterface', 'models');
+
+        $this->filesystem->put($path, $this->parseStub($stub, [
+            'closure_class' => $closureTableClass
+        ]));
+
+        return $allPaths;
     }
 
     /**

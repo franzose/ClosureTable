@@ -1,6 +1,6 @@
 <?php
 
-class {{entity_class}} extends Franzose\ClosureTable\Entity implements {{entity_class}}Interface {
+class {{entity_class}} extends \Franzose\ClosureTable\Models\Entity implements {{entity_class}}Interface {
 
     /**
      * The table associated with the model.
@@ -10,10 +10,9 @@ class {{entity_class}} extends Franzose\ClosureTable\Entity implements {{entity_
     protected $table = '{{entity_table}}';
 
     /**
-     * Makes closure table from an interface.
+     * ClosureTable model instance.
+     *
+     * @var {{closure_class}}
      */
-    protected function makeClosureTable()
-    {
-        $this->closure = \App::make('{{closure_interface}}');
-    }
+    protected $closure = '{{closure_class}}';
 }

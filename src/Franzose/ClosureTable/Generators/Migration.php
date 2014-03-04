@@ -6,28 +6,37 @@ class Migration extends Generator {
     /**
      * @param array $names
      * @param string $path
-     * @return string
+     * @return array
      */
     public function create(array $names, $path)
     {
-        $path = $this->getPath($names['closure'], $path);
-        $stub = $this->getStub('closuretable', 'migrations');
+        $allPaths = [];
+        $migpath = $path;
 
-        $this->filesystem->put($path, $this->parseStub($stub, [
-            'closure_table' => $this->tableize($names['closure']),
-            'closure_class' => $this->classify($names['closure']),
-            'entity_table'  => $this->tableize($names['entity'])
-        ]));
+        $entityClass = $this->getClassName($names['entity']);
+        $entityTable = $this->tableize($names['entity']);
 
-        $path = $this->getPath($names['entity'], $path);
+        $closureClass = $this->getClassName($names['closure']);
+        $closureTable = $this->tableize($names['closure']);
+
+        $allPaths[] = $path = $this->getPath($names['entity'], $migpath);
         $stub = $this->getStub('entity', 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
-            'entity_table' => $this->tableize($names['entity']),
-            'entity_class' => $this->classify($names['entity'])
+            'entity_table' => $entityTable,
+            'entity_class' => $entityClass
         ]));
 
-        return $path;
+        $allPaths[] = $path = $this->getPath($names['closure'], $migpath);
+        $stub = $this->getStub('closuretable', 'migrations');
+
+        $this->filesystem->put($path, $this->parseStub($stub, [
+            'closure_table' => $closureTable,
+            'closure_class' => $closureClass,
+            'entity_table'  => $entityTable
+        ]));
+
+        return $allPaths;
     }
 
     /**

@@ -65,6 +65,6 @@ abstract class Generator {
 
     protected function tableize($name)
     {
-        return snake_case(str_plural($name));
+        return (ends_with($name, '_closure') ? $name : snake_case(str_plural($name)));
     }
 } 
