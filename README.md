@@ -30,7 +30,7 @@ php artisan closuretable:make --entity=page
 ```
 
 All options of the command:<br>
-1. `--namespace`, `-ns` _[optional]_: namespace for classes, set by `--entity` and `--closure` options, helps to avoid namespace duplication in those options
+1. `--namespace`, `-ns` _[optional]_: namespace for classes, set by `--entity` and `--closure` options, helps to avoid namespace duplication in those options<br>
 2. `--entity`, `-e`: entity class name; if namespaced name is used, then the default closure class name will be prepended with that namespace<br>
 3. `--entity-table`, `-et` _[optional]_: entity table name<br>
 4. `--closure`, `-c` _[optional]_: closure class name<br>
