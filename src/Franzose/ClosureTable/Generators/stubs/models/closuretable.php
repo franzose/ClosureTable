@@ -1,4 +1,4 @@
-<?php
+<?php {{namespace}}
 
 class {{closure_class}} extends \Franzose\ClosureTable\Models\ClosureTable implements {{closure_class}}Interface {
 

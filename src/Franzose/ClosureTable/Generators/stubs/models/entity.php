@@ -1,4 +1,4 @@
-<?php
+<?php {{namespace}}
 
 class {{entity_class}} extends \Franzose\ClosureTable\Models\Entity implements {{entity_class}}Interface {
 
@@ -12,7 +12,7 @@ class {{entity_class}} extends \Franzose\ClosureTable\Models\Entity implements {
     /**
      * ClosureTable model instance.
      *
-     * @var {{closure_class}}
+     * @var {{closure_class_short}}
      */
     protected $closure = '{{closure_class}}';
 }

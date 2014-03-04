@@ -1,44 +1,42 @@
 <?php namespace Franzose\ClosureTable\Generators;
 
+use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
+/**
+ * Class Migration
+ * @package Franzose\ClosureTable\Generators
+ */
 class Migration extends Generator {
 
     /**
-     * @param array $names
-     * @param string $path
+     * @param array $options
      * @return array
      */
-    public function create(array $names, $path)
+    public function create(array $options)
     {
-        $allPaths = [];
-        $migpath = $path;
+        $paths = [];
 
-        $entityClass = $this->getClassName($names['entity']);
-        $entityTable = $this->tableize($names['entity']);
+        $entityClass = $this->getClassName($options['entity-table']);
+        $closureClass = $this->getClassName($options['closure-table']);
 
-        $closure = $names['closure'] ?: $names['entity'] . 'Closure';
-
-        $closureClass = $this->getClassName($closure);
-        $closureTable = $this->tableize($closure);
-
-        $allPaths[] = $path = $this->getPath($names['entity'], $migpath);
+        $paths[] = $path = $this->getPath($options['entity-table'], $options['migrations-path']);
         $stub = $this->getStub('entity', 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
-            'entity_table' => $entityTable,
+            'entity_table' => $options['entity-table'],
             'entity_class' => $entityClass
         ]));
 
-        $allPaths[] = $path = $this->getPath($closure, $migpath);
+        $paths[] = $path = $this->getPath($options['closure-table'], $options['migrations-path']);
         $stub = $this->getStub('closuretable', 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
-            'closure_table' => $closureTable,
+            'closure_table' => $options['closure-table'],
             'closure_class' => $closureClass,
-            'entity_table'  => $entityTable
+            'entity_table'  => $options['entity-table']
         ]));
 
-        return $allPaths;
+        return $paths;
     }
 
     /**
@@ -47,7 +45,7 @@ class Migration extends Generator {
      */
     protected function getName($name)
     {
-        return 'create_'.$this->tableize($name).'_table';
+        return 'create_' . ExtStr::tableize($name) . '_table';
     }
 
     /**
@@ -56,7 +54,7 @@ class Migration extends Generator {
      */
     protected function getClassName($name)
     {
-        return $this->classify($this->getName($name));
+        return ExtStr::classify($this->getName($name));
     }
 
     /**
@@ -66,6 +64,6 @@ class Migration extends Generator {
      */
     protected function getPath($name, $path)
     {
-        return $path.'/'.date('Y_m_d_His').'_'.$this->getName($name).'.php';
+        return $path . '/' . date('Y_m_d_His') . '_' . $this->getName($name) . '.php';
     }
 } 

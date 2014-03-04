@@ -1,94 +1,73 @@
 <?php namespace Franzose\ClosureTable\Generators;
 
+use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
+/**
+ * Class Model
+ * @package Franzose\ClosureTable\Generators
+ */
 class Model extends Generator {
 
     /**
-     * @param array $names
-     * @param string $path
+     * @param array $options
      * @return array
      */
-    public function create(array $names, $path)
+    public function create(array $options)
     {
-        $allPaths = [];
+        $paths = [];
 
-        // Initial models path
-        $modelsPath = $path;
+        $nspath = str_replace('\\', '/', $options['namespace']);
+        $nsplaceholder = (!empty($options['namespace']) ? "namespace " . $options['namespace'] . ";" : '');
 
-        // Entity class name
-        $entity = $names['entity'];
+        $closureInterface = $options['closure'].'Interface';
+        $qualifiedEntityName = $nspath . '/' . $options['entity'];
+        $qualifiedEntityInterfaceName = $qualifiedEntityName . 'Interface';
+        $qualifiedClosureName = $nspath . '/' . $options['closure'];
+        $qualifiedClosureInterfaceName = $qualifiedClosureName . 'Interface';
 
-        // Namespace name
-        $ns = $names['namespace'] ?: substr($entity, 0, strrpos($entity, '\\'));
-        $ns = str_replace('\\', '/', $ns);
-        $dirs = explode('/', $ns);
-        $dirsnum = count($dirs);
-
-        // Entity path
-        $epath = (strrpos($entity, '\\') !== false ? str_replace('\\', '/', $entity) : $ns . '/' . $entity);
-
-        // Entity table name
-        $etable = $names['entity-table'] ?: $this->tableize($entity);
-
-        // Closure table class name
-        $closure = $names['closure'] ?: $entity . 'Closure';
-        $cpath = (strrpos($closure, '\\') !== false ? str_replace('\\', '/', $closure) : $ns . '/' . $closure);
-
-        // Closure table name
-        $ctable = $names['closure-table'] ?: $this->tableize($closure);
-
-        // Closure table interface name
-        $closureInterface = $closure.'Interface';
-        $cipath = $cpath.'Interface';
-
-        if ($dirsnum > 1)
-        {
-            $mkpath = $modelsPath . '/';
-
-            for($i=0; $i<$dirsnum; $i++)
-            {
-                $mkpath .= $dirs[$i] . '/';
-
-                $this->filesystem->makeDirectory($mkpath);
-            }
-        }
+        $this->makeDirectories(explode('/', $nspath), $options['models-path']);
 
         // First, we make entity classes
-        $allPaths[] = $path = $this->getPath($epath, $modelsPath);
+        $paths[] = $path = $this->getPath($qualifiedEntityName, $options['models-path']);
         $stub = $this->getStub('entity', 'models');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
-            'entity_class' => $entity,
-            'entity_table' => $etable,
-            'closure_class' => $closure,
+            'namespace' => $nsplaceholder,
+            'entity_class' => $options['entity'],
+            'entity_table' => $options['entity-table'],
+            'closure_class' => $options['namespace'] . '\\' . $options['closure'],
+            'closure_class_short' => $options['closure'],
             'closure_interface' => $closureInterface
         ]));
 
-        $allPaths[] = $path = $this->getPath($epath.'Interface', $modelsPath);
+        $paths[] = $path = $this->getPath($qualifiedEntityInterfaceName, $options['models-path']);
         $stub = $this->getStub('entityinterface', 'models');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
-            'entity_class' => $entity
+            'namespace' => $nsplaceholder,
+            'entity_class' => $options['entity']
         ]));
 
         // Second, we make closure classes
-        $allPaths[] = $path = $this->getPath($cpath, $modelsPath);
+        $paths[] = $path = $this->getPath($qualifiedClosureName, $options['models-path']);
         $stub = $this->getStub('closuretable', 'models');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
-            'closure_class' => $closure,
-            'closure_table' => $ctable
+            'namespace' => $nsplaceholder,
+            'closure_class' => $options['closure'],
+            'closure_table' => $options['closure-table']
         ]));
 
 
-        $allPaths[] = $path = $this->getPath($cipath, $modelsPath);
+        $paths[] = $path = $this->getPath($qualifiedClosureInterfaceName, $options['models-path']);
         $stub = $this->getStub('closuretableinterface', 'models');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
-            'closure_class' => $closure
+            'namespace' => $nsplaceholder,
+            'closure_class' => $options['closure']
         ]));
 
-        return $allPaths;
+        return $paths;
     }
 
     /**
@@ -96,8 +75,29 @@ class Model extends Generator {
      * @param $path
      * @return string
      */
-    public function getPath($name, $path)
+    protected function getPath($name, $path)
     {
-        return $path . '/' . $this->classify($name) . '.php';
+        return $path . '/' . ExtStr::classify($name) . '.php';
+    }
+
+    /**
+     * @param array $directories
+     * @param string $modelsPath
+     */
+    protected function makeDirectories(array $directories, $modelsPath)
+    {
+        $dirsnum = count($directories);
+
+        if ($dirsnum > 1)
+        {
+            $mkpath = $modelsPath . '/';
+
+            for($i=0; $i<$dirsnum; $i++)
+            {
+                $mkpath .= $directories[$i] . '/';
+
+                $this->filesystem->makeDirectory($mkpath);
+            }
+        }
     }
 } 

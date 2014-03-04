@@ -2,6 +2,10 @@
 
 use \Illuminate\Filesystem\Filesystem;
 
+/**
+ * Class Generator
+ * @package Franzose\ClosureTable\Generators
+ */
 abstract class Generator {
 
     /**
@@ -17,7 +21,7 @@ abstract class Generator {
         $this->filesystem = $filesystem;
     }
 
-    abstract public function create(array $names, $path);
+    abstract public function create(array $options);
 
     /**
      * @param string $type
@@ -56,15 +60,5 @@ abstract class Generator {
         }
 
         return $stub;
-    }
-
-    protected function classify($name)
-    {
-        return studly_case(str_singular($name));
-    }
-
-    protected function tableize($name)
-    {
-        return (ends_with($name, 'Closure') ? snake_case($name) : snake_case(str_plural($name)));
     }
 } 

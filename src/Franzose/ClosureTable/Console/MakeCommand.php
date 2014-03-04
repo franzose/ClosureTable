@@ -4,6 +4,7 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Franzose\ClosureTable\Generators\Migration;
 use Franzose\ClosureTable\Generators\Model;
+use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 class MakeCommand extends Command {
 
@@ -61,11 +62,7 @@ class MakeCommand extends Command {
      */
     public function fire()
     {
-        foreach($this->getOptions() as $option)
-        {
-            $this->options[$option[0]] = $this->option($option[0]);
-        }
-
+        $this->prepareOptions();
         $this->writeMigrations();
         $this->writeModels();
 
@@ -79,7 +76,7 @@ class MakeCommand extends Command {
      */
     protected function writeMigrations()
     {
-        $files = $this->migrator->create($this->options, $this->getMigrationsPath());
+        $files = $this->migrator->create($this->options);
 
         foreach($files as $file)
         {
@@ -95,55 +92,13 @@ class MakeCommand extends Command {
      */
     protected function writeModels()
     {
-        $files = $this->modeler->create($this->options, $this->getModelsPath());
+        $files = $this->modeler->create($this->options);
 
         foreach($files as $file)
         {
             $path = pathinfo($file, PATHINFO_FILENAME);
             $this->line("      <fg=green;options=bold>create</fg=green;options=bold>  $path");
         }
-    }
-
-    /**
-     * Get the path to the migrations directory.
-     *
-     * @return string
-     */
-    protected function getMigrationsPath()
-    {
-        $custom = $this->option('migrations-path');
-
-        if ($custom)
-        {
-            $path = $this->laravel['path'] . '/' . $custom;
-        }
-        else
-        {
-            $path = $this->laravel['path'] . '/database/migrations';
-        }
-
-        return $path;
-    }
-
-    /**
-     * Get the path to the models directory.
-     *
-     * @return string
-     */
-    protected function getModelsPath()
-    {
-        $custom = $this->option('models-path');
-
-        if ($custom)
-        {
-            $path = $this->laravel['path'] . '/' . $custom;
-        }
-        else
-        {
-            $path = $this->laravel['path'] . '/models';
-        }
-
-        return $path;
     }
 
     /**
@@ -162,5 +117,27 @@ class MakeCommand extends Command {
             ['models-path', 'mdl', InputOption::VALUE_OPTIONAL, 'Models path.'],
             ['migrations-path', 'mgr', InputOption::VALUE_OPTIONAL, 'Migrations path.'],
         ];
+    }
+
+    protected function prepareOptions()
+    {
+        $options = $this->getOptions();
+        $input = [];
+
+        foreach($options as $option)
+        {
+            $input[] = $this->option($option[0]);
+        }
+
+        $larapath = $this->laravel['path'];
+        $lastnsdelim = strrpos($input[1], '\\');
+
+        $this->options[$options[0][0]] = $input[0] ?: substr($input[1], 0, $lastnsdelim);
+        $this->options[$options[1][0]] = substr($input[1], $lastnsdelim+1);
+        $this->options[$options[2][0]] = $input[2] ?: ExtStr::tableize($input[1]);
+        $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]].'Closure';
+        $this->options[$options[4][0]] = $input[4] ?: ExtStr::tableize($input[1].'Closure');
+        $this->options[$options[5][0]] = $input[5] ? $larapath . '/' . $input[5] : $larapath . '/models';
+        $this->options[$options[6][0]] = $input[6] ? $larapath . '/' . $input[6] : $larapath . '/database/migrations';
     }
 } 
