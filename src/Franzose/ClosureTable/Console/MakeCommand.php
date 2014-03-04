@@ -36,6 +36,13 @@ class MakeCommand extends Command {
     protected $modeler;
 
     /**
+     * Input arguments
+     *
+     * @var array
+     */
+    protected $options;
+
+    /**
      * Creates a new command instance.
      *
      * @param Migration $migrator
@@ -54,16 +61,13 @@ class MakeCommand extends Command {
      */
     public function fire()
     {
-        $entity  = $this->option('entity');
-        $closure = $this->option('closure') ?: $entity . '_closure';
+        foreach($this->getOptions() as $option)
+        {
+            $this->options[$option[0]] = $this->option($option[0]);
+        }
 
-        $names = [
-            'entity' => $entity,
-            'closure' => $closure
-        ];
-
-        $this->writeMigrations($names);
-        $this->writeModels($names);
+        $this->writeMigrations();
+        $this->writeModels();
 
         $this->call('dump-autoload');
     }
@@ -71,12 +75,11 @@ class MakeCommand extends Command {
     /**
      * Writes migration files to disk.
      *
-     * @param array $names
      * @return void
      */
-    protected function writeMigrations(array $names)
+    protected function writeMigrations()
     {
-        $files = $this->migrator->create($names, $this->getMigrationsPath());
+        $files = $this->migrator->create($this->options, $this->getMigrationsPath());
 
         foreach($files as $file)
         {
@@ -88,12 +91,11 @@ class MakeCommand extends Command {
     /**
      * Writes model files to disk.
      *
-     * @param array $names
      * @return void
      */
-    protected function writeModels(array $names)
+    protected function writeModels()
     {
-        $files = $this->modeler->create($names, $this->getModelsPath());
+        $files = $this->modeler->create($this->options, $this->getModelsPath());
 
         foreach($files as $file)
         {
@@ -152,10 +154,13 @@ class MakeCommand extends Command {
     protected function getOptions()
     {
         return [
-            ['entity', 'e', InputOption::VALUE_REQUIRED, 'Entity table name to use for migrations and models scaffolding.'],
-            ['closure', 'c', InputOption::VALUE_OPTIONAL, 'Closure table name to use for migrations and models scaffolding.'],
-            ['models-path', 'mdl', InputOption::VALUE_OPTIONAL, 'Models path'],
-            ['migrations-path', 'mgr', InputOption::VALUE_OPTIONAL, 'Migrations path'],
+            ['namespace', 'ns', InputOption::VALUE_OPTIONAL, 'Namespace for entity and its closure.'],
+            ['entity', 'e', InputOption::VALUE_REQUIRED, 'Entity class name.'],
+            ['entity-table', 'et', InputOption::VALUE_OPTIONAL, 'Entity table name.'],
+            ['closure', 'c', InputOption::VALUE_OPTIONAL, 'Closure class name'],
+            ['closure-table', 'ct', InputOption::VALUE_OPTIONAL, 'Closure table name.'],
+            ['models-path', 'mdl', InputOption::VALUE_OPTIONAL, 'Models path.'],
+            ['migrations-path', 'mgr', InputOption::VALUE_OPTIONAL, 'Migrations path.'],
         ];
     }
 } 

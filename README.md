@@ -30,10 +30,13 @@ php artisan closuretable:make --entity=page
 ```
 
 All options of the command:<br>
-1. `--entity`, `-e`: sets entity class name<br>
-2. `--closure`, `-c`: sets closure table class name<br>
-3. `--models-path`, `-mdl`: sets another models path<br>
-4. `--migrations-path`, `-mgr`: sets another migrations path<br>
+1. `--namespace`, `-ns` _[optional]_: namespace for classes, set by `--entity` and `--closure` options, helps to avoid namespace duplication in those options
+2. `--entity`, `-e`: entity class name; if namespaced name is used, then the default closure class name will be prepended with that namespace<br>
+3. `--entity-table`, `-et` _[optional]_: entity table name<br>
+4. `--closure`, `-c` _[optional]_: closure class name<br>
+5. `--closure-table` _[optional]_, `-ct`: closure table name<br>
+6. `--models-path`, `-mdl` _[optional]_: custom models path<br>
+7. `--migrations-path`, `-mgr` _[optional]_: custom migrations path<br>
 
 That's almost all, folks! The ‘dummy’ stuff has just been created for you. You will need to add some fields to your entity migration because the created ‘dummy’ includes just `id` and `position` columns. The latter is used widely by the package to make entities sortable, so avoid deleting `position` column from your entity table.
 

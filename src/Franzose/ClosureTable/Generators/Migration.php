@@ -16,8 +16,10 @@ class Migration extends Generator {
         $entityClass = $this->getClassName($names['entity']);
         $entityTable = $this->tableize($names['entity']);
 
-        $closureClass = $this->getClassName($names['closure']);
-        $closureTable = $this->tableize($names['closure']);
+        $closure = $names['closure'] ?: $names['entity'] . 'Closure';
+
+        $closureClass = $this->getClassName($closure);
+        $closureTable = $this->tableize($closure);
 
         $allPaths[] = $path = $this->getPath($names['entity'], $migpath);
         $stub = $this->getStub('entity', 'migrations');
@@ -27,7 +29,7 @@ class Migration extends Generator {
             'entity_class' => $entityClass
         ]));
 
-        $allPaths[] = $path = $this->getPath($names['closure'], $migpath);
+        $allPaths[] = $path = $this->getPath($closure, $migpath);
         $stub = $this->getStub('closuretable', 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
