@@ -9,7 +9,10 @@ class {{entity_class}} extends Migration {
     {
         Schema::create('{{entity_table}}', function(Blueprint $table){
             $table->increments('id');
+            $table->integer('parent_id');
             $table->integer('position', false, true);
+
+            $table->foreign('parent_id')->references('id')->on('{{entity_table}}');
         });
     }
 

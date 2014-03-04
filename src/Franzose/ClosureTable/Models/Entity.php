@@ -21,13 +21,6 @@ class Entity extends Eloquent implements EntityInterface {
     protected $closure = 'Franzose\ClosureTable\Models\ClosureTable';
 
     /**
-     * Cached direct ancestor id of this model. It is used to simplify query for parent model.
-     *
-     * @var int
-     */
-    protected $parentId;
-
-    /**
      * Cached "previous" (i.e. before the model is moved) direct ancestor id of this model.
      *
      * @var int
@@ -157,13 +150,9 @@ class Entity extends Eloquent implements EntityInterface {
         {
             $result = null;
         }
-        else if ( ! is_null($this->parentId))
-        {
-            $result = static::find($this->parentId);
-        }
         else
         {
-            $result = $this->parent($columns)->first();
+            $result = $this->belongsTo(get_class($this), static::PARENT_ID)->first($columns);
         }
 
         return $result;
@@ -329,9 +318,30 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @return bool
      */
-    protected function hasChildrenRelation()
+    public function hasChildrenRelation()
     {
         return array_key_exists(EntityInterface::CHILDREN, $this->getRelations());
+    }
+
+    /**
+     * Pushes a new item to a relation.
+     *
+     * @param $relation
+     * @param $value
+     * @return $this
+     */
+    public function appendRelation($relation, $value)
+    {
+        if ( ! array_key_exists($relation, $this->getRelations()))
+        {
+            $this->setRelation($relation, new Collection([$value]));
+        }
+        else
+        {
+            $this->getRelation($relation)->add($value);
+        }
+
+        return $this;
     }
 
     /**
@@ -758,18 +768,21 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function moveTo($position, $ancestor = null)
     {
-        $ancestor = ($ancestor instanceof EntityInterface ? $ancestor->getKey() : $ancestor);
+        //$ancestorRealDepth = $ancestor->{static::REAL_DEPTH};
+        $parentId = ($ancestor instanceof EntityInterface ? $ancestor->getKey() : $ancestor);
 
-        if ($this->getKey() == $ancestor)
+        if ($this->getKey() == $parentId)
         {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
-        $this->oldParentId = $this->parentId;
-        $this->parentId = $ancestor;
+        $this->oldParentId = $this->{static::PARENT_ID};
+        $this->{static::PARENT_ID} = $parentId;
 
         $this->oldPosition = $this->{static::POSITION};
         $this->{static::POSITION} = $position;
+
+        //$this->{static::REAL_DEPTH} = $ancestorRealDepth+1;
 
         $this->save();
 
@@ -849,7 +862,7 @@ class Entity extends Eloquent implements EntityInterface {
     protected function insertNode()
     {
         $descendant = $this->getKey();
-        $ancestor = (isset($this->parentId) ? $this->parentId : $descendant);
+        $ancestor = (isset($this->{static::PARENT_ID}) ? $this->{static::PARENT_ID} : $descendant);
 
         $this->closure->insertNode($ancestor, $descendant);
     }
@@ -861,16 +874,16 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function moveNode()
     {
-        if ($this->exists && isset($this->parentId))
+        if ($this->exists && isset($this->{static::PARENT_ID}))
         {
             $this->initClosureTable();
 
-            if ($this->parentId != $this->oldParentId)
+            if ($this->{static::PARENT_ID} != $this->oldParentId)
             {
                 $this->reorderSiblings(true);
             }
 
-            $this->closure->moveNodeTo($this->parentId);
+            $this->closure->moveNodeTo($this->{static::PARENT_ID});
         }
     }
 
@@ -946,7 +959,7 @@ class Entity extends Eloquent implements EntityInterface {
             $attrs = array_merge($attrs, [
                 'pkValue' => $this->getKey(),
                 'positionValue'   => $this->{static::POSITION},
-                'ancestorValue'   => $ctableAttrs[ClosureTableInterface::ANCESTOR],
+                'ancestorValue'   => $this->{static::PARENT_ID},
                 'depthValue'      => $ctableAttrs[ClosureTableInterface::DEPTH]
             ]);
         }

@@ -564,8 +564,6 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
         return $query;
     }
 
-    //public function
-
     /**
      * Builds a query that checks if a node is root.
      *

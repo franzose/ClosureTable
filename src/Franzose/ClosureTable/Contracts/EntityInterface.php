@@ -2,6 +2,14 @@
 
 
 interface EntityInterface {
+
+    /**
+     * The parent id column name.
+     *
+     * @var string
+     */
+    const PARENT_ID = 'parent_id';
+
     /**
      * The position column name.
      *

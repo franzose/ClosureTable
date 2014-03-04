@@ -98,7 +98,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             $rawTable = \DB::getTablePrefix().$t;
 
             $query = "
-                SELECT tbl.{$ak} as {$ak}, {$descendantId} as {$dk}, tbl.{$dpk}+1 as {$dpk}
+                SELECT tbl.{$ak} as {$ak}, tbl.{$dk} as {$dk}, tbl.{$dpk}+1 as {$dpk}
                 FROM {$rawTable} AS tbl
                 WHERE tbl.{$dk} = {$ancestorId}
                 UNION ALL
@@ -106,6 +106,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             ";
 
             $results = \DB::select($query);
+
             array_walk($results, function(&$item){ $item = (array)$item; });
 
             if (\DB::table($t)->insert($results))

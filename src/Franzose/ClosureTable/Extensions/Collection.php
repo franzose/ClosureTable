@@ -40,49 +40,45 @@ class Collection extends EloquentCollection {
     /**
      * Makes tree-like collection.
      *
-     * @param int $parentId
      * @return Collection
      */
-    public function toTree($parentId = null)
+    public function toTree()
     {
         $items = $this->items;
 
-        return new static($this->makeTree($items, $parentId));
+        return new static($this->makeTree($items));
     }
 
     /**
      * Performs actual tree building.
      *
      * @param array $items
-     * @param int $parentId
      * @return array
      */
-    protected function makeTree(array &$items, $parentId = null)
+    protected function makeTree(array &$items)
     {
-        $tree = [];
+        $result = [];
+        $tops = [];
 
-        foreach($items as $idx => $item)
+        foreach($items as $item)
         {
-            $itemParent = $item->getParent();
-            $itemParentId = ($itemParent instanceof EntityInterface ? $itemParent->getKey() : null);
-            $itemKey = $item->getKey();
-
-            if ($itemParentId == $parentId)
-            {
-                $children = $this->makeTree($items, $itemKey);
-
-                if (count($children))
-                {
-                    $item->setRelation(EntityInterface::CHILDREN, new static($children));
-                }
-
-                $tree[] = $item;
-                unset($items[$idx]);
-            }
-
-
+            $result[$item->getKey()] = $item;
         }
 
-        return $tree;
+        foreach($items as $item)
+        {
+            $parentId = $item->parent_id;
+
+            if (array_key_exists($parentId, $result))
+            {
+                $result[$parentId]->appendRelation(EntityInterface::CHILDREN, $item);
+            }
+            else
+            {
+                $tops[] = $item;
+            }
+        }
+
+        return $tops;
     }
 }

@@ -30,12 +30,12 @@ class EntityTestCase extends BaseTestCase {
 
     public function testPositionIsFillable()
     {
-        $this->assertContains(Entity::POSITION, $this->entity->getFillable());
+        $this->assertContains(EntityInterface::POSITION, $this->entity->getFillable());
     }
 
     public function testPositionDefaultValue()
     {
-        $this->assertEquals(0, $this->entity->{Entity::POSITION});
+        $this->assertEquals(0, $this->entity->{EntityInterface::POSITION});
     }
 
     public function testIsParent()
@@ -62,7 +62,8 @@ class EntityTestCase extends BaseTestCase {
         $result = $this->entity->moveTo(5, $ancestor);
 
         $this->assertSame($this->entity, $result);
-        $this->assertEquals(5, $result->{Entity::POSITION});
+        $this->assertEquals(5, $result->{EntityInterface::POSITION});
+        $this->assertEquals(1, $result->{EntityInterface::PARENT_ID});
         $this->assertEquals($this->entity->getParent()->getKey(), $ancestor->getKey());
     }
 
@@ -118,7 +119,7 @@ class EntityTestCase extends BaseTestCase {
         $descendants = $entity->getDescendantsTree();
 
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $descendants);
-        $this->assertCount(1, $descendants);
+        $this->assertCount(4, $descendants);
         $this->assertArrayHasKey('children', $descendants->get(0)->getRelations());
     }
 
@@ -200,10 +201,7 @@ class EntityTestCase extends BaseTestCase {
         $array = new Collection([$child1, $child2, $child3]);
         $result = $entity->appendChildren($array);
 
-        //var_dump(\DB::getQueryLog());
-
         $this->assertSame($entity, $result);
-        //$this->assertNotNull($entity->getChildAt(2));
         $this->assertEquals(3, $entity->countChildren());
     }
 
@@ -369,7 +367,8 @@ class EntityTestCase extends BaseTestCase {
         $this->assertArrayHasKey(EntityInterface::CHILDREN, $ninth->getRelations());
 
         $tenth = $ninth->getRelation(EntityInterface::CHILDREN);
-        $this->assertCount(1, $tenth);
+
+        $this->assertCount(4, $tenth);
     }
 
     public function testDeleteSubtree()

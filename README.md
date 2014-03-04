@@ -38,7 +38,11 @@ All options of the command:<br>
 6. `--models-path`, `-mdl` _[optional]_: custom models path<br>
 7. `--migrations-path`, `-mgr` _[optional]_: custom migrations path<br>
 
-That's almost all, folks! The ‘dummy’ stuff has just been created for you. You will need to add some fields to your entity migration because the created ‘dummy’ includes just `id` and `position` columns. The latter is used widely by the package to make entities sortable, so avoid deleting `position` column from your entity table.
+That's almost all, folks! The ‘dummy’ stuff has just been created for you. You will need to add some fields to your entity migration because the created ‘dummy’ includes just **required** `id`, `parent_id` and `position` columns.
+
+`parent_id` column is used to simplify immediate ancestor query and, for example, to build the whole tree.
+
+`position` column is used widely by the package to make entities sortable.
 
 By default, entity’s closure table includes the following columns:<br>
 1. **Autoincremented identifier**<br>
@@ -182,7 +186,8 @@ $page->deleteSubtree(false, true); //without subtree ancestor and force delete
 
 ## Customization
 You can customize the default things in your classes created by the ClosureTable `artisan` command:<br>
-1. **Entity table name** by changing `protected $table` of your own `Entity` (e.g. `Page`).<br>
-2. **Closure table name** by changing `protected $table` of your own `ClosureTable` (e.g. `PageClosure`).<br>
-3. **`position` column name** by changing `const POSITION` of your own `EntityInterface` (e.g. `PageInterface`).<br>
-4. **`ancestor`, `descendant`, and `depth` columns names** by changing appropriate constants of your own `ClosureTableInterface` (e.g. `PageClosureInterface`).
+1. **Entity table name** by changing `protected $table` of your own `Entity` (e.g. `Page`)<br>
+2. **Closure table name** by changing `protected $table` of your own `ClosureTable` (e.g. `PageClosure`)<br>
+3. **`parent_id` column name** by changing `const PARENT_ID` of your own `EntityInterface` (e.g. `PageInterface`)<br>
+4. **`position` column name** by changing `const POSITION` of your own `EntityInterface` (e.g. `PageInterface`)<br>
+5. **`ancestor`, `descendant`, and `depth` columns names** by changing appropriate constants of your own `ClosureTableInterface` (e.g. `PageClosureInterface`).
