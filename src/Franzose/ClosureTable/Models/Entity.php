@@ -53,12 +53,12 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @param array $attributes
      */
-    public function __construct(array $attributes = array())
+    public function __construct(array $attributes = [])
     {
         $position = $this->getPositionColumn();
         $depth = $this->getRealDepthColumn();
 
-        $this->fillable(array_merge($this->getFillable(), array($position, $depth)));
+        $this->fillable(array_merge($this->getFillable(), [$position, $depth]));
 
         if ( ! isset($attributes[$position]))
         {
@@ -822,6 +822,40 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Saves models from the given attributes array.
+     *
+     * @param array $tree
+     * @return Collection
+     */
+    public static function createFromArray(array $tree)
+    {
+        $childrenRelationIndex = with(new static)->getChildrenRelationIndex();
+        $entities = [];
+
+        foreach($tree as $item)
+        {
+            $children = array_pull($item, $childrenRelationIndex);
+
+            /**
+             * @var Entity $entity
+             */
+            $entity = new static($item);
+            $entity->save();
+
+            if ( ! is_null($children))
+            {
+                $children = static::createFromArray($children, true);
+                $entity->setRelation($childrenRelationIndex, $children);
+                $entity->appendChildren($children);
+            }
+
+            $entities[] = $entity;
+        }
+
+        return new Collection($entities);
+    }
+
+    /**
      * Makes the model a child or a root with given position.
      *
      * @param int $position
@@ -839,7 +873,7 @@ class Entity extends Eloquent implements EntityInterface {
 
         $parentId = ( ! $ancestorIsObject ? $ancestor : $ancestor->getKey());
 
-        if ($this->{$parentIdColumn} == $parentId)
+        if ($this->{$parentIdColumn} == $parentId && ! is_null($this->{$parentIdColumn}))
         {
             return $this;
         }

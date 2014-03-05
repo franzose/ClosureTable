@@ -5,6 +5,7 @@ use \Illuminate\Container\Container as App;
 use \Franzose\ClosureTable\Extensions\Collection;
 use \Franzose\ClosureTable\Models\Entity;
 use \Franzose\ClosureTable\Models\ClosureTable;
+use \Franzose\ClosureTable\Tests\Models\Page;
 
 class EntityTestCase extends BaseTestCase {
 
@@ -43,6 +44,8 @@ class EntityTestCase extends BaseTestCase {
         Entity::boot();
 
         $this->entity = new Entity;
+        $this->entity->fillable(['title', 'excerpt', 'body', 'position', 'depth']);
+
         $this->positionColumn = $this->entity->getPositionColumn();
         $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
 
@@ -412,5 +415,46 @@ class EntityTestCase extends BaseTestCase {
         $this->assertNull(Entity::find(10));
         $this->assertNull(Entity::find(11));
         $this->assertNull(Entity::find(12));
+    }
+
+    public function testCreateFromArray()
+    {
+        $array = [
+            [
+                'id' => 90,
+                'title' => 'About',
+                'position' => 0,
+                'children' => [
+                    [
+                        'id' => 93,
+                        'title' => 'Testimonials'
+                    ]
+                ]
+            ],
+            [
+                'id' => 91,
+                'title' => 'Blog',
+                'position' => 1
+            ],
+            [
+                'id' => 92,
+                'title' => 'Portfolio',
+                'position' => 2
+            ],
+        ];
+
+        $pages = Page::createFromArray($array);
+
+        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $pages);
+        $this->assertCount(3, $pages);
+
+        $pageZero = $pages->get(0);
+
+        $this->assertTrue($pageZero->hasChildrenRelation());
+
+        $this->assertEquals(90, $pageZero->getKey());
+        $this->assertEquals(91, $pages->get(1)->getKey());
+        $this->assertEquals(92, $pages->get(2)->getKey());
+        $this->assertEquals(93, $pageZero->getChildAt(0)->getKey());
     }
 } 
