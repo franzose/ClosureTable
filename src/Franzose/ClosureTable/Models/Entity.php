@@ -55,16 +55,68 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function __construct(array $attributes = array())
     {
-        $this->fillable(array_merge($this->getFillable(), array(static::POSITION)));
+        $position = $this->getPositionColumn();
 
-        if ( ! isset($attributes[static::POSITION]))
+        $this->fillable(array_merge($this->getFillable(), array($position)));
+
+        if ( ! isset($attributes[$position]))
         {
-            $attributes[static::POSITION] = 0;
+            $attributes[$position] = 0;
         }
 
         $this->closure = new $this->closure;
 
         parent::__construct($attributes);
+    }
+
+    /**
+     * Gets the fully qualified "parent id" column.
+     *
+     * @return string
+     */
+    public function getQualifiedParentIdColumn()
+    {
+        return $this->getTable() . '.' . static::PARENT_ID;
+    }
+
+    /**
+     * Gets the short name of the "parent id" column.
+     *
+     * @return string
+     */
+    public function getParentIdColumn()
+    {
+        return static::PARENT_ID;
+    }
+
+    /**
+     * Gets the fully qualified "position" column.
+     *
+     * @return string
+     */
+    public function getQualifiedPositionColumn()
+    {
+        return $this->getTable() . '.' . static::POSITION;
+    }
+
+    /**
+     * Gets the short name of the "position" column.
+     *
+     * @return string
+     */
+    public function getPositionColumn()
+    {
+        return static::POSITION;
+    }
+
+    /**
+     * Gets the "children" relation index.
+     *
+     * @return string
+     */
+    public function getChildrenRelationIndex()
+    {
+        return static::CHILDREN;
     }
 
     /**
@@ -99,12 +151,12 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function initClosureTable()
     {
-        if (is_null($this->closure->{ClosureTableInterface::ANCESTOR}))
+        if (is_null($this->closure->{$this->closure->getAncestorColumn()}))
         {
             $primaryKey = $this->getKey();
-            $this->closure->{ClosureTableInterface::ANCESTOR} = $primaryKey;
-            $this->closure->{ClosureTableInterface::DESCENDANT} = $primaryKey;
-            $this->closure->{ClosureTableInterface::DEPTH} = 0;
+            $this->closure->{$this->closure->getAncestorColumn()} = $primaryKey;
+            $this->closure->{$this->closure->getDescendantColumn()} = $primaryKey;
+            $this->closure->{$this->closure->getDepthColumn()} = 0;
         }
     }
 
@@ -152,7 +204,7 @@ class Entity extends Eloquent implements EntityInterface {
         }
         else
         {
-            $result = $this->belongsTo(get_class($this), static::PARENT_ID)->first($columns);
+            $result = $this->belongsTo(get_class($this), $this->getParentIdColumn())->first($columns);
         }
 
         return $result;
@@ -270,7 +322,7 @@ class Entity extends Eloquent implements EntityInterface {
         }
         else if ($this->hasChildrenRelation())
         {
-            $result = $this->getRelation(EntityInterface::CHILDREN);
+            $result = $this->getRelation($this->getChildrenRelationIndex());
         }
         else
         {
@@ -293,7 +345,7 @@ class Entity extends Eloquent implements EntityInterface {
         }
         else if ($this->hasChildrenRelation())
         {
-            $result = $this->getRelation(EntityInterface::CHILDREN)->count();
+            $result = $this->getRelation($this->getChildrenRelationIndex())->count();
         }
         else
         {
@@ -320,7 +372,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function hasChildrenRelation()
     {
-        return array_key_exists(EntityInterface::CHILDREN, $this->getRelations());
+        return array_key_exists($this->getChildrenRelationIndex(), $this->getRelations());
     }
 
     /**
@@ -359,7 +411,7 @@ class Entity extends Eloquent implements EntityInterface {
         }
         else if ($this->hasChildrenRelation())
         {
-            $result = $this->getRelation(EntityInterface::CHILDREN)->get($position);
+            $result = $this->getRelation($this->getChildrenRelationIndex())->get($position);
         }
         else
         {
@@ -394,11 +446,11 @@ class Entity extends Eloquent implements EntityInterface {
         }
         else if ($this->hasChildrenRelation())
         {
-            $result = $this->getRelation(EntityInterface::CHILDREN)->last();
+            $result = $this->getRelation($this->getChildrenRelationIndex())->last();
         }
         else
         {
-            $result = $this->children($columns)->orderBy(static::POSITION, 'desc')->first();
+            $result = $this->children($columns)->orderBy($this->getPositionColumn(), 'desc')->first();
         }
 
         return $result;
@@ -442,7 +494,7 @@ class Entity extends Eloquent implements EntityInterface {
         {
             \DB::transaction(function() use($children)
             {
-                $lastChild = $this->getLastChild([static::POSITION]);
+                $lastChild = $this->getLastChild([$this->getPositionColumn()]);
 
                 if (is_null($lastChild))
                 {
@@ -450,7 +502,7 @@ class Entity extends Eloquent implements EntityInterface {
                 }
                 else
                 {
-                    $lastChildPosition = $lastChild->{static::POSITION};
+                    $lastChildPosition = $lastChild->{$this->getPositionColumn()};
                 }
 
                 foreach($children as $child)
@@ -608,7 +660,7 @@ class Entity extends Eloquent implements EntityInterface {
             return new Collection;
         }
 
-        return $this->siblings($columns)->orderBy(static::POSITION, 'desc')->first();
+        return $this->siblings($columns)->orderBy($this->getPositionColumn(), 'desc')->first();
     }
 
     /**
@@ -755,7 +807,9 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public static function getTree(array $columns = ['*'])
     {
-        return with(new static)->tree(array_merge($columns, [static::PARENT_ID]))->get()->toTree();
+        $instance = new static;
+
+        return $instance->tree(array_merge($columns, [$instance->getParentIdColumn()]))->get()->toTree();
     }
 
     /**
@@ -776,10 +830,10 @@ class Entity extends Eloquent implements EntityInterface {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
-        $this->oldParentId = $this->{static::PARENT_ID};
+        $this->oldParentId = $this->{$this->getParentIdColumn()};
         $this->{static::PARENT_ID} = $parentId;
 
-        $this->oldPosition = $this->{static::POSITION};
+        $this->oldPosition = $this->{$this->getPositionColumn()};
         $this->{static::POSITION} = $position;
 
         //$this->{static::REAL_DEPTH} = $ancestorRealDepth+1;
@@ -799,14 +853,15 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if ( ! is_null($this->oldPosition))
         {
+            $poscolumn = $this->getPositionColumn();
             $position = [
                 'old' => $this->oldPosition,
-                'now' => $this->{static::POSITION}
+                'now' => $this->{$poscolumn}
             ];
 
             list($range, $action) = $this->setupReordering($position, $parentIdChanged);
 
-            $this->siblingsRange($range, QueryBuilder::BY_WHERE_IN)->$action(static::POSITION);
+            $this->siblingsRange($range, QueryBuilder::BY_WHERE_IN)->$action($poscolumn);
         }
     }
 
@@ -862,7 +917,8 @@ class Entity extends Eloquent implements EntityInterface {
     protected function insertNode()
     {
         $descendant = $this->getKey();
-        $ancestor = (isset($this->{static::PARENT_ID}) ? $this->{static::PARENT_ID} : $descendant);
+        $parentIdColumn = $this->getParentIdColumn();
+        $ancestor = (isset($this->{$parentIdColumn}) ? $this->{$parentIdColumn} : $descendant);
 
         $this->closure->insertNode($ancestor, $descendant);
     }
@@ -874,16 +930,18 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function moveNode()
     {
-        if ($this->exists && isset($this->{static::PARENT_ID}))
+        $parentIdColumn = $this->getParentIdColumn();
+
+        if ($this->exists && isset($this->{$parentIdColumn}))
         {
             $this->initClosureTable();
 
-            if ($this->{static::PARENT_ID} != $this->oldParentId)
+            if ($this->{$parentIdColumn} != $this->oldParentId)
             {
                 $this->reorderSiblings(true);
             }
 
-            $this->closure->moveNodeTo($this->{static::PARENT_ID});
+            $this->closure->moveNodeTo($this->{$parentIdColumn});
         }
     }
 
@@ -901,16 +959,6 @@ class Entity extends Eloquent implements EntityInterface {
         $type = QueryBuilder::BY_WHERE_IN;
 
         return $this->descendants([$this->getQualifiedKeyName()], $what, $type)->$action();
-    }
-
-    /**
-     *
-     *
-     * @return string
-     */
-    public function getQualifiedPositionColumn()
-    {
-        return $this->getTable() . '.' . static::POSITION;
     }
 
     /**
@@ -940,11 +988,11 @@ class Entity extends Eloquent implements EntityInterface {
             'position' => $this->getQualifiedPositionColumn(),
             'closure'         => $this->closure->getTable(),
             'ancestor'        => $this->closure->getQualifiedAncestorColumn(),
-            'ancestorShort'   => ClosureTableInterface::ANCESTOR,
+            'ancestorShort'   => $this->closure->getAncestorColumn(),
             'descendant'      => $this->closure->getQualifiedDescendantColumn(),
-            'descendantShort' => ClosureTableInterface::DESCENDANT,
+            'descendantShort' => $this->closure->getDescendantColumn(),
             'depth'           => $this->closure->getQualifiedDepthColumn(),
-            'depthShort'      => ClosureTableInterface::DEPTH,
+            'depthShort'      => $this->closure->getDepthColumn(),
         ];
 
         // We create the extended query builder only
@@ -958,9 +1006,9 @@ class Entity extends Eloquent implements EntityInterface {
             // Workaround to simplify QueryBuilder queries construction.
             $attrs = array_merge($attrs, [
                 'pkValue' => $this->getKey(),
-                'positionValue'   => $this->{static::POSITION},
-                'ancestorValue'   => $this->{static::PARENT_ID},
-                'depthValue'      => $ctableAttrs[ClosureTableInterface::DEPTH]
+                'positionValue'   => $this->{$this->getPositionColumn()},
+                'ancestorValue'   => $this->{$this->getParentIdColumn()},
+                'depthValue'      => $ctableAttrs[$this->closure->getDepthColumn()]
             ]);
         }
 

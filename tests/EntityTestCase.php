@@ -2,21 +2,39 @@
 
 use \Mockery;
 use \Illuminate\Container\Container as App;
-use \Franzose\ClosureTable\Contracts\EntityInterface;
 use \Franzose\ClosureTable\Extensions\Collection;
 use \Franzose\ClosureTable\Models\Entity;
 use \Franzose\ClosureTable\Models\ClosureTable;
 
 class EntityTestCase extends BaseTestCase {
+
     /**
+     * Tested entity.
+     *
      * @var Entity;
      */
     protected $entity;
 
     /**
+     * Mocked closure object.
+     *
      * @var Mockery\MockInterface|\Yay_MockObject
      */
     protected $closure;
+
+    /**
+     * Position column name.
+     *
+     * @var string
+     */
+    protected $positionColumn;
+
+    /**
+     * Children relation index.
+     *
+     * @var string
+     */
+    protected $childrenRelationIndex;
 
     public function setUp()
     {
@@ -25,17 +43,20 @@ class EntityTestCase extends BaseTestCase {
         Entity::boot();
 
         $this->entity = new Entity;
+        $this->positionColumn = $this->entity->getPositionColumn();
+        $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
+
         $this->app->instance('Franzose\ClosureTable\Contracts\ClosureTableInterface', new ClosureTable);
     }
 
     public function testPositionIsFillable()
     {
-        $this->assertContains(EntityInterface::POSITION, $this->entity->getFillable());
+        $this->assertContains($this->positionColumn, $this->entity->getFillable());
     }
 
     public function testPositionDefaultValue()
     {
-        $this->assertEquals(0, $this->entity->{EntityInterface::POSITION});
+        $this->assertEquals(0, $this->entity->{$this->positionColumn});
     }
 
     public function testIsParent()
@@ -62,8 +83,8 @@ class EntityTestCase extends BaseTestCase {
         $result = $this->entity->moveTo(5, $ancestor);
 
         $this->assertSame($this->entity, $result);
-        $this->assertEquals(5, $result->{EntityInterface::POSITION});
-        $this->assertEquals(1, $result->{EntityInterface::PARENT_ID});
+        $this->assertEquals(5, $result->{$this->positionColumn});
+        $this->assertEquals(1, $result->{$this->entity->getParentIdColumn()});
         $this->assertEquals($this->entity->getParent()->getKey(), $ancestor->getKey());
     }
 
@@ -156,7 +177,7 @@ class EntityTestCase extends BaseTestCase {
         $child  = $entity->getChildAt(2);
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(2, $child->{EntityInterface::POSITION});
+        $this->assertEquals(2, $child->{$this->positionColumn});
     }
 
     public function testGetFirstChild()
@@ -165,7 +186,7 @@ class EntityTestCase extends BaseTestCase {
         $child  = $entity->getFirstChild();
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(0, $child->{EntityInterface::POSITION});
+        $this->assertEquals(0, $child->{$this->positionColumn});
     }
 
     public function testGetLastChild()
@@ -174,7 +195,7 @@ class EntityTestCase extends BaseTestCase {
         $child  = $entity->getLastChild();
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(3, $child->{EntityInterface::POSITION});
+        $this->assertEquals(3, $child->{$this->positionColumn});
     }
 
     public function testAppendChild()
@@ -183,7 +204,7 @@ class EntityTestCase extends BaseTestCase {
         $newone = new Entity;
         $result = $entity->appendChild($newone, 0);
 
-        $this->assertEquals(0, $newone->{EntityInterface::POSITION});
+        $this->assertEquals(0, $newone->{$this->positionColumn});
         $this->assertTrue($entity->isParent());
         $this->assertSame($entity, $result);
     }
@@ -364,9 +385,9 @@ class EntityTestCase extends BaseTestCase {
         $this->assertCount(9, $tree);
 
         $ninth = $tree->get(8);
-        $this->assertArrayHasKey(EntityInterface::CHILDREN, $ninth->getRelations());
+        $this->assertArrayHasKey($this->childrenRelationIndex, $ninth->getRelations());
 
-        $tenth = $ninth->getRelation(EntityInterface::CHILDREN);
+        $tenth = $ninth->getRelation($this->childrenRelationIndex);
 
         $this->assertCount(4, $tenth);
     }

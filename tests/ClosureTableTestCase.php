@@ -1,6 +1,5 @@
 <?php namespace Franzose\ClosureTable\Tests;
 
-use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
 use \Franzose\ClosureTable\Models\ClosureTable;
 
 class ClosureTableTestCase extends BaseTestCase {
@@ -9,11 +8,29 @@ class ClosureTableTestCase extends BaseTestCase {
      */
     protected $ctable;
 
+    /**
+     * @var string
+     */
+    protected $ancestorColumn;
+
+    /**
+     * @var string
+     */
+    protected $descendantColumn;
+
+    /**
+     * @var string
+     */
+    protected $depthColumn;
+
     public function setUp()
     {
         parent::setUp();
 
         $this->ctable = new ClosureTable;
+        $this->ancestorColumn = $this->ctable->getAncestorColumn();
+        $this->descendantColumn = $this->ctable->getDescendantColumn();
+        $this->depthColumn = $this->ctable->getDepthColumn();
     }
 
     /**
@@ -42,32 +59,32 @@ class ClosureTableTestCase extends BaseTestCase {
     public function testInsertNode()
     {
         $this->ctable->insertNode(16, 16);
-        $item = ClosureTable::where(ClosureTableInterface::DESCENDANT, '=', 16)->first();
+        $item = ClosureTable::where($this->descendantColumn, '=', 16)->first();
 
         $this->assertNotNull($item);
-        $this->assertEquals(16, $item->{ClosureTable::ANCESTOR});
-        $this->assertEquals(16, $item->{ClosureTable::DESCENDANT});
-        $this->assertEquals(0, $item->{ClosureTable::DEPTH});
+        $this->assertEquals(16, $item->{$this->ancestorColumn});
+        $this->assertEquals(16, $item->{$this->descendantColumn});
+        $this->assertEquals(0, $item->{$this->depthColumn});
     }
 
     public function testInsertedNodeDepth()
     {
-        $this->ctable->insertNode(16, 16);
-        $this->ctable->insertNode(13, 16);
+        $this->ctable->insertNode(20, 20);
+        $this->ctable->insertNode(13, 20);
 
-        $item = ClosureTable::where(ClosureTableInterface::DESCENDANT, '=', 16)
-                    ->where(ClosureTableInterface::ANCESTOR, '=', 13)->first();
+        $item = ClosureTable::where($this->descendantColumn, '=', 20)
+                    ->where($this->ancestorColumn, '=', 13)->first();
 
         $this->assertNotNull($item);
-        $this->assertEquals(1, $item->{ClosureTable::DEPTH});
+        $this->assertEquals(1, $item->{$this->depthColumn});
     }
 
     public function testValidNumberOfRowsInsertedByInsertNode()
     {
         $this->ctable->insertNode(1, 17);
 
-        $ancestorRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 1)->count();
-        $descendantRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 17)->count();
+        $ancestorRows = ClosureTable::where($this->descendantColumn, '=', 1)->count();
+        $descendantRows = ClosureTable::where($this->descendantColumn, '=', 17)->count();
 
         $this->assertEquals(1, $ancestorRows);
         $this->assertEquals(2, $descendantRows);
@@ -86,8 +103,8 @@ class ClosureTableTestCase extends BaseTestCase {
         $item = ClosureTable::find(1);
         $item->moveNodeTo(2);
 
-        $ancestors = ClosureTable::where(ClosureTable::DESCENDANT, '=', 2)->count();
-        $descendants = ClosureTable::where(ClosureTable::DESCENDANT, '=', 1)->count();
+        $ancestors = ClosureTable::where($this->descendantColumn, '=', 2)->count();
+        $descendants = ClosureTable::where($this->descendantColumn, '=', 1)->count();
 
         $this->assertEquals(1, $ancestors);
         $this->assertEquals(2, $descendants);
@@ -107,8 +124,8 @@ class ClosureTableTestCase extends BaseTestCase {
         $item = ClosureTable::find(4);
         $item->moveNodeTo(5);
 
-        $descendantRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 1)->count();
-        $ancestorRows = ClosureTable::where(ClosureTable::DESCENDANT, '=', 2)->count();
+        $descendantRows = ClosureTable::where($this->descendantColumn, '=', 1)->count();
+        $ancestorRows = ClosureTable::where($this->descendantColumn, '=', 2)->count();
 
         $this->assertEquals(4, $ancestorRows);
         $this->assertEquals(5, $descendantRows);
@@ -137,41 +154,41 @@ class ClosureTableTestCase extends BaseTestCase {
 
     public function testGetActualAttributes()
     {
-        $deepest = ClosureTable::where(ClosureTableInterface::ANCESTOR, '=', 1)
-                    ->where(ClosureTableInterface::DESCENDANT, '=', 1)
+        $deepest = ClosureTable::where($this->ancestorColumn, '=', 1)
+                    ->where($this->descendantColumn, '=', 1)
                     ->first();
 
         $deepest->moveNodeTo(2);
 
-        $item = ClosureTable::where(ClosureTableInterface::ANCESTOR, '=', 2)
-                    ->where(ClosureTableInterface::DESCENDANT, '=', 2)
+        $item = ClosureTable::where($this->ancestorColumn, '=', 2)
+                    ->where($this->descendantColumn, '=', 2)
                     ->first();
 
         $item->moveNodeTo(3);
 
         $result = $deepest->getActualAttrs();
 
-        $this->assertEquals(3, $result[ClosureTableInterface::ANCESTOR]);
-        $this->assertEquals(1, $result[ClosureTableInterface::DESCENDANT]);
-        $this->assertEquals(2, $result[ClosureTableInterface::DEPTH]);
+        $this->assertEquals(3, $result[$this->ancestorColumn]);
+        $this->assertEquals(1, $result[$this->descendantColumn]);
+        $this->assertEquals(2, $result[$this->depthColumn]);
 
-        $result = $deepest->getActualAttrs([ClosureTableInterface::ANCESTOR]);
+        $result = $deepest->getActualAttrs([$this->ancestorColumn]);
 
         $this->assertInternalType('string', $result);
     }
 
     public function testAncestorQualifiedKeyName()
     {
-        $this->assertEquals($this->ctable->getTable().'.'.ClosureTable::ANCESTOR, $this->ctable->getQualifiedAncestorColumn());
+        $this->assertEquals($this->ctable->getTable().'.'.$this->ancestorColumn, $this->ctable->getQualifiedAncestorColumn());
     }
 
     public function testDescendantQualifiedKeyName()
     {
-        $this->assertEquals($this->ctable->getTable().'.'.ClosureTable::DESCENDANT, $this->ctable->getQualifiedDescendantColumn());
+        $this->assertEquals($this->ctable->getTable().'.'.$this->descendantColumn, $this->ctable->getQualifiedDescendantColumn());
     }
 
     public function testDepthQualifiedKeyName()
     {
-        $this->assertEquals($this->ctable->getTable().'.'.ClosureTable::DEPTH, $this->ctable->getQualifiedDepthColumn());
+        $this->assertEquals($this->ctable->getTable().'.'.$this->depthColumn, $this->ctable->getQualifiedDepthColumn());
     }
 } 

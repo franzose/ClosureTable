@@ -40,8 +40,8 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
         $id = (is_int($id) ?: $this->getKey());
 
-        return !!$this->where(static::DESCENDANT, '=', $id)
-            ->where(static::DEPTH, '>', 0)
+        return !!$this->where($this->getDescendantColumn(), '=', $id)
+            ->where($this->getDepthColumn(), '>', 0)
             ->count() == 0;
     }
 
@@ -58,8 +58,10 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             $attributes = [$attributes];
         }
 
-        $closure = static::where(static::DESCENDANT, '=', $this->{static::DESCENDANT})
-            ->orderBy(static::DEPTH, 'desc')
+        $descendantColumn = $this->getDescendantColumn();
+
+        $closure = static::where($descendantColumn, '=', $this->{$descendantColumn})
+            ->orderBy($this->getDepthColumn(), 'desc')
             ->first($attributes);
 
         if (is_null($closure))
@@ -89,16 +91,16 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             throw new \InvalidArgumentException('`ancestorId` and `descendantId` arguments must be of type int.');
         }
 
-        $t = $this->table;
-        $ak = static::ANCESTOR;
-        $dk = static::DESCENDANT;
-        $dpk = static::DEPTH;
+        $t   = $this->table;
+        $ak  = $this->getAncestorColumn();
+        $dk  = $this->getDescendantColumn();
+        $dpk = $this->getDepthColumn();
 
         \DB::transaction(function() use($t, $ak, $dk, $dpk, $ancestorId, $descendantId){
             $rawTable = \DB::getTablePrefix().$t;
 
             $query = "
-                SELECT tbl.{$ak} as {$ak}, tbl.{$dk} as {$dk}, tbl.{$dpk}+1 as {$dpk}
+                SELECT tbl.{$ak} as {$ak}, {$descendantId} as {$dk}, tbl.{$dpk}+1 as {$dpk}
                 FROM {$rawTable} AS tbl
                 WHERE tbl.{$dk} = {$ancestorId}
                 UNION ALL
@@ -133,9 +135,9 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         }
 
         $t   = $this->table;
-        $ak  = static::ANCESTOR;
-        $dk  = static::DESCENDANT;
-        $dpk = static::DEPTH;
+        $ak  = $this->getAncestorColumn();
+        $dk  = $this->getDescendantColumn();
+        $dpk = $this->getDepthColumn();
 
         $thisAncestorId = $this->{$ak};
         $thisDescendantId = $this->{$dk};
@@ -177,43 +179,82 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     protected function unbindRelationships()
     {
-        $descendant = $this->{static::DESCENDANT};
+        $ancestorColumn = $this->getAncestorColumn();
+        $descendantColumn = $this->getDescendantColumn();
+
+        $descendant = $this->{$descendantColumn};
 
         $ancestorsIds = \DB::table($this->table)
-            ->where(static::DESCENDANT, '=', $descendant)
-            ->where(static::ANCESTOR, '<>', $descendant)
-            ->lists(static::ANCESTOR);
+            ->where($descendantColumn, '=', $descendant)
+            ->where($ancestorColumn, '<>', $descendant)
+            ->lists($ancestorColumn);
 
         if (count($ancestorsIds))
         {
             \DB::table($this->table)
-                ->whereIn(static::ANCESTOR, $ancestorsIds)
-                ->where(static::DESCENDANT, '=', $descendant)
+                ->whereIn($ancestorColumn, $ancestorsIds)
+                ->where($descendantColumn, '=', $descendant)
                 ->delete();
         }
     }
 
     /**
+     * Gets the fully qualified "ancestor" column.
+     *
      * @return string
      */
     public function getQualifiedAncestorColumn()
     {
-        return $this->getTable().'.'.static::ANCESTOR;
+        return $this->getTable() . '.' . static::ANCESTOR;
     }
 
     /**
+     * Get the short name of the "ancestor" column.
+     *
+     * @return string
+     */
+    public function getAncestorColumn()
+    {
+        return static::ANCESTOR;
+    }
+
+    /**
+     * Gets the fully qualified "descendant" column.
+     *
      * @return string
      */
     public function getQualifiedDescendantColumn()
     {
-        return $this->getTable().'.'.static::DESCENDANT;
+        return $this->getTable() . '.' . static::DESCENDANT;
     }
 
     /**
+     * Get the short name of the "descendant" column.
+     *
+     * @return string
+     */
+    public function getDescendantColumn()
+    {
+        return static::DESCENDANT;
+    }
+
+    /**
+     * Gets the fully qualified "deleted at" column.
+     *
      * @return string
      */
     public function getQualifiedDepthColumn()
     {
-        return $this->getTable().'.'.static::DEPTH;
+        return $this->getTable() . '.' . static::DEPTH;
+    }
+
+    /**
+     * Get the short name of the "depth" column.
+     *
+     * @return string
+     */
+    public function getDepthColumn()
+    {
+        return static::DEPTH;
     }
 } 

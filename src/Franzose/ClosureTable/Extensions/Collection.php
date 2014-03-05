@@ -23,7 +23,10 @@ class Collection extends EloquentCollection {
             return null;
         }
 
-        return $this->get($position)->getRelation(EntityInterface::CHILDREN);
+        $item = $this->get($position);
+        $relation = $item->getChildrenRelationIndex();
+
+        return $item->getRelation($relation);
     }
 
     /**
@@ -34,7 +37,10 @@ class Collection extends EloquentCollection {
      */
     public function hasChildren($position)
     {
-        return array_key_exists(EntityInterface::CHILDREN, $this->get($position)->getRelations());
+        $item = $this->get($position);
+        $relation = $item->getChildrenRelationIndex();
+
+        return array_key_exists($relation, $item->getRelations());
     }
 
     /**
@@ -67,11 +73,11 @@ class Collection extends EloquentCollection {
 
         foreach($items as $item)
         {
-            $parentId = $item->{EntityInterface::PARENT_ID};
+            $parentId = $item->{$item->getParentIdColumn()};
 
             if (array_key_exists($parentId, $result))
             {
-                $result[$parentId]->appendRelation(EntityInterface::CHILDREN, $item);
+                $result[$parentId]->appendRelation($item->getChildrenRelationIndex(), $item);
             }
             else
             {
