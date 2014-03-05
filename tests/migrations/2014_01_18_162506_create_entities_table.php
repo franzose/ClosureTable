@@ -19,7 +19,8 @@ class CreateEntitiesTable extends Migration {
             $table->string('title')->default('The Title');
             $table->text('excerpt')->default('The excerpt');
             $table->longText('body')->default('The content');
-            $table->integer('position');
+            $table->integer('position', false, true);
+            $table->integer('depth', false, true);
             $table->softDeletes();
 
             $table->foreign('parent_id')->references('id')->on('entities');

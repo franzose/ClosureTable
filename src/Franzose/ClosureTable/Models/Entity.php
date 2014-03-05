@@ -56,12 +56,18 @@ class Entity extends Eloquent implements EntityInterface {
     public function __construct(array $attributes = array())
     {
         $position = $this->getPositionColumn();
+        $depth = $this->getRealDepthColumn();
 
-        $this->fillable(array_merge($this->getFillable(), array($position)));
+        $this->fillable(array_merge($this->getFillable(), array($position, $depth)));
 
         if ( ! isset($attributes[$position]))
         {
             $attributes[$position] = 0;
+        }
+
+        if ( ! isset($attributes[$depth]))
+        {
+            $attributes[$depth] = 0;
         }
 
         $this->closure = new $this->closure;
@@ -107,6 +113,16 @@ class Entity extends Eloquent implements EntityInterface {
     public function getPositionColumn()
     {
         return static::POSITION;
+    }
+
+    public function getQualifiedRealDepthColumn()
+    {
+        return $this->getTable() . '.' . static::REAL_DEPTH;
+    }
+
+    public function getRealDepthColumn()
+    {
+        return static::REAL_DEPTH;
     }
 
     /**
@@ -822,21 +838,33 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function moveTo($position, $ancestor = null)
     {
-        //$ancestorRealDepth = $ancestor->{static::REAL_DEPTH};
-        $parentId = ($ancestor instanceof EntityInterface ? $ancestor->getKey() : $ancestor);
+        $parentIdColumn  = $this->getParentIdColumn();
+        $positionColumn  = $this->getPositionColumn();
+        $realDepthColumn = $this->getRealDepthColumn();
+
+        if ( ! $ancestor instanceof EntityInterface)
+        {
+            $parentId = $ancestor;
+            $ancestorRealDepth = static::find($ancestor)->{$realDepthColumn};
+        }
+        else
+        {
+            $parentId = $ancestor->getKey();
+            $ancestorRealDepth = $ancestor->{$realDepthColumn};
+        }
 
         if ($this->getKey() == $parentId)
         {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
-        $this->oldParentId = $this->{$this->getParentIdColumn()};
-        $this->{static::PARENT_ID} = $parentId;
+        $this->oldParentId = $this->{$parentIdColumn};
+        $this->{$parentIdColumn} = $parentId;
 
-        $this->oldPosition = $this->{$this->getPositionColumn()};
-        $this->{static::POSITION} = $position;
+        $this->oldPosition = $this->{$positionColumn};
+        $this->{$positionColumn} = $position;
 
-        //$this->{static::REAL_DEPTH} = $ancestorRealDepth+1;
+        $this->{$realDepthColumn} = $ancestorRealDepth+1;
 
         $this->save();
 
@@ -983,6 +1011,7 @@ class Entity extends Eloquent implements EntityInterface {
         $grammar = $conn->getQueryGrammar();
         $queryBuilder = null;
 
+        // Workaround to simplify QueryBuilder queries construction.
         $attrs = [
             'pk' => $this->getQualifiedKeyName(),
             'position' => $this->getQualifiedPositionColumn(),
@@ -996,19 +1025,14 @@ class Entity extends Eloquent implements EntityInterface {
         ];
 
         // We create the extended query builder only
-        // if the model 'exists' to reduce database queries.
+        // if the model 'exists' to avoid null values.
         if ( ! is_null($this->getKey()))
         {
-            $this->initClosureTable();
-
-            $ctableAttrs = $this->closure->getActualAttrs();
-
-            // Workaround to simplify QueryBuilder queries construction.
             $attrs = array_merge($attrs, [
                 'pkValue' => $this->getKey(),
                 'positionValue'   => $this->{$this->getPositionColumn()},
                 'ancestorValue'   => $this->{$this->getParentIdColumn()},
-                'depthValue'      => $ctableAttrs[$this->closure->getDepthColumn()]
+                'depthValue'      => $this->{$this->getRealDepthColumn()}
             ]);
         }
 

@@ -18,6 +18,13 @@ interface EntityInterface {
     const POSITION = 'position';
 
     /**
+     * The "real depth" column name.
+     *
+     * @var string
+     */
+    const REAL_DEPTH = 'depth';
+
+    /**
      * Relations array key that stores children collection.
      *
      * @var string
