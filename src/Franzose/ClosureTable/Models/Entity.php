@@ -755,7 +755,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public static function getTree(array $columns = ['*'])
     {
-        return with(new static)->tree($columns)->get()->toTree();
+        return with(new static)->tree(array_merge($columns, [static::PARENT_ID]))->get()->toTree();
     }
 
     /**

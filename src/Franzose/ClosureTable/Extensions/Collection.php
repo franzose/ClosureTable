@@ -67,7 +67,7 @@ class Collection extends EloquentCollection {
 
         foreach($items as $item)
         {
-            $parentId = $item->parent_id;
+            $parentId = $item->{EntityInterface::PARENT_ID};
 
             if (array_key_exists($parentId, $result))
             {
