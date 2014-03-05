@@ -161,22 +161,6 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * Applies base attributes to closure table object.
-     *
-     * @return void
-     */
-    protected function initClosureTable()
-    {
-        if (is_null($this->closure->{$this->closure->getAncestorColumn()}))
-        {
-            $primaryKey = $this->getKey();
-            $this->closure->{$this->closure->getAncestorColumn()} = $primaryKey;
-            $this->closure->{$this->closure->getDescendantColumn()} = $primaryKey;
-            $this->closure->{$this->closure->getDepthColumn()} = 0;
-        }
-    }
-
-    /**
      * Indicates whether the model is a parent.
      *
      * @return bool
@@ -473,6 +457,19 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Gets last child position.
+     *
+     * @return int
+     */
+    protected function getLastChildPosition()
+    {
+        $positionColumn = $this->getPositionColumn();
+        $lastChild = $this->getLastChild([$positionColumn]);
+
+        return (is_null($lastChild) ? 0 : $lastChild->{$positionColumn});
+    }
+
+    /**
      * Appends a child to the model.
      *
      * @param EntityInterface $child
@@ -483,6 +480,11 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if ($this->exists)
         {
+            if (is_null($position))
+            {
+                $position = $this->getLastChildPosition();
+            }
+
             $child->moveTo($position, $this);
         }
 
@@ -510,16 +512,7 @@ class Entity extends Eloquent implements EntityInterface {
         {
             \DB::transaction(function() use($children)
             {
-                $lastChild = $this->getLastChild([$this->getPositionColumn()]);
-
-                if (is_null($lastChild))
-                {
-                    $lastChildPosition = 0;
-                }
-                else
-                {
-                    $lastChildPosition = $lastChild->{$this->getPositionColumn()};
-                }
+                $lastChildPosition = $this->getLastChildPosition();
 
                 foreach($children as $child)
                 {
@@ -962,7 +955,13 @@ class Entity extends Eloquent implements EntityInterface {
 
         if ($this->exists && isset($this->{$parentIdColumn}))
         {
-            $this->initClosureTable();
+            if (is_null($this->closure->{$this->closure->getAncestorColumn()}))
+            {
+                $primaryKey = $this->getKey();
+                $this->closure->{$this->closure->getAncestorColumn()} = $primaryKey;
+                $this->closure->{$this->closure->getDescendantColumn()} = $primaryKey;
+                $this->closure->{$this->closure->getDepthColumn()} = 0;
+            }
 
             if ($this->{$parentIdColumn} != $this->oldParentId)
             {

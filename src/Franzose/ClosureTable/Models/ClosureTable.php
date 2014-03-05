@@ -1,6 +1,7 @@
 <?php namespace Franzose\ClosureTable\Models;
 
 use \Illuminate\Database\Eloquent\Model as Eloquent;
+use \Illuminate\Database\Query\Builder;
 use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
 
 /**
@@ -43,37 +44,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         return !!$this->where($this->getDescendantColumn(), '=', $id)
             ->where($this->getDepthColumn(), '>', 0)
             ->count() == 0;
-    }
-
-    /**
-     * Retrieves node attributes from its actual depth.
-     *
-     * @param array $attributes
-     * @return array|null
-     */
-    public function getActualAttrs($attributes = ['*'])
-    {
-        if ( ! is_array($attributes))
-        {
-            $attributes = [$attributes];
-        }
-
-        $descendantColumn = $this->getDescendantColumn();
-
-        $closure = static::where($descendantColumn, '=', $this->{$descendantColumn})
-            ->orderBy($this->getDepthColumn(), 'desc')
-            ->first($attributes);
-
-        if (is_null($closure))
-        {
-            return null;
-        }
-
-        $closure = $closure->toArray();
-
-        $result = (count($closure) == 1 ? $closure[$attributes[0]] : $closure);
-
-        return $result;
     }
 
     /**
@@ -179,23 +149,23 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     protected function unbindRelationships()
     {
+        $table = $this->getTable();
         $ancestorColumn = $this->getAncestorColumn();
         $descendantColumn = $this->getDescendantColumn();
-
         $descendant = $this->{$descendantColumn};
 
-        $ancestorsIds = \DB::table($this->table)
-            ->where($descendantColumn, '=', $descendant)
-            ->where($ancestorColumn, '<>', $descendant)
-            ->lists($ancestorColumn);
+        $query = "
+            DELETE FROM {$table}
+            WHERE {$ancestorColumn} IN (
+              SELECT a FROM (
+                SELECT {$ancestorColumn} AS a FROM {$table}
+                WHERE {$descendantColumn} = {$descendant}
+                AND {$ancestorColumn} <> {$descendant}
+              ) as ct
+            )
+        ";
 
-        if (count($ancestorsIds))
-        {
-            \DB::table($this->table)
-                ->whereIn($ancestorColumn, $ancestorsIds)
-                ->where($descendantColumn, '=', $descendant)
-                ->delete();
-        }
+        \DB::delete($query);
     }
 
     /**
