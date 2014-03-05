@@ -835,14 +835,21 @@ class Entity extends Eloquent implements EntityInterface {
         $positionColumn  = $this->getPositionColumn();
         $realDepthColumn = $this->getRealDepthColumn();
 
-        if ( ! $ancestor instanceof EntityInterface)
+        $ancestorIsObject = $ancestor instanceof EntityInterface;
+
+        $parentId = ( ! $ancestorIsObject ? $ancestor : $ancestor->getKey());
+
+        if ($this->{$parentIdColumn} == $parentId)
         {
-            $parentId = $ancestor;
+            return $this;
+        }
+
+        if ( ! $ancestorIsObject)
+        {
             $ancestorRealDepth = static::find($ancestor)->{$realDepthColumn};
         }
         else
         {
-            $parentId = $ancestor->getKey();
             $ancestorRealDepth = $ancestor->{$realDepthColumn};
         }
 
