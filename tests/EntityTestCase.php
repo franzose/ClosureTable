@@ -24,13 +24,6 @@ class EntityTestCase extends BaseTestCase {
     protected $closure;
 
     /**
-     * Position column name.
-     *
-     * @var string
-     */
-    protected $positionColumn;
-
-    /**
      * Children relation index.
      *
      * @var string
@@ -46,7 +39,6 @@ class EntityTestCase extends BaseTestCase {
         $this->entity = new Entity;
         $this->entity->fillable(['title', 'excerpt', 'body', 'position', 'depth']);
 
-        $this->positionColumn = $this->entity->getPositionColumn();
         $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
 
         $this->app->instance('Franzose\ClosureTable\Contracts\ClosureTableInterface', new ClosureTable);
@@ -54,12 +46,12 @@ class EntityTestCase extends BaseTestCase {
 
     public function testPositionIsFillable()
     {
-        $this->assertContains($this->positionColumn, $this->entity->getFillable());
+        $this->assertContains($this->entity->getPositionColumn(), $this->entity->getFillable());
     }
 
     public function testPositionDefaultValue()
     {
-        $this->assertEquals(0, $this->entity->{$this->positionColumn});
+        $this->assertEquals(0, $this->entity->position);
     }
 
     public function testIsParent()
@@ -86,8 +78,8 @@ class EntityTestCase extends BaseTestCase {
         $result = $this->entity->moveTo(5, $ancestor);
 
         $this->assertSame($this->entity, $result);
-        $this->assertEquals(5, $result->{$this->positionColumn});
-        $this->assertEquals(1, $result->{$this->entity->getParentIdColumn()});
+        $this->assertEquals(5, $result->position);
+        $this->assertEquals(1, $result->parent_id);
         $this->assertEquals($this->entity->getParent()->getKey(), $ancestor->getKey());
     }
 
@@ -180,7 +172,7 @@ class EntityTestCase extends BaseTestCase {
         $child  = $entity->getChildAt(2);
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(2, $child->{$this->positionColumn});
+        $this->assertEquals(2, $child->position);
     }
 
     public function testGetFirstChild()
@@ -189,7 +181,7 @@ class EntityTestCase extends BaseTestCase {
         $child  = $entity->getFirstChild();
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(0, $child->{$this->positionColumn});
+        $this->assertEquals(0, $child->position);
     }
 
     public function testGetLastChild()
@@ -198,7 +190,7 @@ class EntityTestCase extends BaseTestCase {
         $child  = $entity->getLastChild();
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(3, $child->{$this->positionColumn});
+        $this->assertEquals(3, $child->position);
     }
 
     public function testAppendChild()
@@ -207,7 +199,7 @@ class EntityTestCase extends BaseTestCase {
         $newone = new Entity;
         $result = $entity->appendChild($newone, 0);
 
-        $this->assertEquals(0, $newone->{$this->positionColumn});
+        $this->assertEquals(0, $newone->position);
         $this->assertTrue($entity->isParent());
         $this->assertSame($entity, $result);
     }

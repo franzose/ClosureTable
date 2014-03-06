@@ -7,7 +7,12 @@ use \Franzose\ClosureTable\Extensions\Collection;
 use \Franzose\ClosureTable\Extensions\QueryBuilder;
 
 /**
- * Class Entity
+ * Basic entity class.
+ *
+ * @property int position Current Entity position
+ * @property int parent_id Direct ancestor identifier
+ * @property int real_depth Real Entity depth in the tree
+ *
  * @package Franzose\ClosureTable
  */
 class Entity extends Eloquent implements EntityInterface {
@@ -24,14 +29,21 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @var int
      */
-    protected $oldParentId;
+    protected $old_parent_id;
 
     /**
      * Cached "previous" (i.e. before the model is moved) model position.
      *
      * @var int
      */
-    protected $oldPosition;
+    protected $old_position;
+
+    /**
+     * Cached "previous" (i.e. before the model is moved) model real depth.
+     *
+     * @var int
+     */
+    protected $old_real_depth;
 
     /**
      * Indicates if the model should soft delete.
@@ -39,6 +51,13 @@ class Entity extends Eloquent implements EntityInterface {
      * @var bool
      */
     protected $softDelete = true;
+
+    /**
+     * Indicates if the model is being moved to another ancestor.
+     *
+     * @var bool
+     */
+    protected $isMoved = false;
 
     /**
      * Indicates if the model should be timestamped.
@@ -75,6 +94,29 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Gets value of the "parent id" attribute.
+     *
+     * @return int
+     */
+    public function getParentIdAttribute()
+    {
+        return $this->getAttributeFromArray($this->getParentIdColumn());
+    }
+
+    /**
+     * Sets new parent id and caches the old one.
+     *
+     * @param int $value
+     */
+    public function setParentIdAttribute($value)
+    {
+        $column = $this->getParentIdColumn();
+
+        $this->old_parent_id = $this->parent_id;
+        $this->attributes[$column] = intval($value);
+    }
+
+    /**
      * Gets the fully qualified "parent id" column.
      *
      * @return string
@@ -92,6 +134,27 @@ class Entity extends Eloquent implements EntityInterface {
     public function getParentIdColumn()
     {
         return static::PARENT_ID;
+    }
+
+    /**
+     * Gets value of the "position" attribute.
+     *
+     * @return int
+     */
+    public function getPositionAttribute()
+    {
+        return $this->getAttributeFromArray($this->getPositionColumn());
+    }
+
+    /**
+     * Sets new position and caches the old one.
+     *
+     * @param int $value
+     */
+    public function setPositionAttribute($value)
+    {
+        $this->old_position = $this->position;
+        $this->attributes[$this->getPositionColumn()] = intval($value);
     }
 
     /**
@@ -114,11 +177,42 @@ class Entity extends Eloquent implements EntityInterface {
         return static::POSITION;
     }
 
+    /**
+     * Gets value of the "real depth" attribute.
+     *
+     * @return int
+     */
+    public function getRealDepthAttribute()
+    {
+        return $this->getAttributeFromArray($this->getRealDepthColumn());
+    }
+
+    /**
+     * Sets value of the "real depth" attribute.
+     *
+     * @param int $value
+     */
+    public function setRealDepthAttribute($value)
+    {
+        $this->old_real_depth = $this->real_depth;
+        $this->attributes[$this->getRealDepthColumn()] = intval($value);
+    }
+
+    /**
+     * Gets the fully qualified "real depth" column.
+     *
+     * @return string
+     */
     public function getQualifiedRealDepthColumn()
     {
         return $this->getTable() . '.' . static::REAL_DEPTH;
     }
 
+    /**
+     * Gets the short name of the "real depth" column.
+     *
+     * @return string
+     */
     public function getRealDepthColumn()
     {
         return static::REAL_DEPTH;
@@ -462,10 +556,9 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function getLastChildPosition()
     {
-        $positionColumn = $this->getPositionColumn();
-        $lastChild = $this->getLastChild([$positionColumn]);
+        $lastChild = $this->getLastChild([$this->getPositionColumn()]);
 
-        return (is_null($lastChild) ? 0 : $lastChild->{$positionColumn});
+        return (is_null($lastChild) ? 0 : $lastChild->position);
     }
 
     /**
@@ -481,7 +574,7 @@ class Entity extends Eloquent implements EntityInterface {
         {
             if (is_null($position))
             {
-                $position = $this->getLastChildPosition();
+                $position = $this->getNextAfterLastPosition($this->real_depth+1);
             }
 
             $child->moveTo($position, $this);
@@ -864,26 +957,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function moveTo($position, $ancestor = null)
     {
-        $parentIdColumn  = $this->getParentIdColumn();
-        $positionColumn  = $this->getPositionColumn();
-        $realDepthColumn = $this->getRealDepthColumn();
+        $parentId = ( ! $ancestor instanceof EntityInterface ? $ancestor : $ancestor->getKey());
 
-        $ancestorIsObject = $ancestor instanceof EntityInterface;
-
-        $parentId = ( ! $ancestorIsObject ? $ancestor : $ancestor->getKey());
-
-        if ($this->{$parentIdColumn} == $parentId && ! is_null($this->{$parentIdColumn}))
+        if ($this->parent_id == $parentId && ! is_null($this->parent_id))
         {
             return $this;
-        }
-
-        if ( ! $ancestorIsObject)
-        {
-            $ancestorRealDepth = static::find($ancestor)->{$realDepthColumn};
-        }
-        else
-        {
-            $ancestorRealDepth = $ancestor->{$realDepthColumn};
         }
 
         if ($this->getKey() == $parentId)
@@ -891,17 +969,90 @@ class Entity extends Eloquent implements EntityInterface {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
-        $this->oldParentId = $this->{$parentIdColumn};
-        $this->{$parentIdColumn} = $parentId;
+        $this->parent_id  = $parentId;
+        $this->position   = $position;
+        $this->real_depth = $this->getNewRealDepth($ancestor);
 
-        $this->oldPosition = $this->{$positionColumn};
-        $this->{$positionColumn} = $position;
-
-        $this->{$realDepthColumn} = $ancestorRealDepth+1;
+        $this->isMoved = true;
 
         $this->save();
 
+        $this->isMoved = false;
+
         return $this;
+    }
+
+    /**
+     * Gets real depth of the new ancestor of the model.
+     *
+     * @param Entity|int|null $ancestor
+     * @return int
+     */
+    protected function getNewRealDepth($ancestor)
+    {
+        if ( ! $ancestor instanceof EntityInterface)
+        {
+            if (is_null($ancestor))
+            {
+                $depth = 0;
+            }
+            else
+            {
+                $depth = static::find($ancestor)->real_depth;
+            }
+        }
+        else
+        {
+            $depth = $ancestor->real_depth;
+        }
+
+        return ($depth === 0 ?: $depth + 1);
+    }
+
+    /**
+     * Perform a model insert operation.
+     *
+     * @param  EloquentBuilder  $query
+     * @return bool
+     */
+    protected function performInsert(EloquentBuilder $query)
+    {
+        if ($this->isMoved === false)
+        {
+            $this->position = $this->getNextAfterLastPosition();
+        }
+
+        return parent::performInsert($query);
+    }
+
+    /**
+     * Gets the next sibling position after the last one at the given depth.
+     *
+     * @param int $depth
+     * @return int
+     */
+    protected function getNextAfterLastPosition($depth = null)
+    {
+        $positionColumn = $this->getPositionColumn();
+        $depthColumn = $this->getRealDepthColumn();
+
+        $depth = ( ! is_null($depth) ?: $this->real_depth);
+
+        $entity = $this->select($positionColumn)
+            ->where($depthColumn, '=', $depth)
+            ->orderBy($positionColumn, 'desc')
+            ->first();
+
+        if (is_null($entity))
+        {
+            $result = 0;
+        }
+        else
+        {
+            $result = $entity->position+1;
+        }
+
+        return $result;
     }
 
     /**
@@ -912,17 +1063,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function reorderSiblings($parentIdChanged = false)
     {
-        if ( ! is_null($this->oldPosition))
+        if ( ! is_null($this->old_position))
         {
-            $poscolumn = $this->getPositionColumn();
-            $position = [
-                'old' => $this->oldPosition,
-                'now' => $this->{$poscolumn}
-            ];
+            list($range, $action) = $this->setupReordering($parentIdChanged);
 
-            list($range, $action) = $this->setupReordering($position, $parentIdChanged);
-
-            $this->siblingsRange($range, QueryBuilder::BY_WHERE_IN)->$action($poscolumn);
+            $this->siblingsRange($range, QueryBuilder::BY_WHERE_IN)->$action($this->getPositionColumn());
         }
     }
 
@@ -933,12 +1078,21 @@ class Entity extends Eloquent implements EntityInterface {
      * by creating range of theirs positions and determining the action
      * that will be used in reordering ('increment' or 'decrement').
      *
-     * @param array $position
      * @param bool $parentIdChanged
      * @return array
      */
-    protected function setupReordering($position, $parentIdChanged)
+    protected function setupReordering($parentIdChanged)
     {
+        $position = [
+            'old' => $this->old_position,
+            'now' => $this->position
+        ];
+
+        $depth = [
+            'old' => $this->old_real_depth,
+            'now' => $this->real_depth
+        ];
+
         // If the model's parent was changed, firstly we decrement
         // positions of the 'old' next siblings of the model.
         if ($parentIdChanged === true)
@@ -950,9 +1104,21 @@ class Entity extends Eloquent implements EntityInterface {
         {
             if ($position['now'] > $position['old'])
             {
-                $range  = range($position['old'], $position['now']);
-                $action = 'decrement';
+                // Prevent the first node to get -1 position
+                if ($position['old'] == 0) $position['old']++;
+
+                if ($depth['old'] == $depth['now'])
+                {
+                    $range  = range($position['old'], $position['now']);
+                    $action = 'decrement';
+                }
+                else
+                {
+                    $range = $position['now'];
+                    $action = 'increment';
+                }
             }
+            // Just increment positions of all next siblings
             elseif ($position['now'] == $position['old'] && $position['now'] == 0)
             {
                 $range = $position['now'];
@@ -960,6 +1126,7 @@ class Entity extends Eloquent implements EntityInterface {
             }
             else
             {
+                // Prevent the first node to get -1 position
                 if ($position['old'] != 0) $position['old']--;
 
                 $range = range($position['now'], $position['old']);
@@ -978,8 +1145,7 @@ class Entity extends Eloquent implements EntityInterface {
     protected function insertNode()
     {
         $descendant = $this->getKey();
-        $parentIdColumn = $this->getParentIdColumn();
-        $ancestor = (isset($this->{$parentIdColumn}) ? $this->{$parentIdColumn} : $descendant);
+        $ancestor = (isset($this->parent_id) ? $this->parent_id : $descendant);
 
         $this->closure->insertNode($ancestor, $descendant);
     }
@@ -991,9 +1157,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function moveNode()
     {
-        $parentIdColumn = $this->getParentIdColumn();
-
-        if ($this->exists && isset($this->{$parentIdColumn}))
+        if ($this->exists && isset($this->parent_id))
         {
             if (is_null($this->closure->{$this->closure->getAncestorColumn()}))
             {
@@ -1003,12 +1167,12 @@ class Entity extends Eloquent implements EntityInterface {
                 $this->closure->{$this->closure->getDepthColumn()} = 0;
             }
 
-            if ($this->{$parentIdColumn} != $this->oldParentId)
+            if ($this->parent_id != $this->old_parent_id)
             {
                 $this->reorderSiblings(true);
             }
 
-            $this->closure->moveNodeTo($this->{$parentIdColumn});
+            $this->closure->moveNodeTo($this->parent_id);
         }
     }
 
@@ -1069,9 +1233,9 @@ class Entity extends Eloquent implements EntityInterface {
         {
             $attrs = array_merge($attrs, [
                 'pkValue' => $this->getKey(),
-                'positionValue'   => $this->{$this->getPositionColumn()},
-                'ancestorValue'   => $this->{$this->getParentIdColumn()},
-                'depthValue'      => $this->{$this->getRealDepthColumn()}
+                'positionValue'   => $this->position,
+                'ancestorValue'   => $this->parent_id,
+                'depthValue'      => $this->real_depth
             ]);
         }
 
