@@ -3,12 +3,15 @@
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 /**
- * Class Migration
+ * ClosureTable specific migrations generator class.
+ *
  * @package Franzose\ClosureTable\Generators
  */
 class Migration extends Generator {
 
     /**
+     * Creates migration files.
+     *
      * @param array $options
      * @return array
      */
@@ -40,6 +43,8 @@ class Migration extends Generator {
     }
 
     /**
+     * Constructs migration name in Laravel style.
+     *
      * @param $name
      * @return string
      */
@@ -49,6 +54,8 @@ class Migration extends Generator {
     }
 
     /**
+     * Constructs migration class name from the migration name.
+     *
      * @param $name
      * @return string
      */
@@ -58,6 +65,8 @@ class Migration extends Generator {
     }
 
     /**
+     * Constructs path to migration file in Laravel style.
+     *
      * @param $name
      * @param $path
      * @return string

@@ -5,22 +5,29 @@ use \Illuminate\Database\Query\Builder;
 use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
 
 /**
- * Class ClosureTable
+ * Basic ClosureTable model. Performs actions on the relationships table.
+ *
  * @package Franzose\ClosureTable
  */
 class ClosureTable extends Eloquent implements ClosureTableInterface {
 
     /**
+     * The table associated with the model.
+     *
      * @var string
      */
     protected $table = 'entities_closure';
 
     /**
+     * The primary key for the model.
+     *
      * @var string
      */
     protected $primaryKey = 'ctid';
 
     /**
+     * Indicates if the model should be timestamped.
+     *
      * @var bool
      */
     public $timestamps = false;
@@ -51,7 +58,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      *
      * @param int $ancestorId
      * @param int $descendantId
-     * @return mixed
+     * @return void
      * @throws \InvalidArgumentException
      */
     public function insertNode($ancestorId, $descendantId)
@@ -94,7 +101,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      * Make a node a descendant of another ancestor or makes it a root node.
      *
      * @param int $ancestorId
-     * @return mixed
+     * @return void
      * @throws \InvalidArgumentException
      */
     public function moveNodeTo($ancestorId = null)
@@ -145,7 +152,9 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     }
 
     /**
-     * Unbindes current relationships.
+     * Unbinds current relationships.
+     *
+     * @return void
      */
     protected function unbindRelationships()
     {

@@ -6,6 +6,11 @@ use Franzose\ClosureTable\Generators\Migration;
 use Franzose\ClosureTable\Generators\Model;
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
+/**
+ * ClosureTable scaffolding command, created migrations and models.
+ *
+ * @package Franzose\ClosureTable\Console
+ */
 class MakeCommand extends Command {
 
     /**
@@ -37,7 +42,7 @@ class MakeCommand extends Command {
     protected $modeler;
 
     /**
-     * Input arguments
+     * User input arguments.
      *
      * @var array
      */
@@ -59,6 +64,8 @@ class MakeCommand extends Command {
 
     /**
      * Executes console command.
+     *
+     * @return void
      */
     public function fire()
     {
@@ -102,7 +109,7 @@ class MakeCommand extends Command {
     }
 
     /**
-     * Get the console command options.
+     * Gets the console command options.
      *
      * @return array
      */
@@ -119,6 +126,11 @@ class MakeCommand extends Command {
         ];
     }
 
+    /**
+     * Prepares user input options to be passed to migrator and modeler instances.
+     *
+     * @return void
+     */
     protected function prepareOptions()
     {
         $options = $this->getOptions();

@@ -1,7 +1,7 @@
 <?php namespace Franzose\ClosureTable\Extensions;
 
-use \Franzose\ClosureTable\Contracts\EntityInterface;
 use \Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use \Franzose\ClosureTable\Models\Entity;
 
 /**
  * Extended Collection class. Provides some useful methods.
@@ -66,6 +66,9 @@ class Collection extends EloquentCollection {
         $result = [];
         $tops = [];
 
+        /**
+         * @var Entity $item
+         */
         foreach($items as $item)
         {
             $result[$item->getKey()] = $item;

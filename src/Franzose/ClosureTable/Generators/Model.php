@@ -3,12 +3,15 @@
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 /**
- * Class Model
+ * ClosureTable specific models generator class.
+ *
  * @package Franzose\ClosureTable\Generators
  */
 class Model extends Generator {
 
     /**
+     * Creates models and interfaces files.
+     *
      * @param array $options
      * @return array
      */
@@ -71,6 +74,8 @@ class Model extends Generator {
     }
 
     /**
+     * Constructs path to a model.
+     *
      * @param $name
      * @param $path
      * @return string
@@ -81,6 +86,8 @@ class Model extends Generator {
     }
 
     /**
+     * Creates directories with given names under the models path.
+     *
      * @param array $directories
      * @param string $modelsPath
      */

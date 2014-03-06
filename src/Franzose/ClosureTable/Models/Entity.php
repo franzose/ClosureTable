@@ -3,7 +3,6 @@
 use \Illuminate\Database\Eloquent\Model as Eloquent;
 use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use \Franzose\ClosureTable\Contracts\EntityInterface;
-use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
 use \Franzose\ClosureTable\Extensions\Collection;
 use \Franzose\ClosureTable\Extensions\QueryBuilder;
 
@@ -553,7 +552,7 @@ class Entity extends Eloquent implements EntityInterface {
      * @param int $from
      * @param int $to
      * @param bool $forceDelete
-     * @return Entity
+     * @return $this
      * @throws \InvalidArgumentException
      */
     public function removeChildren($from, $to = null, $forceDelete = false)
@@ -692,7 +691,7 @@ class Entity extends Eloquent implements EntityInterface {
      * Retrieves all previous siblings of a model.
      *
      * @param array $columns
-     * @return mixed
+     * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getPrevSiblings(array $columns = ['*'])
     {
@@ -749,7 +748,7 @@ class Entity extends Eloquent implements EntityInterface {
      * Retrieves all next siblings of a model.
      *
      * @param array $columns
-     * @return mixed
+     * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getNextSiblings(array $columns = ['*'])
     {
@@ -790,7 +789,7 @@ class Entity extends Eloquent implements EntityInterface {
      * Retrieves root (with no ancestors) models.
      *
      * @param array $columns
-     * @return mixed
+     * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function getRoots(array $columns = ['*'])
     {
@@ -812,7 +811,7 @@ class Entity extends Eloquent implements EntityInterface {
      * Retrieves entire tree.
      *
      * @param array $columns
-     * @return mixed
+     * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function getTree(array $columns = ['*'])
     {
@@ -825,7 +824,7 @@ class Entity extends Eloquent implements EntityInterface {
      * Saves models from the given attributes array.
      *
      * @param array $tree
-     * @return Collection
+     * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function createFromArray(array $tree)
     {

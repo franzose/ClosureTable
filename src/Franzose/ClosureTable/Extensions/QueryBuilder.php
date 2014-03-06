@@ -3,10 +3,10 @@
 use \Illuminate\Database\ConnectionInterface;
 use \Illuminate\Database\Query\Grammars\Grammar;
 use \Illuminate\Database\Query\Processors\Processor;
-use \Franzose\ClosureTable\Contracts\EntityInterface;
 
 /**
- * Class QueryBuilder
+ * Extended QueryBuilder class. Provides methods for building ClosureTable specific queries.
+ *
  * @package Franzose\ClosureTable\Extensions
  */
 class QueryBuilder extends \Illuminate\Database\Query\Builder {
@@ -318,11 +318,6 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
         $method = $this->getQueryMethodType('siblingsBy', $type);
 
         $query = $this->{$method}($columns, $what);
-
-        //if ($this->qattrs['depthValue'] == 0)
-        //{
-        //    $this->whereRaw($this->getRootCheckQuery());
-        //}
 
         switch($what)
         {

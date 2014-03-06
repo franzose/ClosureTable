@@ -3,6 +3,11 @@
 use Franzose\ClosureTable\ClosureTableServiceProvider as CT;
 use Illuminate\Console\Command;
 
+/**
+ * Basic ClosureTable command, outputs information about the library in short.
+ *
+ * @package Franzose\ClosureTable\Console
+ */
 class ClosureTableCommand extends Command {
 
     /**
@@ -21,6 +26,8 @@ class ClosureTableCommand extends Command {
 
     /**
      * Executes console command.
+     *
+     * @return void
      */
     public function fire()
     {

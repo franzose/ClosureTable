@@ -6,10 +6,15 @@ use Franzose\ClosureTable\Console\MakeCommand;
 use Franzose\ClosureTable\Generators\Migration as Migrator;
 use Franzose\ClosureTable\Generators\Model as Modeler;
 
+/**
+ * ClosureTable service provider
+ *
+ * @package Franzose\ClosureTable
+ */
 class ClosureTableServiceProvider extends ServiceProvider {
 
     /**
-     *
+     * Current library version
      */
     const VERSION = 3;
 
@@ -37,9 +42,11 @@ class ClosureTableServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
+        // Default interfaces binding
         $this->app->bind('Franzose\ClosureTable\Contracts\EntityInterface', 'Franzose\ClosureTable\Models\Entity');
         $this->app->bind('Franzose\ClosureTable\Contracts\ClosureTableInterface', 'Franzose\ClosureTable\Models\ClosureTable');
 
+        // Here we register commands for artisan
         $this->app['command.closuretable'] = $this->app->share(function($app){
             return new ClosureTableCommand;
         });
