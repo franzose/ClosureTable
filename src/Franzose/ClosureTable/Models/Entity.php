@@ -9,9 +9,13 @@ use \Franzose\ClosureTable\Extensions\QueryBuilder;
 /**
  * Basic entity class.
  *
- * @property int position Current Entity position
- * @property int parent_id Direct ancestor identifier
- * @property int real_depth Real Entity depth in the tree
+ * Properties, listed below, are used to make the internal code cleaner.
+ * However, if you named, for example, the position column to be "pos",
+ * remember you can get its value either by $this->pos or $this->position.
+ *
+ * @property int position Alias for the current position property
+ * @property int parent_id Alias for the direct ancestor identifier property
+ * @property int real_depth Alias for the real depth property
  *
  * @package Franzose\ClosureTable
  */
