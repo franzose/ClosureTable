@@ -54,6 +54,16 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(0, $this->entity->position);
     }
 
+    public function testRealDepthIsFillable()
+    {
+        $this->assertContains($this->entity->getRealDepthColumn(), $this->entity->getFillable());
+    }
+
+    public function testRealDepthDefaultValue()
+    {
+        $this->assertEquals(0, $this->entity->real_depth);
+    }
+
     public function testIsParent()
     {
         $this->assertFalse($this->entity->isParent());
@@ -208,17 +218,18 @@ class EntityTestCase extends BaseTestCase {
     {
         $entity = Entity::find(15);
         $child1 = new Entity;
-        $child1->save();
         $child2 = new Entity;
-        $child2->save();
         $child3 = new Entity;
-        $child3->save();
 
         $array = new Collection([$child1, $child2, $child3]);
         $result = $entity->appendChildren($array);
 
         $this->assertSame($entity, $result);
         $this->assertEquals(3, $entity->countChildren());
+
+        $this->assertEquals(0, $child1->position);
+        $this->assertEquals(1, $child2->position);
+        $this->assertEquals(2, $child3->position);
     }
 
     public function testRemoveChild()
