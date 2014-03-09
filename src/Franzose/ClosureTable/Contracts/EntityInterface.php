@@ -26,7 +26,7 @@ interface EntityInterface {
      *
      * @var string
      */
-    const REAL_DEPTH = 'depth';
+    const REAL_DEPTH = 'real_depth';
 
     /**
      * Relations array key that stores children collection.

@@ -914,7 +914,61 @@ class Entity extends Eloquent implements EntityInterface {
     {
         $instance = new static;
 
-        return $instance->tree(array_merge($columns, [$instance->getParentIdColumn()]))->get()->toTree();
+        return $instance->get($instance->prepareTreeQueryColumns($columns))->toTree();
+    }
+
+    /**
+     * Retrieves tree by condition.
+     *
+     * @param mixed $column
+     * @param mixed $operator
+     * @param mixed $value
+     * @param array $columns
+     * @return \Franzose\ClosureTable\Extensions\Collection
+     */
+    public static function getTreeWhere($column, $operator = null, $value = null, array $columns = ['*'])
+    {
+        $instance = new static;
+        $query = null;
+        $columns = $instance->prepareTreeQueryColumns($columns);
+
+        if ($column instanceof Closure)
+        {
+            $query = $instance->whereNested($column, 'and');
+        }
+
+        // If the value is a Closure, it means the developer is performing an entire
+        // sub-select within the query and we will need to compile the sub-select
+        // within the where clause to get the appropriate query record results.
+        if ($value instanceof Closure)
+        {
+            $query = $instance->whereSub($column, $operator, $value, 'and');
+        }
+
+        // If the value is "null", we will just assume the developer wants to add a
+        // where null clause to the query. So, we will allow a short-cut here to
+        // that method for convenience so the developer doesn't have to check.
+        if (is_null($value))
+        {
+            $query = $instance->whereNull($column, 'and', $operator != '=');
+        }
+        else if ( ! $column instanceof Closure && ! $value instanceof Closure)
+        {
+            $query = $instance->where($column, $operator, $value);
+        }
+
+        return $query->get($columns)->toTree();
+    }
+
+    /**
+     * Adds "parent id" column to columns list for proper tree querying.
+     *
+     * @param array $columns
+     * @return array
+     */
+    protected function prepareTreeQueryColumns(array $columns)
+    {
+        return ($columns === ['*'] ? $columns : array_merge($columns, [$this->getParentIdColumn()]));
     }
 
     /**
@@ -1221,6 +1275,7 @@ class Entity extends Eloquent implements EntityInterface {
         // Workaround to simplify QueryBuilder queries construction.
         $attrs = [
             'pk' => $this->getQualifiedKeyName(),
+            'parentIdShort' => $this->getParentIdColumn(),
             'position' => $this->getQualifiedPositionColumn(),
             'closure'         => $this->closure->getTable(),
             'ancestor'        => $this->closure->getQualifiedAncestorColumn(),

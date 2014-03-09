@@ -11,7 +11,7 @@ class {{entity_class}} extends Migration {
             $table->increments('id');
             $table->integer('parent_id');
             $table->integer('position', false, true);
-            $table->integer('depth', false, true);
+            $table->integer('real_depth', false, true);
 
             $table->foreign('parent_id')->references('id')->on('{{entity_table}}');
         });

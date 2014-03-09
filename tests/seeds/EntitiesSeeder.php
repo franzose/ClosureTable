@@ -6,7 +6,7 @@ class EntitiesSeeder extends \Seeder {
 
     public function run()
     {
-        $entitiesSql = 'insert into entities (id, parent_id, title, excerpt, body, position, depth) values(?, ?, ?, ?, ?, ?, ?)';
+        $entitiesSql = 'insert into entities (id, parent_id, title, excerpt, body, position, real_depth) values(?, ?, ?, ?, ?, ?, ?)';
         $closuresSql = 'insert into entities_closure (ancestor, descendant, depth) values(?, ?, ?)';
 
         // 1

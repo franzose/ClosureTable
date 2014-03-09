@@ -448,7 +448,7 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
 
         if ($this->qattrs['depthValue'] == 0)
         {
-            $this->whereRaw($this->getRootCheckQuery());
+            $this->whereNull($this->qattrs['parentIdShort']);
         }
 
         return $this;
@@ -560,21 +560,6 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     }
 
     /**
-     * Builds a query that checks if a node is root.
-     *
-     * @param string $closureTableAlias
-     * @return string
-     */
-    protected function getRootCheckQuery($closureTableAlias = 'c')
-    {
-        $ancestor = $closureTableAlias.'.'.$this->qattrs['ancestorShort'];
-
-        return '(select count(*) from '.$this->qattrs['closure'].' as ct '.
-               'where ct.'.$this->qattrs['descendantShort'].' = '.$ancestor.' '.
-               'and ct.'.$this->qattrs['depthShort'].' > 0) = 0';
-    }
-
-    /**
      * Builds roots query.
      *
      * @param array $columns
@@ -582,38 +567,7 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      */
     public function roots(array $columns = ['*'])
     {
-        array_push($columns, 'c.'.$this->qattrs['ancestorShort']);
-
-        return $this->select($columns)
-            ->distinct()
-            ->join($this->qattrs['closure'].' as c', function($join)
-                {
-                    $join->on('c.'.$this->qattrs['ancestorShort'], '=', $this->qattrs['pk']);
-                    $join->on('c.'.$this->qattrs['descendantShort'], '=', $this->qattrs['pk']);
-                })
-            ->whereRaw($this->getRootCheckQuery());
-    }
-
-    /**
-     * Builds an entire tree query.
-     *
-     * @param array $columns
-     * @return QueryBuilder
-     */
-    public function tree(array $columns = ['*'])
-    {
-        $whereIn = function(QueryBuilder $q)
-        {
-            return $q->select($this->qattrs['ancestor'])
-                ->from($q->qattrs['closure'])
-                ->whereRaw($q->getRootCheckQuery($q->qattrs['closure']));
-        };
-
-        $query = $this->select($columns)
-            ->join($this->qattrs['closure'], $this->qattrs['descendant'], '=', $this->qattrs['pk'])
-            ->whereIn($this->qattrs['ancestor'], $whereIn);
-
-        return $query;
+        return $this->select($columns)->whereNull($this->qattrs['parentIdShort']);
     }
 
     /**

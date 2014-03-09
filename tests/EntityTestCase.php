@@ -37,7 +37,7 @@ class EntityTestCase extends BaseTestCase {
         Entity::boot();
 
         $this->entity = new Entity;
-        $this->entity->fillable(['title', 'excerpt', 'body', 'position', 'depth']);
+        $this->entity->fillable(['title', 'excerpt', 'body', 'position', 'real_depth']);
 
         $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
 
@@ -396,6 +396,16 @@ class EntityTestCase extends BaseTestCase {
         $tenth = $ninth->getRelation($this->childrenRelationIndex);
 
         $this->assertCount(4, $tenth);
+    }
+
+    public function testGetTreeWhere()
+    {
+        $tree = Entity::getTreeWhere($this->entity->getPositionColumn(), '>=', 1, [
+            $this->entity->getKeyName(),
+            $this->entity->getPositionColumn()
+        ]);
+
+        $this->assertEquals(1, $tree[0]->position);
     }
 
     public function testDeleteSubtree()
