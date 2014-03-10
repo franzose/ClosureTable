@@ -66,6 +66,17 @@ interface EntityInterface {
     public function getAncestors(array $columns = ['*']);
 
     /**
+     * Retrieves ancestors applying given conditions.
+     *
+     * @param mixed $column
+     * @param mixed $operator
+     * @param mixed $value
+     * @param array $columns
+     * @return \Franzose\ClosureTable\Extensions\Collection
+     */
+    public function getAncestorsWhere($column, $operator = null, $value = null, array $columns = ['*']);
+
+    /**
      * Returns a number of model's ancestors.
      *
      * @return int
@@ -88,12 +99,15 @@ interface EntityInterface {
     public function getDescendants(array $columns = ['*']);
 
     /**
-     * Retrieves all descendants of a model as a tree-like collection.
+     * Retrieves descendants applying given conditions.
      *
+     * @param mixed $column
+     * @param mixed $operator
+     * @param mixed $value
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
-    public function getDescendantsTree(array $columns = ['*']);
+    public function getDescendantsWhere($column, $operator = null, $value = null, array $columns = ['*']);
 
     /**
      * Returns a number of model's descendants.

@@ -121,6 +121,18 @@ class EntityTestCase extends BaseTestCase {
         $this->assertCount(3, $ancestors);
     }
 
+    public function testGetAncestorsWhere()
+    {
+        $entity = Entity::find(12);
+        $ancestors = $entity->getAncestorsWhere('excerpt', '=', '');
+
+        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $ancestors);
+        $this->assertCount(0, $ancestors);
+
+        $ancestors = $entity->getAncestorsWhere($this->entity->getPositionColumn(), '=', 0);
+        $this->assertCount(2, $ancestors);
+    }
+
     public function testCountAncestors()
     {
         $entity = Entity::find(12);
@@ -138,14 +150,12 @@ class EntityTestCase extends BaseTestCase {
         $this->assertCount(6, $descendants);
     }
 
-    public function testGetDescendantsTree()
+    public function testGetDescendantsWhere()
     {
         $entity = Entity::find(9);
-        $descendants = $entity->getDescendantsTree();
 
-        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $descendants);
-        $this->assertCount(4, $descendants);
-        $this->assertArrayHasKey('children', $descendants[0]->getRelations());
+        $descendants = $entity->getDescendantsWhere($this->entity->getPositionColumn(), '=', 1);
+        $this->assertCount(1, $descendants);
     }
 
     public function testCountDescendants()

@@ -368,11 +368,25 @@ class Entity extends Eloquent implements EntityInterface {
      * Retrieves all ancestors of a model.
      *
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     * @return Collection
      */
     public function getAncestors(array $columns = ['*'])
     {
         return $this->joinClosureBy('ancestor')->get($columns);
+    }
+
+    /**
+     * Retrieves ancestors applying given conditions.
+     *
+     * @param mixed $column
+     * @param mixed $operator
+     * @param mixed $value
+     * @param array $columns
+     * @return Collection
+     */
+    public function getAncestorsWhere($column, $operator = null, $value = null, array $columns = ['*'])
+    {
+        return $this->joinClosureBy('ancestor')->where($column, $operator, $value)->get($columns);
     }
 
     /**
@@ -407,14 +421,17 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * Retrieves all descendants of a model as a tree-like collection.
+     * Retrieves descendants applying given conditions.
      *
+     * @param mixed $column
+     * @param mixed $operator
+     * @param mixed $value
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     * @return Collection
      */
-    public function getDescendantsTree(array $columns = ['*'])
+    public function getDescendantsWhere($column, $operator = null, $value = null, array $columns = ['*'])
     {
-        return $this->getDescendants($columns)->toTree($this->getKey());
+        return $this->joinClosureBy('descendant')->where($column, $operator, $value)->get($columns);
     }
 
     /**
