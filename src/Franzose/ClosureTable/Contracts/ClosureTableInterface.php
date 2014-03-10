@@ -28,15 +28,6 @@ interface ClosureTableInterface {
     const DEPTH = 'depth';
 
     /**
-     * Check if model is a top level one (i.e. has no ancestors).
-     *
-     * @param int $id
-     * @return bool
-     * @throws \InvalidArgumentException
-     */
-    public function isRoot($id = null);
-
-    /**
      * Inserts new node into closure table.
      *
      * @param int $ancestorId

@@ -37,27 +37,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     public $timestamps = false;
 
     /**
-     * Check if model is a top level one (i.e. has no ancestors).
-     *
-     * @param null $id
-     * @return bool
-     * @throws \InvalidArgumentException
-     */
-    public function isRoot($id = null)
-    {
-        if ( ! is_null($id) && ! is_int($id))
-        {
-            throw new \InvalidArgumentException('`id` argument must be of type int.');
-        }
-
-        $id = (is_int($id) ?: $this->getKey());
-
-        return !!$this->where($this->getDescendantColumn(), '=', $id)
-            ->where($this->getDepthColumn(), '>', 0)
-            ->count() == 0;
-    }
-
-    /**
      * Inserts new node into closure table.
      *
      * @param int $ancestorId
