@@ -660,7 +660,7 @@ class Entity extends Eloquent implements EntityInterface {
      * @param int $position
      * @return $this
      */
-    public function appendChild(EntityInterface $child, $position = null)
+    public function addChild(EntityInterface $child, $position = null)
     {
         if ($this->exists)
         {
@@ -682,7 +682,7 @@ class Entity extends Eloquent implements EntityInterface {
      * @return $this
      * @throws \InvalidArgumentException
      */
-    public function appendChildren($children)
+    public function addChildren($children)
     {
         $validInstance = (   $children instanceof \Illuminate\Database\Eloquent\Collection
                           || $children instanceof Collection);
@@ -705,7 +705,7 @@ class Entity extends Eloquent implements EntityInterface {
                         throw new \InvalidArgumentException('Array items must be of type EntityInterface.');
                     }
 
-                    $this->appendChild($child, $lastChildPosition);
+                    $this->addChild($child, $lastChildPosition);
                     $lastChildPosition++;
                 }
             });
@@ -1072,7 +1072,7 @@ class Entity extends Eloquent implements EntityInterface {
             {
                 $children = static::createFromArray($children, true);
                 $entity->setRelation($childrenRelationIndex, $children);
-                $entity->appendChildren($children);
+                $entity->addChildren($children);
             }
 
             $entities[] = $entity;

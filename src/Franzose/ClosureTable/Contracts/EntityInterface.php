@@ -177,7 +177,7 @@ interface EntityInterface {
      * @param int $position
      * @return $this
      */
-    public function appendChild(EntityInterface $child, $position = null);
+    public function addChild(EntityInterface $child, $position = null);
 
     /**
      * Appends a collection of children to the model.
@@ -186,7 +186,7 @@ interface EntityInterface {
      * @return $this
      * @throws \InvalidArgumentException
      */
-    public function appendChildren($children);
+    public function addChildren($children);
 
     /**
      * Removes a model's child with given position.

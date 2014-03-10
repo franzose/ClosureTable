@@ -228,18 +228,18 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $children[1]->position);
     }
 
-    public function testAppendChild()
+    public function testAddChild()
     {
         $entity = Entity::find(15);
         $newone = new Entity;
-        $result = $entity->appendChild($newone, 0);
+        $result = $entity->addChild($newone, 0);
 
         $this->assertEquals(0, $newone->position);
         $this->assertTrue($entity->isParent());
         $this->assertSame($entity, $result);
     }
 
-    public function testAppendChildren()
+    public function testAddChildren()
     {
         $entity = Entity::find(15);
         $child1 = new Entity;
@@ -247,7 +247,7 @@ class EntityTestCase extends BaseTestCase {
         $child3 = new Entity;
 
         $array = new Collection([$child1, $child2, $child3]);
-        $result = $entity->appendChildren($array);
+        $result = $entity->addChildren($array);
 
         $this->assertSame($entity, $result);
         $this->assertEquals(3, $entity->countChildren());
