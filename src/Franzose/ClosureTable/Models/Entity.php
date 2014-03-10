@@ -13,9 +13,9 @@ use \Franzose\ClosureTable\Extensions\QueryBuilder;
  * However, if you named, for example, the position column to be "pos",
  * remember you can get its value either by $this->pos or $this->position.
  *
- * @property int position Alias for the current position property
- * @property int parent_id Alias for the direct ancestor identifier property
- * @property int real_depth Alias for the real depth property
+ * @property int position Alias for the current position attribute name
+ * @property int parent_id Alias for the direct ancestor identifier attribute name
+ * @property int real_depth Alias for the real depth attribute name
  *
  * @package Franzose\ClosureTable
  */
@@ -1217,12 +1217,12 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if ($this->exists && isset($this->parent_id))
         {
-            if (is_null($this->closure->{$this->closure->getAncestorColumn()}))
+            if (is_null($this->closure->ancestor))
             {
                 $primaryKey = $this->getKey();
-                $this->closure->{$this->closure->getAncestorColumn()} = $primaryKey;
-                $this->closure->{$this->closure->getDescendantColumn()} = $primaryKey;
-                $this->closure->{$this->closure->getDepthColumn()} = 0;
+                $this->closure->ancestor = $primaryKey;
+                $this->closure->descendant = $primaryKey;
+                $this->closure->depth = 0;
             }
 
             if ($this->parent_id != $this->old_parent_id)

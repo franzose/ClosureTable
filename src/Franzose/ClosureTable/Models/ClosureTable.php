@@ -7,6 +7,10 @@ use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
 /**
  * Basic ClosureTable model. Performs actions on the relationships table.
  *
+ * @property int ancestor Alias for the ancestor attribute name
+ * @property int descendant Alias for the descendant attribute name
+ * @property int depth Alias for the depth attribute name
+ *
  * @package Franzose\ClosureTable
  */
 class ClosureTable extends Eloquent implements ClosureTableInterface {
@@ -90,9 +94,9 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
             if (\DB::table($t)->insert($results))
             {
-                $this->{$ak} = $results[0][$ak];
-                $this->{$dk} = $results[0][$dk];
-                $this->{$dpk} = $results[0][$dpk];
+                $this->ancestor = $results[0][$ak];
+                $this->descendant = $results[0][$dk];
+                $this->depth = $results[0][$dpk];
             }
         });
     }
@@ -116,8 +120,8 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $dk  = $this->getDescendantColumn();
         $dpk = $this->getDepthColumn();
 
-        $thisAncestorId = $this->{$ak};
-        $thisDescendantId = $this->{$dk};
+        $thisAncestorId = $this->ancestor;
+        $thisDescendantId = $this->descendant;
 
         // Prevent constraint collision
         if ( ! is_null($ancestorId) && $thisAncestorId === $ancestorId)
@@ -161,7 +165,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $table = $this->getTable();
         $ancestorColumn = $this->getAncestorColumn();
         $descendantColumn = $this->getDescendantColumn();
-        $descendant = $this->{$descendantColumn};
+        $descendant = $this->descendant;
 
         $query = "
             DELETE FROM {$table}
@@ -175,6 +179,26 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         ";
 
         \DB::delete($query);
+    }
+
+    /**
+     * Gets value of the "ancestor" attribute.
+     *
+     * @return int
+     */
+    public function getAncestorAttribute()
+    {
+        return $this->getAttributeFromArray($this->getAncestorColumn());
+    }
+
+    /**
+     * Sets new ancestor id.
+     *
+     * @param $value
+     */
+    public function setAncestorAttribute($value)
+    {
+        $this->attributes[$this->getAncestorColumn()] = intval($value);
     }
 
     /**
@@ -198,6 +222,26 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     }
 
     /**
+     * Gets value of the "descendant" attribute.
+     *
+     * @return int
+     */
+    public function getDescendantAttribute()
+    {
+        return $this->getAttributeFromArray($this->getDescendantColumn());
+    }
+
+    /**
+     * Sets new descendant id.
+     *
+     * @param $value
+     */
+    public function setDescendantAttribute($value)
+    {
+        $this->attributes[$this->getDescendantColumn()] = intval($value);
+    }
+
+    /**
      * Gets the fully qualified "descendant" column.
      *
      * @return string
@@ -215,6 +259,26 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     public function getDescendantColumn()
     {
         return static::DESCENDANT;
+    }
+
+    /**
+     * Gets value of the "depth" attribute.
+     *
+     * @return int
+     */
+    public function getDepthAttribute()
+    {
+        return $this->getAttributeFromArray($this->getDepthColumn());
+    }
+
+    /**
+     * Sets new depth.
+     *
+     * @param $value
+     */
+    public function setDepthAttribute($value)
+    {
+        $this->attributes[$this->getDepthColumn()] = intval($value);
     }
 
     /**
