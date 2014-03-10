@@ -155,6 +155,7 @@ Page::find(11)->makeRoot();
 
 ```php
 $tree = Page::getTree();
+$treeByCondition = Page::getTreeWhere('position', '>=', 1);
 ```
 
 You deal with the collection, thus you can control its items as you usually do. Descendants? They are already loaded.
