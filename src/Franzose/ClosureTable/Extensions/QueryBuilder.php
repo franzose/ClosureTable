@@ -33,67 +33,60 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     const ALL_INC_SELF  = 2;
 
     /**
-     * 'Find children' flag.
-     *
-     * @var int
-     */
-    const CHILDREN      = 3;
-
-    /**
      * 'Find neighbors' flag.
      *
      * @var int
      */
-    const NEIGHBORS     = 4;
+    const NEIGHBORS     = 3;
 
     /**
      * 'Find one previous sibling' flag.
      *
      * @var int
      */
-    const PREV_ONE      = 5;
+    const PREV_ONE      = 4;
 
     /**
      * 'Find all previous siblings' flag.
      *
      * @var int
      */
-    const PREV_ALL      = 6;
+    const PREV_ALL      = 5;
 
     /**
      * 'Find one next sibling' flag.
      *
      * @var int
      */
-    const NEXT_ONE      = 7;
+    const NEXT_ONE      = 6;
 
     /**
      * 'Find all next siblings' flag.
      *
      * @var int
      */
-    const NEXT_ALL      = 8;
+    const NEXT_ALL      = 7;
 
     /**
      * 'Find within range' flag.
      *
      * @var int
      */
-    const IN_RANGE      = 9;
+    const IN_RANGE      = 8;
 
     /**
      * 'Find using where in clause' flag.
      *
      * @var int
      */
-    const BY_WHERE_IN   = 10;
+    const BY_WHERE_IN   = 9;
 
     /**
      * 'Find using join clause' flag.
      *
      * @var int
      */
-    const BY_JOIN       = 11;
+    const BY_JOIN       = 10;
 
     /**
      * Create a new query builder instance.
@@ -168,11 +161,6 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
 
         switch($what)
         {
-            case static::CHILDREN:
-                $depthOperator = '=';
-                $depthValue = 1;
-                break;
-
             case static::ALL_INC_SELF:
                 $depthOperator = '>=';
                 break;
@@ -241,12 +229,11 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      * Builds children query.
      *
      * @param array $columns
-     * @param int $type
      * @return QueryBuilder
      */
-    public function children(array $columns = ['*'], $type = self::BY_JOIN)
+    public function children(array $columns = ['*'])
     {
-        return $this->descendants($columns, static::CHILDREN, $type);
+        return $this->where($this->qattrs['parentIdShort'], '=', $this->qattrs['pkValue']);
     }
 
     /**
@@ -254,12 +241,22 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      *
      * @param $position
      * @param array $columns
-     * @param int $type
      * @return QueryBuilder
      */
-    public function childAt($position, array $columns = ['*'], $type = self::BY_JOIN)
+    public function childAt($position, array $columns = ['*'])
     {
-        return $this->children($columns, $type)->where($this->qattrs['position'], '=', $position);
+        return $this->children($columns)->where($this->qattrs['position'], '=', $position);
+    }
+
+    /**
+     * Builds the last child query.
+     *
+     * @param array $columns
+     * @return QueryBuilder
+     */
+    public function lastChild(array $columns = ['*'])
+    {
+        return $this->children($columns)->orderBy($this->qattrs['position'], 'desc');
     }
 
     /**
@@ -274,7 +271,7 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
         $action = ($forceDelete === true ? 'forceDelete' : 'delete');
         $columns = [$this->qattrs['pk'], $this->qattrs['position']];
 
-        return $this->childAt($position, $columns, static::BY_WHERE_IN)->$action();
+        return $this->childAt($position, $columns)->$action();
     }
 
     /**
@@ -287,7 +284,7 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
      */
     public function removeChildrenRange($from, $to = null, $forceDelete = false)
     {
-        $query = $this->children([$this->qattrs['pk'], $this->qattrs['position']], static::BY_WHERE_IN)
+        $query = $this->children([$this->qattrs['pk'], $this->qattrs['position']])
             ->where($this->qattrs['position'], '>=', $from);
 
         if ( ! is_null($to))
@@ -318,6 +315,11 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
         $method = $this->getQueryMethodType('siblingsBy', $type);
 
         $query = $this->{$method}($columns, $what);
+
+        if ($this->qattrs['depthValue'] == 0)
+        {
+            $this->whereNull($this->qattrs['parentIdShort']);
+        }
 
         switch($what)
         {
@@ -446,11 +448,6 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
             $this->where('c.'.$this->qattrs['descendantShort'], '<>', $this->qattrs['pkValue']);
         }
 
-        if ($this->qattrs['depthValue'] == 0)
-        {
-            $this->whereNull($this->qattrs['parentIdShort']);
-        }
-
         return $this;
     }
 
@@ -478,6 +475,17 @@ class QueryBuilder extends \Illuminate\Database\Query\Builder {
     public function siblingAt($position, array $columns = ['*'])
     {
         return $this->siblings($columns)->where($this->qattrs['position'], '=', $position);
+    }
+
+    /**
+     * Builds query for the last sibling.
+     *
+     * @param array $columns
+     * @return QueryBuilder
+     */
+    public function lastSibling(array $columns = ['*'])
+    {
+        return $this->siblings($columns)->orderBy($this->getPositionColumn(), 'desc');
     }
 
     /**

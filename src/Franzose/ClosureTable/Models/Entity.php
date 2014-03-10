@@ -284,7 +284,7 @@ class Entity extends Eloquent implements EntityInterface {
             return false;
         }
 
-        return $this->closure->isRoot($this->getKey());
+        return is_null($this->parent_id);
     }
 
     /**
@@ -547,7 +547,7 @@ class Entity extends Eloquent implements EntityInterface {
         }
         else
         {
-            $result = $this->children($columns)->orderBy($this->getPositionColumn(), 'desc')->first();
+            $result = $this->lastChild($columns)->first();
         }
 
         return $result;
@@ -762,10 +762,10 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if ( ! $this->exists)
         {
-            return new Collection;
+            return null;
         }
 
-        return $this->siblings($columns)->orderBy($this->getPositionColumn(), 'desc')->first();
+        return $this->lastSibling($columns)->first();
     }
 
     /**
