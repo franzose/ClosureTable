@@ -236,16 +236,23 @@ class Entity extends Eloquent implements EntityInterface {
     {
         parent::boot();
 
+        // If model's parent identifier was changed,
+        // the closure table rows will update automatically.
         static::saving(function($entity)
         {
             $entity->moveNode();
         });
 
+        // When entity is created, the appropriate
+        // data will be put into the closure table.
         static::created(function($entity)
         {
             $entity->insertNode();
         });
 
+        // Everytime the model's position or depth
+        // is changed, its siblings reordering will happen,
+        // so they will always keep the proper order.
         static::saved(function($entity)
         {
             $entity->reorderSiblings();
@@ -605,6 +612,19 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves children within given positions range.
+     *
+     * @param int $from
+     * @param int $to
+     * @param array $columns
+     * @return Collection
+     */
+    public function getChildrenRange($from, $to = null, array $columns = ['*'])
+    {
+        return $this->children($this->getArgsAsArray($from, $to))->get($columns);
+    }
+
+    /**
      * Gets last child position.
      *
      * @return int
@@ -713,10 +733,9 @@ class Entity extends Eloquent implements EntityInterface {
 
         if ($this->exists)
         {
-            $range  = (is_null($to) ? [$from] : [$from, $to]);
             $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-            $this->children($range)->$action();
+            $this->children($this->getArgsAsArray($from, $to))->$action();
         }
 
         return $this;
@@ -920,6 +939,21 @@ class Entity extends Eloquent implements EntityInterface {
     public function hasNextSiblings()
     {
         return !!$this->countNextSiblings();
+    }
+
+    /**
+     * Retrieves siblings within given positions range.
+     *
+     * @param int $from
+     * @param int $to
+     * @param array $columns
+     * @return Collection
+     */
+    public function getSiblingsRange($from, $to = null, array $columns = ['*'])
+    {
+        return $this->siblings()
+            ->whereIn($this->getPositionColumn(), $this->getArgsAsArray($from, $to))
+            ->get($columns);
     }
 
     /**
@@ -1333,5 +1367,17 @@ class Entity extends Eloquent implements EntityInterface {
     public function newCollection(array $models = array())
     {
         return new Collection($models);
+    }
+
+    /**
+     * Helper method to build positions range.
+     *
+     * @param int $from
+     * @param int $to
+     * @return array
+     */
+    protected function getArgsAsArray($from, $to = null)
+    {
+        return (is_null($to) ? [$from] : [$from, $to]);
     }
 }

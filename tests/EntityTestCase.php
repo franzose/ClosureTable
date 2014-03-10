@@ -145,7 +145,7 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $descendants);
         $this->assertCount(4, $descendants);
-        $this->assertArrayHasKey('children', $descendants->get(0)->getRelations());
+        $this->assertArrayHasKey('children', $descendants[0]->getRelations());
     }
 
     public function testCountDescendants()
@@ -198,6 +198,24 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
         $this->assertEquals(3, $child->position);
+    }
+
+    public function testGetChildrenRange()
+    {
+        $entity   = Entity::find(9);
+        $children = $entity->getChildrenRange(0, 2);
+
+        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $children);
+        $this->assertCount(3, $children);
+        $this->assertEquals(0, $children[0]->position);
+        $this->assertEquals(1, $children[1]->position);
+        $this->assertEquals(2, $children[2]->position);
+
+        $children = $entity->getChildrenRange(2);
+
+        $this->assertCount(2, $children);
+        $this->assertEquals(2, $children[0]->position);
+        $this->assertEquals(3, $children[1]->position);
     }
 
     public function testAppendChild()
@@ -264,9 +282,9 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $siblings);
         $this->assertCount(3, $siblings);
-        $this->assertEquals(10, $siblings->get(0)->getKey());
-        $this->assertEquals(14, $siblings->get(1)->getKey());
-        $this->assertEquals(15, $siblings->get(2)->getKey());
+        $this->assertEquals(10, $siblings[0]->getKey());
+        $this->assertEquals(14, $siblings[1]->getKey());
+        $this->assertEquals(15, $siblings[2]->getKey());
     }
 
     public function testsCountSiblings()
@@ -283,8 +301,8 @@ class EntityTestCase extends BaseTestCase {
         $neighbors = $entity->getNeighbors();
 
         $this->assertCount(2, $neighbors);
-        $this->assertEquals(10, $neighbors->get(0)->getKey());
-        $this->assertEquals(14, $neighbors->get(1)->getKey());
+        $this->assertEquals(10, $neighbors[0]->getKey());
+        $this->assertEquals(14, $neighbors[1]->getKey());
     }
 
     public function testsGetSiblingAt()
@@ -329,9 +347,9 @@ class EntityTestCase extends BaseTestCase {
         $siblings = $entity->getPrevSiblings();
 
         $this->assertCount(3, $siblings);
-        $this->assertEquals(10, $siblings->get(0)->getKey());
-        $this->assertEquals(13, $siblings->get(1)->getKey());
-        $this->assertEquals(14, $siblings->get(2)->getKey());
+        $this->assertEquals(10, $siblings[0]->getKey());
+        $this->assertEquals(13, $siblings[1]->getKey());
+        $this->assertEquals(14, $siblings[2]->getKey());
     }
 
     public function testsCountPrevSiblings()
@@ -356,9 +374,9 @@ class EntityTestCase extends BaseTestCase {
         $siblings = $entity->getNextSiblings();
 
         $this->assertCount(3, $siblings);
-        $this->assertEquals(13, $siblings->get(0)->getKey());
-        $this->assertEquals(14, $siblings->get(1)->getKey());
-        $this->assertEquals(15, $siblings->get(2)->getKey());
+        $this->assertEquals(13, $siblings[0]->getKey());
+        $this->assertEquals(14, $siblings[1]->getKey());
+        $this->assertEquals(15, $siblings[2]->getKey());
     }
 
     public function testCountNextSiblings()
@@ -367,6 +385,16 @@ class EntityTestCase extends BaseTestCase {
         $siblings = $entity->countNextSiblings();
 
         $this->assertEquals(3, $siblings);
+    }
+
+    public function testGetSiblingsRange()
+    {
+        $entity = Entity::find(15);
+        $siblings = $entity->getSiblingsRange(1, 2);
+
+        $this->assertCount(2, $siblings);
+        $this->assertEquals(1, $siblings[0]->position);
+        $this->assertEquals(2, $siblings[1]->position);
     }
 
     public function testGetRoots()
@@ -387,7 +415,7 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertCount(9, $tree);
 
-        $ninth = $tree->get(8);
+        $ninth = $tree[8];
         $this->assertArrayHasKey($this->childrenRelationIndex, $ninth->getRelations());
 
         $tenth = $ninth->getChildren();
@@ -405,7 +433,7 @@ class EntityTestCase extends BaseTestCase {
         $this->assertCount(8, $tree);
         $this->assertEquals(1, $tree[0]->position);
 
-        $eight = $tree->get(7);
+        $eight = $tree[7];
 
         $this->assertArrayHasKey($this->childrenRelationIndex, $eight->getRelations());
         $this->assertEquals(1, $eight->getChildAt(0)->position);
@@ -468,13 +496,13 @@ class EntityTestCase extends BaseTestCase {
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $pages);
         $this->assertCount(3, $pages);
 
-        $pageZero = $pages->get(0);
+        $pageZero = $pages[0];
 
         $this->assertTrue($pageZero->hasChildrenRelation());
 
         $this->assertEquals(90, $pageZero->getKey());
-        $this->assertEquals(91, $pages->get(1)->getKey());
-        $this->assertEquals(92, $pages->get(2)->getKey());
+        $this->assertEquals(91, $pages[1]->getKey());
+        $this->assertEquals(92, $pages[2]->getKey());
         $this->assertEquals(93, $pageZero->getChildAt(0)->getKey());
     }
 } 
