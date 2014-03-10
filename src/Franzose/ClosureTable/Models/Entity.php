@@ -1025,35 +1025,9 @@ class Entity extends Eloquent implements EntityInterface {
          * @var Entity $instance
          */
         $instance = new static;
-        $query = null;
         $columns = $instance->prepareTreeQueryColumns($columns);
 
-        if ($column instanceof Closure)
-        {
-            $query = $instance->whereNested($column, 'and');
-        }
-
-        // If the value is a Closure, it means the developer is performing an entire
-        // sub-select within the query and we will need to compile the sub-select
-        // within the where clause to get the appropriate query record results.
-        if ($value instanceof Closure)
-        {
-            $query = $instance->whereSub($column, $operator, $value, 'and');
-        }
-
-        // If the value is "null", we will just assume the developer wants to add a
-        // where null clause to the query. So, we will allow a short-cut here to
-        // that method for convenience so the developer doesn't have to check.
-        if (is_null($value))
-        {
-            $query = $instance->whereNull($column, 'and', $operator != '=');
-        }
-        else if ( ! $column instanceof Closure && ! $value instanceof Closure)
-        {
-            $query = $instance->where($column, $operator, $value);
-        }
-
-        return $query->get($columns)->toTree();
+        return $instance->where($column, $operator, $value)->get($columns)->toTree();
     }
 
     /**
