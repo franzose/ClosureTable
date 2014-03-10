@@ -126,7 +126,6 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(12);
         $ancestors = $entity->countAncestors();
 
-        $this->assertInternalType('int', $ancestors);
         $this->assertEquals(3, $ancestors);
     }
 
@@ -154,7 +153,6 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(9);
         $descendants = $entity->countDescendants();
 
-        $this->assertInternalType('int', $descendants);
         $this->assertEquals(6, $descendants);
     }
 
@@ -172,7 +170,6 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(9);
         $children = $entity->countChildren();
 
-        $this->assertInternalType('int', $children);
         $this->assertEquals(4, $children);
     }
 

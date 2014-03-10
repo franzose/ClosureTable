@@ -2,9 +2,9 @@
 
 use \Illuminate\Database\Eloquent\Model as Eloquent;
 use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use \Illuminate\Database\Query\Builder as QueryBuilder;
 use \Franzose\ClosureTable\Contracts\EntityInterface;
 use \Franzose\ClosureTable\Extensions\Collection;
-use \Franzose\ClosureTable\Extensions\QueryBuilder;
 
 /**
  * Basic entity class.
@@ -81,11 +81,6 @@ class Entity extends Eloquent implements EntityInterface {
         $depth = $this->getRealDepthColumn();
 
         $this->fillable(array_merge($this->getFillable(), [$position, $depth]));
-
-        if ( ! isset($attributes[$position]))
-        {
-            $attributes[$position] = 0;
-        }
 
         if ( ! isset($attributes[$depth]))
         {
@@ -264,11 +259,6 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function isParent()
     {
-        if ( ! $this->exists)
-        {
-            return false;
-        }
-
         return $this->hasChildren();
     }
 
@@ -295,16 +285,76 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getParent(array $columns = ['*'])
     {
-        if ( ! $this->exists)
+        return static::find($this->parent_id, $columns);
+    }
+
+    /**
+     * Builds closure table join based on the given column.
+     *
+     * @param string $column
+     * @param bool $withSelf
+     * @return QueryBuilder
+     */
+    protected function joinClosureBy($column, $withSelf = false)
+    {
+        $primary    = $this->getQualifiedKeyName();
+        $closure    = $this->closure->getTable();
+        $ancestor   = $this->closure->getQualifiedAncestorColumn();
+        $descendant = $this->closure->getQualifiedDescendantColumn();
+
+        switch($column)
         {
-            $result = null;
-        }
-        else
-        {
-            $result = $this->belongsTo(get_class($this), $this->getParentIdColumn())->first($columns);
+            case 'ancestor':
+                $query = $this->join($closure, $ancestor, '=', $primary)
+                    ->where($descendant, '=', $this->getKey());
+                break;
+
+            case 'descendant':
+                $query = $this->join($closure, $descendant, '=', $primary)
+                    ->where($ancestor, '=', $this->getKey());
+                break;
         }
 
-        return $result;
+        $depthOperator = ($withSelf === true ? '>=' : '>');
+
+        $query->where($this->closure->getQualifiedDepthColumn(), $depthOperator, 0);
+
+        return $query;
+    }
+
+    /**
+     * Builds closure table "where in" query on the given column.
+     *
+     * @param string $column
+     * @param bool $withSelf
+     * @return QueryBuilder
+     */
+    protected function subqueryClosureBy($column, $withSelf = false)
+    {
+        $self = $this;
+
+        return $this->whereIn($this->getQualifiedKeyName(), function(QueryBuilder $qb) use($self, $column, $withSelf)
+        {
+            switch($column)
+            {
+                case 'ancestor':
+                    $selectedColumn = $self->closure->getAncestorColumn();
+                    $whereColumn = $self->closure->getDescendantColumn();
+                    break;
+
+                case 'descendant':
+                    $selectedColumn = $self->closure->getDescendantColumn();
+                    $whereColumn = $self->closure->getAncestorColumn();
+                    break;
+            }
+
+            $depthOperator = ($withSelf === true ? '>=' : '>');
+
+            return $qb->select($selectedColumn)
+                ->from($self->closure->getTable())
+                ->where($whereColumn, '=', $self->getKey())
+                ->where($self->closure->getDepthColumn(), $depthOperator, 0);
+        });
     }
 
     /**
@@ -315,12 +365,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getAncestors(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return new Collection;
-        }
-
-        return $this->ancestors($columns)->get();
+        return $this->joinClosureBy('ancestor')->get($columns);
     }
 
     /**
@@ -330,12 +375,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countAncestors()
     {
-        if ( ! $this->exists)
-        {
-            return 0;
-        }
-
-        return (int)$this->ancestors()->count();
+        return $this->joinClosureBy('ancestor')->count();
     }
 
     /**
@@ -356,12 +396,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getDescendants(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return new Collection;
-        }
-
-        return $this->descendants($columns)->get();
+        return $this->joinClosureBy('descendant')->get($columns);
     }
 
     /**
@@ -372,11 +407,6 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getDescendantsTree(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return new Collection;
-        }
-
         return $this->getDescendants($columns)->toTree($this->getKey());
     }
 
@@ -387,12 +417,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countDescendants()
     {
-        if ( ! $this->exists)
-        {
-            return 0;
-        }
-
-        return (int)$this->descendants()->count();
+        return $this->joinClosureBy('descendant')->count();
     }
 
     /**
@@ -406,6 +431,48 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Shorthand of the children query part.
+     *
+     * @param array|int|null $position
+     * @return QueryBuilder
+     */
+    protected function children($position = null)
+    {
+        $query = $this->where($this->getParentIdColumn(), '=', (int)$this->getKey());
+
+        if ( ! is_null($position))
+        {
+            if (is_array($position))
+            {
+                switch(count($position))
+                {
+                    case 1:
+                        $query->where($this->getPositionColumn(), '>=', $position[0]);
+                        break;
+
+                    case 2:
+                        $query->whereIn($this->getPositionColumn(), range($position[0], $position[1]));
+                        break;
+                }
+            }
+            else
+            {
+                if ($position === 'last')
+                {
+                    $query->orderBy($this->getPositionColumn(), 'desc');
+                }
+                else
+                {
+                    $query->where($this->getPositionColumn(), '=', $position);
+                }
+            }
+        }
+
+
+        return $query;
+    }
+
+    /**
      * Retrieves all children of a model.
      *
      * @param array $columns
@@ -413,17 +480,13 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getChildren(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            $result = new Collection;
-        }
-        else if ($this->hasChildrenRelation())
+        if ($this->hasChildrenRelation())
         {
             $result = $this->getRelation($this->getChildrenRelationIndex());
         }
         else
         {
-            $result = $this->children($columns)->get();
+            $result = $this->children()->get($columns);
         }
 
         return $result;
@@ -436,11 +499,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countChildren()
     {
-        if ( ! $this->exists)
-        {
-            $result = 0;
-        }
-        else if ($this->hasChildrenRelation())
+        if ($this->hasChildrenRelation())
         {
             $result = $this->getRelation($this->getChildrenRelationIndex())->count();
         }
@@ -449,7 +508,7 @@ class Entity extends Eloquent implements EntityInterface {
             $result = $this->children()->count();
         }
 
-        return (int)$result;
+        return $result;
     }
 
     /**
@@ -502,17 +561,13 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getChildAt($position, array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            $result = null;
-        }
-        else if ($this->hasChildrenRelation())
+        if ($this->hasChildrenRelation())
         {
             $result = $this->getRelation($this->getChildrenRelationIndex())->get($position);
         }
         else
         {
-            $result = $this->childAt($position, $columns)->first();
+            $result = $this->children($position)->first($columns);
         }
 
         return $result;
@@ -537,17 +592,13 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getLastChild(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            $result = null;
-        }
-        else if ($this->hasChildrenRelation())
+        if ($this->hasChildrenRelation())
         {
             $result = $this->getRelation($this->getChildrenRelationIndex())->last();
         }
         else
         {
-            $result = $this->lastChild($columns)->first();
+            $result = $this->children('last')->first($columns);
         }
 
         return $result;
@@ -637,7 +688,8 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if ($this->exists)
         {
-            $this->removeChildAt($position, $forceDelete);
+            $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+            $this->children($position)->$action();
         }
 
         return $this;
@@ -661,10 +713,34 @@ class Entity extends Eloquent implements EntityInterface {
 
         if ($this->exists)
         {
-            $this->removeChildrenRange($from, $to, $forceDelete);
+            $range  = (is_null($to) ? [$from] : [$from, $to]);
+            $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+
+            $this->children($range)->$action();
         }
 
         return $this;
+    }
+
+    /**
+     * Builds a part of the siblings query.
+     *
+     * @param bool $queryAll
+     * @param int|bool $parentId
+     * @return QueryBuilder
+     */
+    protected function siblings($queryAll = false, $parentId = false)
+    {
+        $parentId = ($parentId === false ? $this->parent_id : $parentId);
+
+        $query = $this->where($this->getParentIdColumn(), '=', $parentId);
+
+        if ($queryAll === true)
+        {
+            $query->where($this->getPositionColumn(), '<>', $this->position);
+        }
+
+        return $query;
     }
 
     /**
@@ -675,12 +751,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getSiblings(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return new Collection;
-        }
-
-        return $this->siblings($columns)->get();
+        return $this->siblings(true)->get($columns);
     }
 
     /**
@@ -690,12 +761,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countSiblings()
     {
-        if ( ! $this->exists)
-        {
-            return 0;
-        }
-
-        return $this->siblings()->count();
+        return $this->siblings(true)->count();
     }
 
     /**
@@ -716,12 +782,10 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getNeighbors(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return new Collection;
-        }
-
-        return $this->neighbors($columns)->get();
+        return $this->siblings()->whereIn($this->getPositionColumn(), [
+            $this->position-1,
+            $this->position+1
+        ])->get($columns);
     }
 
     /**
@@ -733,12 +797,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getSiblingAt($position, array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return null;
-        }
-
-        return $this->siblingAt($position, $columns)->first();
+        return $this->siblings()->where($this->getPositionColumn(), '=', $position)->first($columns);
     }
 
     /**
@@ -760,12 +819,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getLastSibling(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return null;
-        }
-
-        return $this->lastSibling($columns)->first();
+        return $this->siblings()->orderBy($this->getPositionColumn(), 'desc')->first($columns);
     }
 
     /**
@@ -776,12 +830,15 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getPrevSibling(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return null;
-        }
+        return $this->siblings()->where($this->getPositionColumn(), '=', $this->position-1)->first($columns);
+    }
 
-        return $this->prevSibling($columns)->first();
+    /**
+     * @return QueryBuilder
+     */
+    protected function prevSiblings()
+    {
+        return $this->siblings()->where($this->getPositionColumn(), '<', $this->position);
     }
 
     /**
@@ -792,12 +849,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getPrevSiblings(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return new Collection;
-        }
-
-        return $this->prevSiblings($columns)->get();
+        return $this->prevSiblings()->get($columns);
     }
 
     /**
@@ -807,11 +859,6 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countPrevSiblings()
     {
-        if ( ! $this->exists)
-        {
-            return 0;
-        }
-
         return $this->prevSiblings()->count();
     }
 
@@ -833,12 +880,15 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getNextSibling(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return null;
-        }
+        return $this->siblings()->where($this->getPositionColumn(), '=', $this->position+1)->first($columns);
+    }
 
-        return $this->nextSibling($columns)->first();
+    /**
+     * @return QueryBuilder
+     */
+    protected function nextSiblings()
+    {
+        return $this->siblings()->where($this->getPositionColumn(), '>', $this->position);
     }
 
     /**
@@ -849,12 +899,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getNextSiblings(array $columns = ['*'])
     {
-        if ( ! $this->exists)
-        {
-            return new Collection;
-        }
-
-        return $this->nextSiblings($columns)->get();
+        return $this->nextSiblings()->get($columns);
     }
 
     /**
@@ -864,11 +909,6 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function countNextSiblings()
     {
-        if ( ! $this->exists)
-        {
-            return 0;
-        }
-
         return $this->nextSiblings()->count();
     }
 
@@ -890,7 +930,12 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public static function getRoots(array $columns = ['*'])
     {
-        return with(new static)->roots()->get();
+        /**
+         * @var Entity $instance
+         */
+        $instance = new static;
+
+        return $instance->whereNull($instance->getParentIdColumn())->get($columns);
     }
 
     /**
@@ -905,6 +950,17 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Adds "parent id" column to columns list for proper tree querying.
+     *
+     * @param array $columns
+     * @return array
+     */
+    protected function prepareTreeQueryColumns(array $columns)
+    {
+        return ($columns === ['*'] ? $columns : array_merge($columns, [$this->getParentIdColumn()]));
+    }
+
+    /**
      * Retrieves entire tree.
      *
      * @param array $columns
@@ -912,6 +968,9 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public static function getTree(array $columns = ['*'])
     {
+        /**
+         * @var Entity $instance
+         */
         $instance = new static;
 
         return $instance->get($instance->prepareTreeQueryColumns($columns))->toTree();
@@ -928,6 +987,9 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public static function getTreeWhere($column, $operator = null, $value = null, array $columns = ['*'])
     {
+        /**
+         * @var Entity $instance
+         */
         $instance = new static;
         $query = null;
         $columns = $instance->prepareTreeQueryColumns($columns);
@@ -958,17 +1020,6 @@ class Entity extends Eloquent implements EntityInterface {
         }
 
         return $query->get($columns)->toTree();
-    }
-
-    /**
-     * Adds "parent id" column to columns list for proper tree querying.
-     *
-     * @param array $columns
-     * @return array
-     */
-    protected function prepareTreeQueryColumns(array $columns)
-    {
-        return ($columns === ['*'] ? $columns : array_merge($columns, [$this->getParentIdColumn()]));
     }
 
     /**
@@ -1094,7 +1145,10 @@ class Entity extends Eloquent implements EntityInterface {
         $positionColumn = $this->getPositionColumn();
         $depthColumn = $this->getRealDepthColumn();
 
-        $depth = ( ! is_null($depth) ?: $this->real_depth);
+        if (is_null($depth))
+        {
+            $depth = ( ! is_null($this->real_depth) ? $this->real_depth : 0);
+        }
 
         $entity = $this->select($positionColumn)
             ->where($depthColumn, '=', $depth)
@@ -1125,7 +1179,29 @@ class Entity extends Eloquent implements EntityInterface {
         {
             list($range, $action) = $this->setupReordering($parentIdChanged);
 
-            $this->siblingsRange($range, QueryBuilder::BY_WHERE_IN)->$action($this->getPositionColumn());
+            $positionColumn = $this->getPositionColumn();
+
+            // As the method called twice (before moving and after moving),
+            // first we gather "old" siblings by the old parent id value of the model.
+            if ($parentIdChanged === true)
+            {
+                $query = $this->siblings(false, $this->old_parent_id);
+            }
+            else
+            {
+                $query = $this->siblings();
+            }
+
+            if (is_array($range))
+            {
+                $query->whereIn($positionColumn, $range);
+            }
+            else
+            {
+                $query->where($positionColumn, '>=', $range);
+            }
+
+            $query->where($this->getKeyName(), '<>', $this->getKey())->$action($positionColumn);
         }
     }
 
@@ -1244,10 +1320,8 @@ class Entity extends Eloquent implements EntityInterface {
     public function deleteSubtree($withSelf = false, $forceDelete = false)
     {
         $action = ($forceDelete === true ? 'forceDelete' : 'delete');
-        $what = ($withSelf === true ? QueryBuilder::ALL_INC_SELF : QueryBuilder::ALL_BUT_SELF);
-        $type = QueryBuilder::BY_WHERE_IN;
 
-        return $this->descendants([$this->getQualifiedKeyName()], $what, $type)->$action();
+        return $this->subqueryClosureBy('descendant', $withSelf)->$action();
     }
 
     /**
@@ -1259,45 +1333,5 @@ class Entity extends Eloquent implements EntityInterface {
     public function newCollection(array $models = array())
     {
         return new Collection($models);
-    }
-
-    /**
-     * Get a new query builder instance for the connection.
-     *
-     * @return \Illuminate\Database\Query\Builder
-     */
-    protected function newBaseQueryBuilder()
-    {
-        $conn = $this->getConnection();
-        $grammar = $conn->getQueryGrammar();
-        $queryBuilder = null;
-
-        // Workaround to simplify QueryBuilder queries construction.
-        $attrs = [
-            'pk' => $this->getQualifiedKeyName(),
-            'parentIdShort' => $this->getParentIdColumn(),
-            'position' => $this->getQualifiedPositionColumn(),
-            'closure'         => $this->closure->getTable(),
-            'ancestor'        => $this->closure->getQualifiedAncestorColumn(),
-            'ancestorShort'   => $this->closure->getAncestorColumn(),
-            'descendant'      => $this->closure->getQualifiedDescendantColumn(),
-            'descendantShort' => $this->closure->getDescendantColumn(),
-            'depth'           => $this->closure->getQualifiedDepthColumn(),
-            'depthShort'      => $this->closure->getDepthColumn(),
-        ];
-
-        // We create the extended query builder only
-        // if the model 'exists' to avoid null values.
-        if ( ! is_null($this->getKey()))
-        {
-            $attrs = array_merge($attrs, [
-                'pkValue' => $this->getKey(),
-                'positionValue'   => $this->position,
-                'ancestorValue'   => $this->parent_id,
-                'depthValue'      => $this->real_depth
-            ]);
-        }
-
-        return new QueryBuilder($conn, $grammar, $conn->getPostProcessor(), $attrs);
     }
 }
