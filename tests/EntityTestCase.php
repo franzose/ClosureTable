@@ -393,7 +393,7 @@ class EntityTestCase extends BaseTestCase {
         $ninth = $tree->get(8);
         $this->assertArrayHasKey($this->childrenRelationIndex, $ninth->getRelations());
 
-        $tenth = $ninth->getRelation($this->childrenRelationIndex);
+        $tenth = $ninth->getChildren();
 
         $this->assertCount(4, $tenth);
     }
@@ -405,7 +405,17 @@ class EntityTestCase extends BaseTestCase {
             $this->entity->getPositionColumn()
         ]);
 
+        $this->assertCount(8, $tree);
         $this->assertEquals(1, $tree[0]->position);
+
+        $eight = $tree->get(7);
+
+        $this->assertArrayHasKey($this->childrenRelationIndex, $eight->getRelations());
+        $this->assertEquals(1, $eight->getChildAt(0)->position);
+
+        $ninth = $eight->getChildren();
+
+        $this->assertCount(3, $ninth);
     }
 
     public function testDeleteSubtree()
