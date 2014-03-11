@@ -1276,16 +1276,9 @@ class Entity extends Eloquent implements EntityInterface {
             $query = $this->siblings();
         }
 
-        if (is_array($range))
-        {
-            $query->whereIn($positionColumn, $range);
-        }
-        else
-        {
-            $query->where($positionColumn, '>=', $range);
-        }
-
-        $query->where($this->getKeyName(), '<>', $this->getKey())->$action($positionColumn);
+        $query->buildWherePosition($positionColumn, $range)
+            ->where($this->getKeyName(), '<>', $this->getKey())
+            ->$action($positionColumn);
     }
 
     /**
@@ -1349,6 +1342,11 @@ class Entity extends Eloquent implements EntityInterface {
                 $range = range($position['now'], $position['old']);
                 $action = 'increment';
             }
+        }
+
+        if ( ! is_array($range))
+        {
+            $range = [$range, null];
         }
 
         return [$range, $action];
