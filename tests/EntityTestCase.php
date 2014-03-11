@@ -40,8 +40,6 @@ class EntityTestCase extends BaseTestCase {
         $this->entity->fillable(['title', 'excerpt', 'body', 'position', 'real_depth']);
 
         $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
-
-        $this->app->instance('Franzose\ClosureTable\Contracts\ClosureTableInterface', new ClosureTable);
     }
 
     public function testPositionIsFillable()
@@ -246,8 +244,7 @@ class EntityTestCase extends BaseTestCase {
         $child2 = new Entity;
         $child3 = new Entity;
 
-        $array = new Collection([$child1, $child2, $child3]);
-        $result = $entity->addChildren($array);
+        $result = $entity->addChildren([$child1, $child2, $child3]);
 
         $this->assertSame($entity, $result);
         $this->assertEquals(3, $entity->countChildren());
@@ -405,6 +402,43 @@ class EntityTestCase extends BaseTestCase {
         $this->assertCount(2, $siblings);
         $this->assertEquals(1, $siblings[0]->position);
         $this->assertEquals(2, $siblings[1]->position);
+    }
+
+    public function testAddSibling()
+    {
+        $entity = Entity::find(15);
+        $entity->addSibling(new Entity);
+
+        $sibling = $entity->getNextSibling();
+
+        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $sibling);
+        $this->assertEquals(4, $sibling->position);
+    }
+
+    public function testAddSiblings()
+    {
+        $entity = Entity::find(15);
+        $entity->addSiblings([new Entity, new Entity, new Entity]);
+
+        $siblings = $entity->getNextSiblings();
+
+        $this->assertCount(3, $siblings);
+        $this->assertEquals(4, $siblings[0]->position);
+        $this->assertEquals(5, $siblings[1]->position);
+        $this->assertEquals(6, $siblings[2]->position);
+    }
+
+    public function testAddSiblingsFromPosition()
+    {
+        $entity = Entity::find(15);
+
+        $entity->addSiblings([new Entity, new Entity, new Entity, new Entity], 1);
+
+        $siblings = $entity->getSiblingsRange(0, 3);
+
+        $this->assertEquals(16, $siblings[1]->getKey());
+        $this->assertEquals(17, $siblings[2]->getKey());
+        $this->assertEquals(18, $siblings[3]->getKey());
     }
 
     public function testGetRoots()

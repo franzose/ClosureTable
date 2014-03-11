@@ -36,6 +36,55 @@ interface EntityInterface {
     const CHILDREN = 'children';
 
     /**
+     * "Query all models" flag.
+     *
+     * @var string
+     */
+    const QUERY_ALL = 'all';
+
+    /**
+     * "Query all previous models" flag.
+     *
+     * @var string
+     */
+    const QUERY_PREV_ALL = 'prev_all';
+
+    /**
+     * "Query one previous model" flag.
+     *
+     * @var string
+     */
+    const QUERY_PREV_ONE = 'prev_one';
+
+    /**
+     * "Query all next models" flag.
+     *
+     * @var string
+     */
+    const QUERY_NEXT_ALL = 'next_all';
+
+    /**
+     * "Query one next model" flag.
+     *
+     * @var string
+     */
+    const QUERY_NEXT_ONE = 'next_one';
+
+    /**
+     * "Query models that are neighbors to this model" flag.
+     *
+     * @var string
+     */
+    const QUERY_NEIGHBORS = 'neighbors';
+
+    /**
+     * "Query the last model" flag.
+     *
+     * @var string
+     */
+    const QUERY_LAST = 'last';
+
+    /**
      * Indicates whether the model has children.
      *
      * @return bool
@@ -180,13 +229,13 @@ interface EntityInterface {
     public function addChild(EntityInterface $child, $position = null);
 
     /**
-     * Appends a collection of children to the model.
+     * Appends multiple children to the model.
      *
-     * @param \Franzose\ClosureTable\Extensions\Collection|\Illuminate\Database\Eloquent\Collection $children
+     * @param array $children
      * @return $this
      * @throws \InvalidArgumentException
      */
-    public function addChildren($children);
+    public function addChildren(array $children);
 
     /**
      * Removes a model's child with given position.
@@ -322,6 +371,34 @@ interface EntityInterface {
      * @return bool
      */
     public function hasNextSiblings();
+
+    /**
+     * Retrieves siblings within given positions range.
+     *
+     * @param int $from
+     * @param int $to
+     * @param array $columns
+     * @return \Franzose\ClosureTable\Extensions\Collection
+     */
+    public function getSiblingsRange($from, $to = null, array $columns = ['*']);
+
+    /**
+     * Appends a sibling within the current depth.
+     *
+     * @param EntityInterface $sibling
+     * @param int|null $position
+     * @return $this
+     */
+    public function addSibling(EntityInterface $sibling, $position = null);
+
+    /**
+     * Appends multiple siblings within the current depth.
+     *
+     * @param array $siblings
+     * @param int|null $from
+     * @return mixed
+     */
+    public function addSiblings(array $siblings, $from = null);
 
     /**
      * Retrieves root (with no ancestors) models.
