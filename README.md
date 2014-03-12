@@ -69,6 +69,7 @@ $parent = Page::find(15)->getParent();
 ```php
 $page = Page::find(15);
 $ancestors = $page->getAncestors();
+$ancestors = $page->getAncestorsWhere('position', '=', 1);
 $hasAncestors = $page->hasAncestors();
 $ancestorsNumber = $page->countAncestors();
 ```
@@ -103,6 +104,7 @@ $page->appendChildren([$newChild, $newChild2]);
 $page->getChildAt(5);
 $page->getFirstChild();
 $page->getLastChild();
+$page->getChildrenRange(0, 2);
 
 $page->removeChild(0);
 $page->removeChild(0, true); //force delete
@@ -115,6 +117,7 @@ $page->removeChildren(0, 3, true); //force delete
 ```php
 $page = Page::find(15);
 $descendants = $page->getDescendants();
+$descendants = $page->getDescendantsWhere('position', '=', 1);
 $descendantsTree = $page->getDescendantsTree();
 $hasDescendants = $page->hasDescendants();
 $descendantsNumber = $page->countDescendants();
@@ -141,6 +144,14 @@ $nextNumber = $page->countNextSiblings();
 //in both directions
 $hasSiblings = $page->hasSiblings();
 $siblingsNumber = $page->countSiblings();
+
+$sibligns = $page->getSiblingsRange(0, 2);
+
+$page->addSibling(new Page);
+$page->addSibling(new Page, 3); //third position
+
+$page->addSiblings([new Page, new Page]);
+$page->addSiblings([new Page, new Page], 5); //insert from fifth position
 ```
 
 ### Roots (entities that have no ancestors)
