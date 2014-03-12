@@ -1,7 +1,9 @@
-<?php
+<?php namespace Franzose\ClosureTable\Tests\Models;
 
-use Franzose\ClosureTable\Entity;
+use \Franzose\ClosureTable\Models\Entity;
 
 class Page extends Entity {
-    protected $fillable = array('title', 'excerpt', 'content','language', 'position');
-}
+
+    protected $table = 'entities';
+    protected $fillable = ['id', 'title', 'excerpt', 'body', 'position', 'real_depth'];
+} 
