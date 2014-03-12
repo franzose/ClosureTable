@@ -36,19 +36,6 @@ class ClosureTableTestCase extends BaseTestCase {
     /**
      * @expectedException \InvalidArgumentException
      */
-    public function testIsRootValidatesItsArgument()
-    {
-        ClosureTable::find(1)->isRoot('wrong');
-    }
-
-    public function testIsRoot()
-    {
-        $this->assertTrue(ClosureTable::find(1)->isRoot());
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testInsertNodeValidatesItsArguments()
     {
         $this->ctable->insertNode('wrong', 12);
@@ -148,33 +135,7 @@ class ClosureTableTestCase extends BaseTestCase {
         $item = ClosureTable::find(1);
         $item->moveNodeTo();
 
-        $this->assertTrue($item->isRoot());
-        $this->assertFalse(ClosureTable::find(3)->isRoot());
-    }
-
-    public function testGetActualAttributes()
-    {
-        $deepest = ClosureTable::where($this->ancestorColumn, '=', 1)
-                    ->where($this->descendantColumn, '=', 1)
-                    ->first();
-
-        $deepest->moveNodeTo(2);
-
-        $item = ClosureTable::where($this->ancestorColumn, '=', 2)
-                    ->where($this->descendantColumn, '=', 2)
-                    ->first();
-
-        $item->moveNodeTo(3);
-
-        $result = $deepest->getActualAttrs();
-
-        $this->assertEquals(3, $result[$this->ancestorColumn]);
-        $this->assertEquals(1, $result[$this->descendantColumn]);
-        $this->assertEquals(2, $result[$this->depthColumn]);
-
-        $result = $deepest->getActualAttrs([$this->ancestorColumn]);
-
-        $this->assertInternalType('string', $result);
+        $this->assertEquals(1, $item->where($this->descendantColumn, '=', 1)->count());
     }
 
     public function testAncestorQualifiedKeyName()
