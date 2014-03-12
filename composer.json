@@ -22,9 +22,6 @@
         "orchestra/testbench": "dev-master",
         "doctrine/dbal": "dev-master"
     },
-    "replace": {
-        "phpseclib/phpseclib": "0.3.*"
-    },
     "autoload": {
         "classmap": ["tests"],
         "psr-0": {
