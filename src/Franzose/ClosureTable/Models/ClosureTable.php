@@ -149,7 +149,13 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
         $query = "
             DELETE FROM {$table}
-            WHERE {$ancestorColumn} IN (
+            WHERE {$descendantColumn} IN (
+              SELECT d FROM (
+                SELECT {$descendantColumn} as d FROM {$table}
+                WHERE {$ancestorColumn} = {$descendant}
+              ) as dct
+            )
+            AND {$ancestorColumn} IN (
               SELECT a FROM (
                 SELECT {$ancestorColumn} AS a FROM {$table}
                 WHERE {$descendantColumn} = {$descendant}
