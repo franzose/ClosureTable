@@ -1,8 +1,9 @@
 <?php namespace Franzose\ClosureTable\Models;
 
-use \Illuminate\Database\Eloquent\Model as Eloquent;
-use \Illuminate\Database\Query\Builder;
-use \Franzose\ClosureTable\Contracts\ClosureTableInterface;
+use DB;
+use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Database\Query\Builder;
+use Franzose\ClosureTable\Contracts\ClosureTableInterface;
 
 /**
  * Basic ClosureTable model. Performs actions on the relationships table.
@@ -56,8 +57,8 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $dk  = $this->getDescendantColumn();
         $dpk = $this->getDepthColumn();
 
-        \DB::transaction(function() use($t, $ak, $dk, $dpk, $ancestorId, $descendantId){
-            $rawTable = \DB::getTablePrefix().$t;
+        DB::transaction(function() use($t, $ak, $dk, $dpk, $ancestorId, $descendantId){
+            $rawTable = DB::getTablePrefix().$t;
 
             $query = "
                 SELECT tbl.{$ak} as {$ak}, {$descendantId} as {$dk}, tbl.{$dpk}+1 as {$dpk}
@@ -67,11 +68,11 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
                 SELECT {$descendantId}, {$descendantId}, 0
             ";
 
-            $results = \DB::select($query);
+            $results = DB::select($query);
 
             array_walk($results, function(&$item){ $item = (array)$item; });
 
-            if (\DB::table($t)->insert($results))
+            if (DB::table($t)->insert($results))
             {
                 $this->ancestor = $results[0][$ak];
                 $this->descendant = $results[0][$dk];
@@ -118,7 +119,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             return;
         }
 
-        \DB::transaction(function() use($ak, $dk, $dpk, $t, $ancestorId, $thisDescendantId){
+        DB::transaction(function() use($ak, $dk, $dpk, $t, $ancestorId, $thisDescendantId){
             $query = "
                 SELECT supertbl.{$ak}, subtbl.{$dk}, supertbl.{$dpk}+subtbl.{$dpk}+1 as {$dpk}
                 FROM {$t} as supertbl
@@ -127,10 +128,10 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
                 AND subtbl.{$ak} = {$thisDescendantId}
             ";
 
-            $results = \DB::select($query);
+            $results = DB::select($query);
             array_walk($results, function(&$item){ $item = (array)$item; });
 
-            \DB::table($t)->insert($results);
+            DB::table($t)->insert($results);
         });
     }
 
@@ -144,6 +145,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $table = $this->getTable();
         $ancestorColumn = $this->getAncestorColumn();
         $descendantColumn = $this->getDescendantColumn();
+        $depthColumn = $this->getDepthColumn();
         $descendant = $this->descendant;
 
         $query = "
@@ -152,12 +154,12 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
               SELECT a FROM (
                 SELECT {$ancestorColumn} AS a FROM {$table}
                 WHERE {$descendantColumn} = {$descendant}
-                AND {$ancestorColumn} <> {$descendant}
               ) as ct
             )
+            AND {$depthColumn} > 0
         ";
 
-        \DB::delete($query);
+        DB::delete($query);
     }
 
     /**
