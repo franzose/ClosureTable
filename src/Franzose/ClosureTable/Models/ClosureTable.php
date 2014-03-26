@@ -157,7 +157,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
                 AND {$ancestorColumn} <> {$descendant}
               ) as ct
             )
-            /*AND {$depthColumn} > 0*/
         ";
 
         DB::delete($query);
