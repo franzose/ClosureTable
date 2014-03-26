@@ -145,7 +145,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $table = $this->getTable();
         $ancestorColumn = $this->getAncestorColumn();
         $descendantColumn = $this->getDescendantColumn();
-        $depthColumn = $this->getDepthColumn();
         $descendant = $this->descendant;
 
         $query = "

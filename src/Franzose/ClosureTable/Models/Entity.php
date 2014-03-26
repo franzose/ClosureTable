@@ -1234,6 +1234,30 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Perform a model insert operation.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return bool
+     */
+    protected function performUpdate(EloquentBuilder $query)
+    {
+        if (parent::performUpdate($query))
+        {
+            if ($this->real_depth != $this->old_real_depth)
+            {
+                $action = ($this->real_depth > $this->old_real_depth ? 'increment' : 'decrement');
+                $amount = abs($this->real_depth - $this->old_real_depth);
+
+                $this->joinClosureBy('descendant')->$action($this->getRealDepthColumn(), $amount);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Gets the next sibling position after the last one at the given ancestor.
      *
      * @param int|bool $parentId
