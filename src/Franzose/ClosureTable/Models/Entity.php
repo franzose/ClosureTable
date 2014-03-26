@@ -1231,7 +1231,7 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @return int
      */
-    protected function getNextAfterLastPosition()
+    public function getNextAfterLastPosition()
     {
         $positionColumn = $this->getPositionColumn();
         $parentIdColumn = $this->getParentIdColumn();
