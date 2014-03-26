@@ -89,6 +89,15 @@ class Entity extends Eloquent implements EntityInterface {
 
         $this->closure = new $this->closure;
 
+        // The default class name of the closure table was not changed
+        // so we define and set default closure table name automagically.
+        // This can prevent useless copy paste of closure table models.
+        if (get_class($this->closure) == 'Franzose\ClosureTable\Models\ClosureTable')
+        {
+            $table = $this->getTable() . '_closure';
+            $this->closure->setTable($table);
+        }
+
         parent::__construct($attributes);
     }
 
@@ -112,7 +121,7 @@ class Entity extends Eloquent implements EntityInterface {
         $column = $this->getParentIdColumn();
 
         $this->old_parent_id = $this->parent_id;
-        $this->attributes[$column] = intval($value);
+        $this->attributes[$column] = $value;
     }
 
     /**
@@ -665,7 +674,7 @@ class Entity extends Eloquent implements EntityInterface {
         {
             if (is_null($position))
             {
-                $position = $this->getNextAfterLastPosition();
+                $position = $this->getNextAfterLastPosition($this->getKey());
             }
 
             $child->moveTo($position, $this);
@@ -1172,7 +1181,7 @@ class Entity extends Eloquent implements EntityInterface {
 
         $this->parent_id  = $parentId;
         $this->position   = $position;
-        $this->real_depth = $this->getNewRealDepth($ancestor);
+        $this->real_depth = $this->getNewRealDepth($parentId);
 
         $this->isMoved = true;
 
@@ -1195,19 +1204,17 @@ class Entity extends Eloquent implements EntityInterface {
         {
             if (is_null($ancestor))
             {
-                $depth = 0;
+                return 0;
             }
             else
             {
-                $depth = static::find($ancestor)->real_depth;
+                return static::find($ancestor)->real_depth+1;
             }
         }
         else
         {
-            $depth = $ancestor->real_depth;
+            return $ancestor->real_depth+1;
         }
-
-        return ($depth === 0 ?: $depth + 1);
     }
 
     /**
@@ -1227,17 +1234,20 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * Gets the next sibling position after the last one at the given depth.
+     * Gets the next sibling position after the last one at the given ancestor.
      *
+     * @param int|bool $parentId
      * @return int
      */
-    public function getNextAfterLastPosition()
+    public function getNextAfterLastPosition($parentId = false)
     {
         $positionColumn = $this->getPositionColumn();
         $parentIdColumn = $this->getParentIdColumn();
 
+        $parentId = ($parentId === false ? $this->parent_id : $parentId);
+
         $entity = $this->select($positionColumn)
-            ->where($parentIdColumn, '=', $this->parent_id)
+            ->where($parentIdColumn, '=', $parentId)
             ->orderBy($positionColumn, 'desc')
             ->first();
 
@@ -1296,53 +1306,33 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function setupReordering($parentIdChanged)
     {
-        $position = [
-            'old' => $this->old_position,
-            'now' => $this->position
-        ];
-
-        $depth = [
-            'old' => $this->old_real_depth,
-            'now' => $this->real_depth
-        ];
-
         // If the model's parent was changed, firstly we decrement
         // positions of the 'old' next siblings of the model.
         if ($parentIdChanged === true)
         {
-            $range  = $position['old'];
+            $range  = $this->old_position;
             $action = 'decrement';
         }
         else
         {
-            if ($position['now'] > $position['old'])
+            // Reordering within the same ancestor
+            if ($this->old_parent_id == $this->parent_id)
             {
-                // Prevent the first node to get -1 position
-                if ($position['old'] == 0) $position['old']++;
-
-                if ($depth['old'] == $depth['now'])
+                if ($this->position > $this->old_position)
                 {
-                    $range  = range($position['old'], $position['now']);
+                    $range = [$this->old_position, $this->position];
                     $action = 'decrement';
                 }
-                else
+                else if ($this->position < $this->old_position)
                 {
-                    $range = $position['now'];
+                    $range = [$this->position, $this->old_position];
                     $action = 'increment';
                 }
             }
-            // Just increment positions of all next siblings
-            elseif ($position['now'] == $position['old'] && $position['now'] == 0)
-            {
-                $range = $position['now'];
-                $action = 'increment';
-            }
+            // Ancestor has changed
             else
             {
-                // Prevent the first node to get -1 position
-                if ($position['old'] != 0) $position['old']--;
-
-                $range = range($position['now'], $position['old']);
+                $range = $this->position;
                 $action = 'increment';
             }
         }
@@ -1375,7 +1365,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function moveNode()
     {
-        if ($this->exists && isset($this->parent_id))
+        if ($this->exists)
         {
             if (is_null($this->closure->ancestor))
             {
