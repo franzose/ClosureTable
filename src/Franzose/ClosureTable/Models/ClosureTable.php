@@ -145,7 +145,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $table = $this->getTable();
         $ancestorColumn = $this->getAncestorColumn();
         $descendantColumn = $this->getDescendantColumn();
-        $depthColumn = $this->getDepthColumn();
         $descendant = $this->descendant;
 
         $query = "
@@ -154,9 +153,9 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
               SELECT a FROM (
                 SELECT {$ancestorColumn} AS a FROM {$table}
                 WHERE {$descendantColumn} = {$descendant}
+                AND {$ancestorColumn} <> {$descendant}
               ) as ct
             )
-            AND {$depthColumn} > 0
         ";
 
         DB::delete($query);
