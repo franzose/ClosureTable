@@ -145,7 +145,7 @@ class MakeCommand extends Command {
         $lastnsdelim = strrpos($input[1], '\\');
 
         $this->options[$options[0][0]] = $input[0] ?: substr($input[1], 0, $lastnsdelim);
-        $this->options[$options[1][0]] = substr($input[1], $lastnsdelim+1);
+        $this->options[$options[1][0]] = substr($input[1], $lastnsdelim);
         $this->options[$options[2][0]] = $input[2] ?: ExtStr::tableize($input[1]);
         $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]].'Closure';
         $this->options[$options[4][0]] = $input[4] ?: ExtStr::tableize($input[1].'Closure');
