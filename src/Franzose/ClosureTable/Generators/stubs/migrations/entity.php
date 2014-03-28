@@ -12,6 +12,7 @@ class {{entity_class}} extends Migration {
             $table->integer('parent_id')->unsigned();
             $table->integer('position', false, true);
             $table->integer('real_depth', false, true);
+            $table->softDeletes();
 
             $table->foreign('parent_id')->references('id')->on('{{entity_table}}');
         });
