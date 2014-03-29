@@ -1243,12 +1243,12 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if (parent::performUpdate($query))
         {
-            if ($this->real_depth != $this->old_real_depth)
+            if ($this->real_depth != $this->old_real_depth && $this->isMoved === true)
             {
                 $action = ($this->real_depth > $this->old_real_depth ? 'increment' : 'decrement');
                 $amount = abs($this->real_depth - $this->old_real_depth);
 
-                $this->joinClosureBy('descendant')->$action($this->getRealDepthColumn(), $amount);
+                $this->subqueryClosureBy('descendant')->$action($this->getRealDepthColumn(), $amount);
             }
 
             return true;
