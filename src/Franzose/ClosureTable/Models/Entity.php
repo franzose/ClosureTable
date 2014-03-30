@@ -1312,9 +1312,11 @@ class Entity extends Eloquent implements EntityInterface {
                 $query = $this->siblings();
             }
 
-            $query->buildWherePosition($positionColumn, $range)
-                ->where($this->getKeyName(), '<>', $this->getKey())
-                ->$action($positionColumn);
+            if($action) {
+                $query->buildWherePosition($positionColumn, $range)
+                    ->where($this->getKeyName(), '<>', $this->getKey())
+                    ->$action($positionColumn);
+            }
         }
     }
 
@@ -1330,6 +1332,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     protected function setupReordering($parentIdChanged)
     {
+        $range = $action = null;
         // If the model's parent was changed, firstly we decrement
         // positions of the 'old' next siblings of the model.
         if ($parentIdChanged === true)
