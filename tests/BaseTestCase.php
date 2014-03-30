@@ -7,7 +7,7 @@ use \Mockery;
  * Class BaseTestCase
  * @package Franzose\ClosureTable\Tests
  */
-class BaseTestCase extends TestCase {
+abstract class BaseTestCase extends TestCase {
     use \Way\Tests\ModelHelpers;
 
     public function setUp()

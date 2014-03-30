@@ -1,8 +1,9 @@
 <?php namespace Franzose\ClosureTable\Tests\Seeds;
 
 use \DB;
+use Illuminate\Database\Seeder;
 
-class EntitiesSeeder extends \Seeder {
+class EntitiesSeeder extends Seeder {
 
     public function run()
     {
