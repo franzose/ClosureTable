@@ -70,6 +70,7 @@ class EntityTestCase extends BaseTestCase {
     public function testIsRoot()
     {
         $this->assertFalse($this->entity->isRoot());
+        $this->assertTrue(Entity::find(1)->isRoot());
     }
 
     /**
@@ -139,6 +140,14 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $ancestors);
     }
 
+    public function testHasAncestors()
+    {
+        $entity = Entity::find(12);
+        $hasAncestors = $entity->hasAncestors();
+
+        $this->assertTrue($hasAncestors);
+    }
+
     public function testGetDescendants()
     {
         $entity = Entity::find(9);
@@ -162,6 +171,14 @@ class EntityTestCase extends BaseTestCase {
         $descendants = $entity->countDescendants();
 
         $this->assertEquals(6, $descendants);
+    }
+
+    public function testHasDescendants()
+    {
+        $entity = Entity::find(9);
+        $hasDescendants = $entity->hasDescendants();
+
+        $this->assertTrue($hasDescendants);
     }
 
     public function testGetChildren()
@@ -226,13 +243,24 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $children[1]->position);
     }
 
-    public function testAddChild()
+    public function testAddChildWithPosition()
     {
         $entity = Entity::find(15);
         $newone = new Entity;
         $result = $entity->addChild($newone, 0);
 
         $this->assertEquals(0, $newone->position);
+        $this->assertTrue($entity->isParent());
+        $this->assertSame($entity, $result);
+    }
+
+    public function testAddChildWithoutPosition()
+    {
+        $entity = Entity::find(9);
+        $newone = new Entity;
+        $result = $entity->addChild($newone);
+
+        $this->assertEquals(4, $newone->position);
         $this->assertTrue($entity->isParent());
         $this->assertSame($entity, $result);
     }
@@ -302,6 +330,14 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $number);
     }
 
+    public function testsHasSiblings()
+    {
+        $entity = Entity::find(13);
+        $hasSiblings = $entity->hasSiblings();
+
+        $this->assertTrue($hasSiblings);
+    }
+
     public function testsGetNeighbors()
     {
         $entity = Entity::find(13);
@@ -367,6 +403,14 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $siblings);
     }
 
+    public function testsHasPrevSiblings()
+    {
+        $entity = Entity::find(15);
+        $hasPrevSiblings = $entity->hasPrevSiblings();
+
+        $this->assertTrue($hasPrevSiblings);
+    }
+
     public function testGetNextSibling()
     {
         $entity = Entity::find(10);
@@ -392,6 +436,14 @@ class EntityTestCase extends BaseTestCase {
         $siblings = $entity->countNextSiblings();
 
         $this->assertEquals(3, $siblings);
+    }
+
+    public function testsHasNextSiblings()
+    {
+        $entity = Entity::find(10);
+        $hasNextSiblings = $entity->hasNextSiblings();
+
+        $this->assertTrue($hasNextSiblings);
     }
 
     public function testGetSiblingsRange()
