@@ -70,6 +70,8 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public $timestamps = false;
 
+    public static $debug = false;
+
     /**
      * Entity constructor.
      *
@@ -249,14 +251,19 @@ class Entity extends Eloquent implements EntityInterface {
         // the closure table rows will update automatically.
         static::saving(function($entity)
         {
+            static::echo_debug(PHP_EOL.'>>>>> BEGIN SAVING >>>>>'.PHP_EOL);
             $entity->moveNode();
+            static::echo_debug(PHP_EOL.'<<<<< END SAVING <<<<<'.PHP_EOL);
         });
 
         // When entity is created, the appropriate
         // data will be put into the closure table.
         static::created(function($entity)
         {
+            static::echo_debug(PHP_EOL.'>>>>> BEGIN CREATED >>>>>'.PHP_EOL);
+            $entity->old_position = $entity->position;
             $entity->insertNode();
+            static::echo_debug(PHP_EOL.'<<<<< END CREATED <<<<<'.PHP_EOL);
         });
 
         // Everytime the model's position or depth
@@ -264,7 +271,9 @@ class Entity extends Eloquent implements EntityInterface {
         // so they will always keep the proper order.
         static::saved(function($entity)
         {
+            static::echo_debug(PHP_EOL.'>>>>> BEGIN SAVED >>>>>'.PHP_EOL);
             $entity->reorderSiblings();
+            static::echo_debug(PHP_EOL.'<<<<< END SAVED <<<<<'.PHP_EOL);
         });
     }
 
@@ -1036,12 +1045,13 @@ class Entity extends Eloquent implements EntityInterface {
                 $from = $this->getNextAfterLastPosition();
             }
 
+            $parent = $this->getParent();
             /**
              * @var Entity $sibling
              */
             foreach($siblings as $sibling)
             {
-                $sibling->moveTo($from, $this->parent_id);
+                $sibling->moveTo($from, $parent);
                 $from++;
             }
         }
@@ -1129,7 +1139,7 @@ class Entity extends Eloquent implements EntityInterface {
      * @param array $tree
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
-    public static function createFromArray(array $tree)
+    public static function createFromArray(array $tree, EntityInterface $parent = null)
     {
         $childrenRelationIndex = with(new static)->getChildrenRelationIndex();
         $entities = [];
@@ -1142,13 +1152,14 @@ class Entity extends Eloquent implements EntityInterface {
              * @var Entity $entity
              */
             $entity = new static($item);
+            $entity->parent_id = $parent ? $parent->getKey() : null;
             $entity->save();
 
             if ( ! is_null($children))
             {
-                $children = static::createFromArray($children, true);
+                $children = static::createFromArray($children, $entity);
                 $entity->setRelation($childrenRelationIndex, $children);
-                $entity->addChildren($children->toArray());
+                $entity->addChildren($children->all());
             }
 
             $entities[] = $entity;
@@ -1181,7 +1192,7 @@ class Entity extends Eloquent implements EntityInterface {
 
         $this->parent_id  = $parentId;
         $this->position   = $position;
-        $this->real_depth = $this->getNewRealDepth($parentId);
+        $this->real_depth = $this->getNewRealDepth($ancestor);
 
         $this->isMoved = true;
 
@@ -1310,7 +1321,8 @@ class Entity extends Eloquent implements EntityInterface {
             $query = $this->siblings();
         }
 
-        if($action) {
+        if ($action)
+        {
             $query->buildWherePosition($positionColumn, $range)
                 ->where($this->getKeyName(), '<>', $this->getKey())
                 ->$action($positionColumn);
@@ -1383,7 +1395,7 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * Moves node no another ancestor.
+     * Moves node to another ancestor.
      *
      * @return void
      */
@@ -1444,5 +1456,13 @@ class Entity extends Eloquent implements EntityInterface {
         $grammar = $conn->getQueryGrammar();
 
         return new QueryBuilder($conn, $grammar, $conn->getPostProcessor());
+    }
+
+    private static function echo_debug($string)
+    {
+        if (static::$debug)
+        {
+            echo $string;
+        }
     }
 }
