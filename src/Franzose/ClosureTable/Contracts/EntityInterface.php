@@ -430,7 +430,7 @@ interface EntityInterface {
      * @param array $tree
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
-    public static function createFromArray(array $tree);
+    public static function createFromArray(array $tree, EntityInterface $parent);
 
     /**
      * @param int $position
