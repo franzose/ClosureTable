@@ -249,16 +249,17 @@ class Entity extends Eloquent implements EntityInterface {
 
         // If model's parent identifier was changed,
         // the closure table rows will update automatically.
-        static::saving(function($entity)
+        static::saving(function(Entity $entity)
         {
             static::echo_debug(PHP_EOL.'>>>>> BEGIN SAVING >>>>>'.PHP_EOL);
+            $entity->clampPosition();
             $entity->moveNode();
             static::echo_debug(PHP_EOL.'<<<<< END SAVING <<<<<'.PHP_EOL);
         });
 
         // When entity is created, the appropriate
         // data will be put into the closure table.
-        static::created(function($entity)
+        static::created(function(Entity $entity)
         {
             static::echo_debug(PHP_EOL.'>>>>> BEGIN CREATED >>>>>'.PHP_EOL);
             $entity->old_position = $entity->position;
@@ -269,7 +270,7 @@ class Entity extends Eloquent implements EntityInterface {
         // Everytime the model's position or depth
         // is changed, its siblings reordering will happen,
         // so they will always keep the proper order.
-        static::saved(function($entity)
+        static::saved(function(Entity $entity)
         {
             static::echo_debug(PHP_EOL.'>>>>> BEGIN SAVED >>>>>'.PHP_EOL);
             $entity->reorderSiblings();
@@ -866,7 +867,7 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * Retrieves neighbors (immediate previous and immmediate next models) of a model.
+     * Retrieves neighbors (immediate previous and immediate next models) of a model.
      *
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
@@ -1137,6 +1138,7 @@ class Entity extends Eloquent implements EntityInterface {
      * Saves models from the given attributes array.
      *
      * @param array $tree
+     * @param \Franzose\ClosureTable\Contracts\EntityInterface $parent
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function createFromArray(array $tree, EntityInterface $parent = null)
@@ -1169,7 +1171,7 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
-     * Makes the model a child or a root with given position.
+     * Makes the model a child or a root with given position. Do not use moveTo to move a node within the same ancestor (call position = value and save instead).
      *
      * @param int $position
      * @param EntityInterface|int $ancestor
@@ -1276,6 +1278,12 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getNextAfterLastPosition($parentId = false)
     {
+        $position = $this->getLastPosition($parentId);
+        return $position === 0 ? 0 : $position + 1;
+    }
+
+    public function getLastPosition($parentId = false)
+    {
         $positionColumn = $this->getPositionColumn();
         $parentIdColumn = $this->getParentIdColumn();
 
@@ -1286,16 +1294,7 @@ class Entity extends Eloquent implements EntityInterface {
             ->orderBy($positionColumn, 'desc')
             ->first();
 
-        if (is_null($entity))
-        {
-            $result = 0;
-        }
-        else
-        {
-            $result = $entity->position+1;
-        }
-
-        return $result;
+        return !is_null($entity) ?  $entity->position : 0;
     }
 
     /**
@@ -1351,6 +1350,8 @@ class Entity extends Eloquent implements EntityInterface {
         }
         else
         {
+            // TODO: There's probably a bug here where if you just created an entity and you set it to be
+            // a root (parent_id = null) then it comes in here (while it should have gone in the else)
             // Reordering within the same ancestor
             if ($this->old_parent_id == $this->parent_id)
             {
@@ -1411,13 +1412,22 @@ class Entity extends Eloquent implements EntityInterface {
                 $this->closure->depth = 0;
             }
 
-            if ($this->parent_id != $this->old_parent_id)
+            if ($this->isDirty($this->getParentIdColumn()))
             {
                 $this->reorderSiblings(true);
+                $this->closure->moveNodeTo($this->parent_id);
             }
-
-            $this->closure->moveNodeTo($this->parent_id);
         }
+    }
+
+    /**
+     * Clamp the position between 0 and the last position of the current parent.
+     */
+    protected function clampPosition()
+    {
+        if (!$this->isDirty($this->getPositionColumn())) { return; }
+        $newPosition = max(0, min($this->position, $this->getNextAfterLastPosition()));
+        $this->attributes[$this->getPositionColumn()] = $newPosition;
     }
 
     /**

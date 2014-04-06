@@ -35,12 +35,20 @@ class ClosureTableTestCase extends BaseTestCase {
 
     /**
      * @expectedException \InvalidArgumentException
+     * @dataProvider insertNodeProvider
      */
-    public function testInsertNodeValidatesItsArguments()
+    public function testInsertNodeValidatesItsArguments($ancestorId, $descendantId)
     {
-        $this->ctable->insertNode('wrong', 12);
-        $this->ctable->insertNode(12, 'wrong');
-        $this->ctable->insertNode('wrong', 'wrong');
+        $this->ctable->insertNode($ancestorId, $descendantId);
+    }
+
+    public function insertNodeProvider()
+    {
+        return [
+            ['wrong', 12],
+            [12, 'wrong'],
+            ['wrong', 'wrong'],
+        ];
     }
 
     public function testInsertNode()

@@ -2,7 +2,6 @@
 
 use DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
-use Illuminate\Database\Query\Builder;
 use Franzose\ClosureTable\Contracts\ClosureTableInterface;
 
 /**
