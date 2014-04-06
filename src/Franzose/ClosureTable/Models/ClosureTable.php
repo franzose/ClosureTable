@@ -61,7 +61,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             $rawTable = DB::getTablePrefix().$t;
 
             $query = "
-                INSERT INTO {$t} ({$ak}, ${dk}, ${dpk})
+                INSERT INTO {$t} ({$ak}, {$dk}, {$dpk})
                 SELECT tbl.{$ak} as {$ak}, {$descendantId} as {$dk}, tbl.{$dpk}+1 as {$dpk}
                 FROM {$rawTable} AS tbl
                 WHERE tbl.{$dk} = {$ancestorId}
