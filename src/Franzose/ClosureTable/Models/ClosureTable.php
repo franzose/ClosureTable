@@ -56,21 +56,18 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $ak  = $this->getAncestorColumn();
         $dk  = $this->getDescendantColumn();
         $dpk = $this->getDepthColumn();
+        $rawTable = DB::getTablePrefix().$t;
 
-        DB::transaction(function() use($t, $ak, $dk, $dpk, $ancestorId, $descendantId){
-            $rawTable = DB::getTablePrefix().$t;
+        $query = "
+            INSERT INTO {$rawTable} ({$ak}, {$dk}, {$dpk})
+            SELECT tbl.{$ak} as {$ak}, {$descendantId} as {$dk}, tbl.{$dpk}+1 as {$dpk}
+            FROM {$rawTable} AS tbl
+            WHERE tbl.{$dk} = {$ancestorId}
+            UNION ALL
+            SELECT {$descendantId}, {$descendantId}, 0
+        ";
 
-            $query = "
-                INSERT INTO {$t} ({$ak}, {$dk}, {$dpk})
-                SELECT tbl.{$ak} as {$ak}, {$descendantId} as {$dk}, tbl.{$dpk}+1 as {$dpk}
-                FROM {$rawTable} AS tbl
-                WHERE tbl.{$dk} = {$ancestorId}
-                UNION ALL
-                SELECT {$descendantId}, {$descendantId}, 0
-            ";
-
-            $results = DB::statement($query);
-        });
+        $results = DB::statement($query);
     }
 
     /**
