@@ -72,12 +72,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
 
             array_walk($results, function(&$item){ $item = (array)$item; });
 
-            if (DB::table($t)->insert($results))
-            {
-                $this->ancestor = $results[0][$ak];
-                $this->descendant = $results[0][$dk];
-                $this->depth = $results[0][$dpk];
-            }
+            DB::table($t)->insert($results);
         });
     }
 
