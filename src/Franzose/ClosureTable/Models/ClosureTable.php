@@ -58,7 +58,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $depth = $this->getDepthColumn();
 
         $query = "
-            INSERT INTO {$table} ({$$ancestor}, {$descendant}, {$depth})
+            INSERT INTO {$table} ({$ancestor}, {$descendant}, {$depth})
             SELECT tbl.{$ancestor}, {$descendantId}, tbl.{$depth}+1
             FROM {$table} AS tbl
             WHERE tbl.{$descendant} = {$ancestorId}
