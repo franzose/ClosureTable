@@ -52,22 +52,21 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             throw new \InvalidArgumentException('`ancestorId` and `descendantId` arguments must be of type int.');
         }
 
-        $t   = $this->table;
-        $ak  = $this->getAncestorColumn();
-        $dk  = $this->getDescendantColumn();
-        $dpk = $this->getDepthColumn();
-        $rawTable = DB::getTablePrefix().$t;
+        $table = $this->getPrefixedTable();
+        $ancestor = $this->getAncestorColumn();
+        $descendant = $this->getDescendantColumn();
+        $depth = $this->getDepthColumn();
 
         $query = "
-            INSERT INTO {$rawTable} ({$ak}, {$dk}, {$dpk})
-            SELECT tbl.{$ak} as {$ak}, {$descendantId} as {$dk}, tbl.{$dpk}+1 as {$dpk}
-            FROM {$rawTable} AS tbl
-            WHERE tbl.{$dk} = {$ancestorId}
+            INSERT INTO {$table} ({$$ancestor}, {$descendant}, {$depth})
+            SELECT tbl.{$ancestor}, {$descendantId}, tbl.{$depth}+1
+            FROM {$table} AS tbl
+            WHERE tbl.{$descendant} = {$ancestorId}
             UNION ALL
             SELECT {$descendantId}, {$descendantId}, 0
         ";
 
-        $results = DB::statement($query);
+        DB::statement($query);
     }
 
     /**
@@ -84,10 +83,10 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             throw new \InvalidArgumentException('`ancestor` argument must be of type int.');
         }
 
-        $t   = $this->table;
-        $ak  = $this->getAncestorColumn();
-        $dk  = $this->getDescendantColumn();
-        $dpk = $this->getDepthColumn();
+        $table = $this->getPrefixedTable();
+        $ancestor = $this->getAncestorColumn();
+        $descendant = $this->getDescendantColumn();
+        $depth = $this->getDepthColumn();
 
         $thisAncestorId = $this->ancestor;
         $thisDescendantId = $this->descendant;
@@ -108,20 +107,16 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
             return;
         }
 
-        DB::transaction(function() use($ak, $dk, $dpk, $t, $ancestorId, $thisDescendantId){
-            $query = "
-                SELECT supertbl.{$ak}, subtbl.{$dk}, supertbl.{$dpk}+subtbl.{$dpk}+1 as {$dpk}
-                FROM {$t} as supertbl
-                CROSS JOIN {$t} as subtbl
-                WHERE supertbl.{$dk} = {$ancestorId}
-                AND subtbl.{$ak} = {$thisDescendantId}
-            ";
+        $query = "
+            INSERT INTO {$table} ({$ancestor}, {$descendant}, {$depth})
+            SELECT supertbl.{$ancestor}, subtbl.{$descendant}, supertbl.{$depth}+subtbl.{$depth}+1
+            FROM {$table} as supertbl
+            CROSS JOIN {$table} as subtbl
+            WHERE supertbl.{$descendant} = {$ancestorId}
+            AND subtbl.{$ancestor} = {$thisDescendantId}
+        ";
 
-            $results = DB::select($query);
-            array_walk($results, function(&$item){ $item = (array)$item; });
-
-            DB::table($t)->insert($results);
-        });
+        DB::statement($query);
     }
 
     /**
@@ -131,7 +126,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     protected function unbindRelationships()
     {
-        $table = $this->getTable();
+        $table = $this->getPrefixedTable();
         $ancestorColumn = $this->getAncestorColumn();
         $descendantColumn = $this->getDescendantColumn();
         $descendant = $this->descendant;
@@ -157,7 +152,17 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     }
 
     /**
-     * Gets value of the "ancestor" attribute.
+     * Get table name with custom prefix for use in raw queries.
+     *
+     * @return string
+     */
+    public function getPrefixedTable()
+    {
+        return DB::getTablePrefix() . $this->getTable();
+    }
+
+    /**
+     * Get value of the "ancestor" attribute.
      *
      * @return int
      */
@@ -167,7 +172,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     }
 
     /**
-     * Sets new ancestor id.
+     * Set new ancestor id.
      *
      * @param $value
      */
@@ -177,7 +182,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     }
 
     /**
-     * Gets the fully qualified "ancestor" column.
+     * Get the fully qualified "ancestor" column.
      *
      * @return string
      */
@@ -197,7 +202,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     }
 
     /**
-     * Gets value of the "descendant" attribute.
+     * Get value of the "descendant" attribute.
      *
      * @return int
      */
@@ -207,7 +212,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     }
 
     /**
-     * Sets new descendant id.
+     * Set new descendant id.
      *
      * @param $value
      */
@@ -217,7 +222,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     }
 
     /**
-     * Gets the fully qualified "descendant" column.
+     * Get the fully qualified "descendant" column.
      *
      * @return string
      */
