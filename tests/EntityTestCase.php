@@ -23,6 +23,8 @@ class EntityTestCase extends BaseTestCase {
      */
     protected $closure;
 
+    protected static $force_boot = false;
+
     /**
      * Children relation index.
      *
@@ -34,7 +36,12 @@ class EntityTestCase extends BaseTestCase {
     {
         parent::setUp();
 
-        Entity::boot();
+		// TODO: Remove this when Laravel fixes the issue with model booting in tests
+        if (self::$force_boot) {
+            Entity::boot();
+        } else {
+            self::$force_boot = true;
+        }
 
         $this->entity = new Entity;
         $this->entity->fillable(['title', 'excerpt', 'body', 'position', 'real_depth']);
@@ -70,6 +77,23 @@ class EntityTestCase extends BaseTestCase {
     public function testIsRoot()
     {
         $this->assertFalse($this->entity->isRoot());
+        $this->assertTrue(Entity::find(1)->isRoot());
+    }
+
+    public function testCreate()
+    {
+        $entity1 = new Page(['title' => 'Item 1']);
+        $entity1->save();
+
+        $this->assertEquals(9, $entity1->position);
+
+        $id = $entity1->getKey();
+
+        $entity2 = new Page(['title' => 'Item 2']);
+        $entity2->save();
+
+        $this->assertEquals(10, $entity2->position);
+        $this->assertEquals(9, Entity::find($id)->position);
     }
 
     /**
@@ -139,6 +163,14 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $ancestors);
     }
 
+    public function testHasAncestors()
+    {
+        $entity = Entity::find(12);
+        $hasAncestors = $entity->hasAncestors();
+
+        $this->assertTrue($hasAncestors);
+    }
+
     public function testGetDescendants()
     {
         $entity = Entity::find(9);
@@ -162,6 +194,14 @@ class EntityTestCase extends BaseTestCase {
         $descendants = $entity->countDescendants();
 
         $this->assertEquals(6, $descendants);
+    }
+
+    public function testHasDescendants()
+    {
+        $entity = Entity::find(9);
+        $hasDescendants = $entity->hasDescendants();
+
+        $this->assertTrue($hasDescendants);
     }
 
     public function testGetChildren()
@@ -226,13 +266,24 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $children[1]->position);
     }
 
-    public function testAddChild()
+    public function testAddChildWithPosition()
     {
         $entity = Entity::find(15);
         $newone = new Entity;
-        $result = $entity->addChild($newone, 0);
+        $result = $entity->addChild($newone, 6);
 
-        $this->assertEquals(0, $newone->position);
+        $this->assertEquals(6, $newone->position);
+        $this->assertTrue($entity->isParent());
+        $this->assertSame($entity, $result);
+    }
+
+    public function testAddChildWithoutPosition()
+    {
+        $entity = Entity::find(9);
+        $newone = new Entity;
+        $result = $entity->addChild($newone);
+
+        $this->assertEquals(4, $newone->position);
         $this->assertTrue($entity->isParent());
         $this->assertSame($entity, $result);
     }
@@ -302,6 +353,14 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $number);
     }
 
+    public function testsHasSiblings()
+    {
+        $entity = Entity::find(13);
+        $hasSiblings = $entity->hasSiblings();
+
+        $this->assertTrue($hasSiblings);
+    }
+
     public function testsGetNeighbors()
     {
         $entity = Entity::find(13);
@@ -367,6 +426,14 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(3, $siblings);
     }
 
+    public function testsHasPrevSiblings()
+    {
+        $entity = Entity::find(15);
+        $hasPrevSiblings = $entity->hasPrevSiblings();
+
+        $this->assertTrue($hasPrevSiblings);
+    }
+
     public function testGetNextSibling()
     {
         $entity = Entity::find(10);
@@ -392,6 +459,14 @@ class EntityTestCase extends BaseTestCase {
         $siblings = $entity->countNextSiblings();
 
         $this->assertEquals(3, $siblings);
+    }
+
+    public function testsHasNextSiblings()
+    {
+        $entity = Entity::find(10);
+        $hasNextSiblings = $entity->hasNextSiblings();
+
+        $this->assertTrue($hasNextSiblings);
     }
 
     public function testGetSiblingsRange()
@@ -549,4 +624,69 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(92, $pages[2]->getKey());
         $this->assertEquals(93, $pageZero->getChildAt(0)->getKey());
     }
-} 
+
+    public function testCreateFromArrayBug81()
+    {
+        $array = [
+            [
+                'title' => 'About',
+                'children' => [
+                    [
+                        'title' => 'Testimonials',
+                        'children' => [
+                            [
+                                'title' => 'child 1',
+                            ],
+                            [
+                                'title' => 'child 2',
+                            ],
+                        ]
+                    ]
+                ]
+            ],
+            [
+                'title' => 'Blog',
+            ],
+            [
+                'title' => 'Portfolio',
+            ],
+        ];
+
+        $pages = Page::createFromArray($array);
+
+        $about = $pages[0];
+        $this->assertEquals('About', $about->title);
+        $this->assertEquals(1, $about->countChildren());
+        $this->assertEquals(16, $about->getKey());
+
+        $blog = $pages[1];
+        $this->assertEquals('Blog', $blog->title);
+        $this->assertEquals(0, $blog->countChildren());
+        $this->assertEquals(20, $blog->getKey());
+
+        $portfolio = $pages[2];
+        $this->assertEquals('Portfolio', $portfolio->title);
+        $this->assertEquals(0, $portfolio->countChildren());
+        $this->assertEquals(21, $portfolio->getKey());
+
+
+        $pages = $pages[0]->getChildren();
+
+        $testimonials = $pages[0];
+        $this->assertEquals('Testimonials', $testimonials->title);
+        $this->assertEquals(2, $testimonials->countChildren());
+        $this->assertEquals(17, $testimonials->getKey());
+
+        $pages = $pages[0]->getChildren();
+
+        $child1 = $pages[0];
+        $this->assertEquals('child 1', $child1->title);
+        $this->assertEquals(0, $child1->countChildren());
+        $this->assertEquals(18, $child1->getKey());
+
+        $child2 = $pages[1];
+        $this->assertEquals('child 2', $child2->title);
+        $this->assertEquals(0, $child2->countChildren());
+        $this->assertEquals(19, $child2->getKey());
+    }
+}
