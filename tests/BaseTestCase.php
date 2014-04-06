@@ -12,8 +12,8 @@ use Franzose\ClosureTable\Models\Entity;
 abstract class BaseTestCase extends TestCase {
     use \Way\Tests\ModelHelpers;
 
-    public static $debug = true;
-    public static $sqlite_in_memory = false;
+    public static $debug = false;
+    public static $sqlite_in_memory = true;
 
     public function setUp()
     {
