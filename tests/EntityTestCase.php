@@ -1,7 +1,6 @@
 <?php namespace Franzose\ClosureTable\Tests;
 
 use Mockery;
-use Illuminate\Container\Container as App;
 use Franzose\ClosureTable\Models\Entity;
 use Franzose\ClosureTable\Tests\Models\Page;
 
@@ -34,7 +33,7 @@ class EntityTestCase extends BaseTestCase {
     {
         parent::setUp();
 
-		// TODO: Remove this when Laravel fixes the issue with model booting in tests
+        // TODO: Remove this when Laravel fixes the issue with model booting in tests
         if (self::$force_boot) {
             Entity::boot();
         } else {
@@ -78,20 +77,66 @@ class EntityTestCase extends BaseTestCase {
         $this->assertTrue(Entity::find(1)->isRoot());
     }
 
-    public function testCreate()
+    public function testCreateSetsPosition()
+    {
+        $entity = new Page(['title' => 'Item 1']);
+
+        $this->assertEquals(null, $entity->position);
+        $this->assertEquals(null, $this->readAttribute($entity, 'old_position'));
+        $this->assertEquals(null, $entity->parent_id);
+        $this->assertEquals(null, $this->readAttribute($entity, 'old_parent_id'));
+
+        $entity->save();
+
+        $this->assertEquals(9, $entity->position);
+        $this->assertEquals($entity->position, $this->readAttribute($entity, 'old_position'));
+        $this->assertEquals(null, $entity->parent_id);
+        $this->assertEquals($entity->parent_id, $this->readAttribute($entity, 'old_parent_id'));
+    }
+
+    public function testCreateDoesNotChangePositionOfSiblings()
+    {
+         $entity1 = new Page(['title' => 'Item 1']);
+         $entity1->save();
+
+         $id = $entity1->getKey();
+
+         $entity2 = new Page(['title' => 'Item 2']);
+         $entity2->save();
+
+         $this->assertEquals(10, $entity2->position);
+         $this->assertEquals(9, Entity::find($id)->position);
+    }
+
+    public function testCreateSetsRealDepth()
+    {
+        $entity = new Page(['title' => 'Item 3']);
+        $entity->parent_id = 9;
+        $entity->save();
+
+        $this->assertEquals(1, $entity->real_depth);
+    }
+
+    public function testSavingLoadedEntityShouldNotTriggerReordering()
     {
         $entity1 = new Page(['title' => 'Item 1']);
         $entity1->save();
 
-        $this->assertEquals(9, $entity1->position);
-
         $id = $entity1->getKey();
 
-        $entity2 = new Page(['title' => 'Item 2']);
-        $entity2->save();
+        $entity1 = Page::find($id);
 
-        $this->assertEquals(10, $entity2->position);
-        $this->assertEquals(9, Entity::find($id)->position);
+        $this->assertEquals(8, Page::find(9)->position); // Sibling node that shouldn't move
+
+        $this->assertEquals($entity1->position, $this->readAttribute($entity1, 'old_position'), 'Position should be the same after a load');
+        $this->assertEquals($entity1->parent_id, $this->readAttribute($entity1, 'old_parent_id'), 'Parent should be the same after a load');
+
+        $entity1->title = 'New title';
+        $entity1->save();
+
+        $this->assertEquals(8, Page::find(9)->position, 'Sibling node should not have moved');
+        $this->assertEquals($entity1->position, $this->readAttribute($entity1, 'old_position'));
+        $this->assertEquals($entity1->parent_id, $this->readAttribute($entity1, 'old_parent_id'));
     }
 
     /**
@@ -105,12 +150,27 @@ class EntityTestCase extends BaseTestCase {
     public function testMoveTo()
     {
         $ancestor = Entity::find(1);
-        $result = $this->entity->moveTo(5, $ancestor);
+        $result = $this->entity->moveTo(0, $ancestor);
 
         $this->assertSame($this->entity, $result);
-        $this->assertEquals(5, $result->position);
+        $this->assertEquals(0, $result->position);
         $this->assertEquals(1, $result->parent_id);
         $this->assertEquals($this->entity->getParent()->getKey(), $ancestor->getKey());
+    }
+
+    public function testClampPosition()
+    {
+        $ancestor = Entity::find(9);
+        $entity = Entity::find(15);
+        $entity->position = -1;
+        $entity->save();
+
+        $this->assertEquals(0, $entity->position);
+
+        $entity->position = 100;
+        $entity->save();
+
+        $this->assertEquals($ancestor->countChildren(), $entity->position);
     }
 
     public function testGetParent()
@@ -139,6 +199,7 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $ancestors);
         $this->assertCount(3, $ancestors);
+        $this->assertArrayValuesEquals($ancestors->modelKeys(), [9, 10, 11]);
     }
 
     public function testGetAncestorsWhere()
@@ -151,6 +212,7 @@ class EntityTestCase extends BaseTestCase {
 
         $ancestors = $entity->getAncestorsWhere($this->entity->getPositionColumn(), '=', 0);
         $this->assertCount(2, $ancestors);
+        $this->assertArrayValuesEquals($ancestors->modelKeys(), [10, 11]);
     }
 
     public function testCountAncestors()
@@ -176,6 +238,7 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $descendants);
         $this->assertCount(6, $descendants);
+        $this->assertArrayValuesEquals($descendants->modelKeys(), [10, 11, 12, 13, 14, 15]);
     }
 
     public function testGetDescendantsWhere()
@@ -184,6 +247,7 @@ class EntityTestCase extends BaseTestCase {
 
         $descendants = $entity->getDescendantsWhere($this->entity->getPositionColumn(), '=', 1);
         $this->assertCount(1, $descendants);
+        $this->assertArrayValuesEquals($descendants->modelKeys(), [13]);
     }
 
     public function testCountDescendants()
@@ -209,6 +273,7 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $children);
         $this->assertCount(4, $children);
+        $this->assertArrayValuesEquals($children->modelKeys(), [10, 13, 14, 15]);
     }
 
     public function testCountChildren()
@@ -268,9 +333,9 @@ class EntityTestCase extends BaseTestCase {
     {
         $entity = Entity::find(15);
         $newone = new Entity;
-        $result = $entity->addChild($newone, 6);
+        $result = $entity->addChild($newone, 0);
 
-        $this->assertEquals(6, $newone->position);
+        $this->assertEquals(0, $newone->position);
         $this->assertTrue($entity->isParent());
         $this->assertSame($entity, $result);
     }
@@ -507,11 +572,12 @@ class EntityTestCase extends BaseTestCase {
 
         $entity->addSiblings([new Entity, new Entity, new Entity, new Entity], 1);
 
-        $siblings = $entity->getSiblingsRange(0, 3);
+        $siblings = $entity->getSiblingsRange(1, 4);
 
-        $this->assertEquals(16, $siblings[1]->getKey());
-        $this->assertEquals(17, $siblings[2]->getKey());
-        $this->assertEquals(18, $siblings[3]->getKey());
+        $this->assertEquals(16, $siblings[0]->getKey());
+        $this->assertEquals(17, $siblings[1]->getKey());
+        $this->assertEquals(18, $siblings[2]->getKey());
+        $this->assertEquals(19, $siblings[3]->getKey());
     }
 
     public function testGetRoots()
@@ -565,10 +631,8 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(9);
         $entity->deleteSubtree();
 
-        $this->assertNull(Entity::find(10));
-        $this->assertNull(Entity::find(11));
-        $this->assertNull(Entity::find(12));
-        $this->assertNotNull(Entity::find(8));
+        $this->assertCount(1, Entity::whereBetween('id', [9, 15])->get());
+        $this->assertCount(8, Entity::whereBetween('id', [1, 8])->get());
     }
 
     public function testDeleteSubtreeWithAncestor()
@@ -576,10 +640,8 @@ class EntityTestCase extends BaseTestCase {
         $entity = Entity::find(9);
         $entity->deleteSubtree(true);
 
-        $this->assertNull(Entity::find(9));
-        $this->assertNull(Entity::find(10));
-        $this->assertNull(Entity::find(11));
-        $this->assertNull(Entity::find(12));
+        $this->assertCount(0, Entity::whereBetween('id', [9, 15])->get());
+        $this->assertCount(8, Entity::whereBetween('id', [1, 8])->get());
     }
 
     public function testCreateFromArray()
@@ -666,7 +728,6 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals('Portfolio', $portfolio->title);
         $this->assertEquals(0, $portfolio->countChildren());
         $this->assertEquals(21, $portfolio->getKey());
-
 
         $pages = $pages[0]->getChildren();
 

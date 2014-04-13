@@ -37,7 +37,6 @@ class CollectionTestCase extends BaseTestCase {
 
         $this->assertEquals($grandEntity->getKey(), $grandItem->getKey());
         $this->assertArrayNotHasKey($childrenRelationIndex, $grandItem->getRelations());
-
     }
 
     public function testHasChildren()
