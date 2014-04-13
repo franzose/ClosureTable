@@ -258,7 +258,7 @@ interface EntityInterface {
     public function removeChildren($from, $to = null, $forceDelete = false);
 
     /**
-     * Retrives all siblings of a model.
+     * Retrieves all siblings of a model.
      *
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
@@ -280,7 +280,7 @@ interface EntityInterface {
     public function hasSiblings();
 
     /**
-     * Retrieves neighbors (immediate previous and immmediate next models) of a model.
+     * Retrieves neighbors (immediate previous and immediate next models) of a model.
      *
      * @param array $columns
      * @return \Franzose\ClosureTable\Extensions\Collection
@@ -428,6 +428,7 @@ interface EntityInterface {
      * Saves models from the given attributes array.
      *
      * @param array $tree
+     * @param EntityInterface $parent
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function createFromArray(array $tree, EntityInterface $parent);
