@@ -103,6 +103,14 @@ class Entity extends Eloquent implements EntityInterface {
         parent::__construct($attributes);
     }
 
+    public function newFromBuilder($attributes = array())
+    {
+        $instance = parent::newFromBuilder($attributes);
+        $instance->old_parent_id = $instance->parent_id;
+        $instance->old_position = $instance->position;
+        return $instance;
+    }
+
     /**
      * Gets value of the "parent id" attribute.
      *
@@ -267,7 +275,7 @@ class Entity extends Eloquent implements EntityInterface {
             static::echo_debug(PHP_EOL.'<<<<< END CREATED <<<<<'.PHP_EOL);
         });
 
-        // Everytime the model's position or depth
+        // Everytime the model's position or parent
         // is changed, its siblings reordering will happen,
         // so they will always keep the proper order.
         static::saved(function(Entity $entity)
@@ -1241,13 +1249,14 @@ class Entity extends Eloquent implements EntityInterface {
         if ($this->isMoved === false)
         {
             $this->position = $this->getNextAfterLastPosition();
+            $this->real_depth = $this->getNewRealDepth($this->parent_id);
         }
 
         return parent::performInsert($query);
     }
 
     /**
-     * Perform a model insert operation.
+     * Perform a model update operation.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return bool

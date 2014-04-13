@@ -33,7 +33,7 @@ class EntityTestCase extends BaseTestCase {
     {
         parent::setUp();
 
-		// TODO: Remove this when Laravel fixes the issue with model booting in tests
+        // TODO: Remove this when Laravel fixes the issue with model booting in tests
         if (self::$force_boot) {
             Entity::boot();
         } else {
@@ -77,20 +77,66 @@ class EntityTestCase extends BaseTestCase {
         $this->assertTrue(Entity::find(1)->isRoot());
     }
 
-    public function testCreate()
+    public function testCreateSetsPosition()
+    {
+        $entity = new Page(['title' => 'Item 1']);
+
+        $this->assertEquals(null, $entity->position);
+        $this->assertEquals(null, $this->readAttribute($entity, 'old_position'));
+        $this->assertEquals(null, $entity->parent_id);
+        $this->assertEquals(null, $this->readAttribute($entity, 'old_parent_id'));
+
+        $entity->save();
+
+        $this->assertEquals(9, $entity->position);
+        $this->assertEquals($entity->position, $this->readAttribute($entity, 'old_position'));
+        $this->assertEquals(null, $entity->parent_id);
+        $this->assertEquals($entity->parent_id, $this->readAttribute($entity, 'old_parent_id'));
+    }
+
+    public function testCreateDoesNotChangePositionOfSiblings()
+    {
+         $entity1 = new Page(['title' => 'Item 1']);
+         $entity1->save();
+
+         $id = $entity1->getKey();
+
+         $entity2 = new Page(['title' => 'Item 2']);
+         $entity2->save();
+
+         $this->assertEquals(10, $entity2->position);
+         $this->assertEquals(9, Entity::find($id)->position);
+    }
+
+    public function testCreateSetsRealDepth()
+    {
+        $entity = new Page(['title' => 'Item 3']);
+        $entity->parent_id = 9;
+        $entity->save();
+
+        $this->assertEquals(1, $entity->real_depth);
+    }
+
+    public function testSavingLoadedEntityShouldNotTriggerReordering()
     {
         $entity1 = new Page(['title' => 'Item 1']);
         $entity1->save();
 
-        $this->assertEquals(9, $entity1->position);
-
         $id = $entity1->getKey();
 
-        $entity2 = new Page(['title' => 'Item 2']);
-        $entity2->save();
+        $entity1 = Page::find($id);
 
-        $this->assertEquals(10, $entity2->position);
-        $this->assertEquals(9, Entity::find($id)->position);
+        $this->assertEquals(8, Page::find(9)->position); // Sibling node that shouldn't move
+
+        $this->assertEquals($entity1->position, $this->readAttribute($entity1, 'old_position'), 'Position should be the same after a load');
+        $this->assertEquals($entity1->parent_id, $this->readAttribute($entity1, 'old_parent_id'), 'Parent should be the same after a load');
+
+        $entity1->title = 'New title';
+        $entity1->save();
+
+        $this->assertEquals(8, Page::find(9)->position, 'Sibling node should not have moved');
+        $this->assertEquals($entity1->position, $this->readAttribute($entity1, 'old_position'));
+        $this->assertEquals($entity1->parent_id, $this->readAttribute($entity1, 'old_parent_id'));
     }
 
     /**
