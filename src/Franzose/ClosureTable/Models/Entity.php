@@ -128,10 +128,11 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function setParentIdAttribute($value)
     {
-        $column = $this->getParentIdColumn();
-
+        if ($this->parent_id === $value) {
+            return;
+        }
         $this->old_parent_id = $this->parent_id;
-        $this->attributes[$column] = $value;
+        $this->attributes[$this->getParentIdColumn()] = $value;
     }
 
     /**
@@ -171,6 +172,9 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function setPositionAttribute($value)
     {
+        if ($this->position === $value) {
+            return;
+        }
         $this->old_position = $this->position;
         $this->attributes[$this->getPositionColumn()] = intval($value);
     }
@@ -212,6 +216,9 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function setRealDepthAttribute($value)
     {
+        if ($this->real_depth === $value) {
+            return;
+        }
         $this->old_real_depth = $this->real_depth;
         $this->attributes[$this->getRealDepthColumn()] = intval($value);
     }
@@ -270,6 +277,7 @@ class Entity extends Eloquent implements EntityInterface {
         static::created(function(Entity $entity)
         {
             static::echo_debug(PHP_EOL.'>>>>> BEGIN CREATED >>>>>'.PHP_EOL);
+            $entity->old_parent_id = false;
             $entity->old_position = $entity->position;
             $entity->insertNode();
             static::echo_debug(PHP_EOL.'<<<<< END CREATED <<<<<'.PHP_EOL);
@@ -1248,7 +1256,7 @@ class Entity extends Eloquent implements EntityInterface {
     {
         if ($this->isMoved === false)
         {
-            $this->position = $this->getNextAfterLastPosition();
+            $this->position = $this->position !== null ? $this->position : $this->getNextAfterLastPosition();
             $this->real_depth = $this->getNewRealDepth($this->parent_id);
         }
 
@@ -1362,7 +1370,7 @@ class Entity extends Eloquent implements EntityInterface {
             // TODO: There's probably a bug here where if you just created an entity and you set it to be
             // a root (parent_id = null) then it comes in here (while it should have gone in the else)
             // Reordering within the same ancestor
-            if ($this->old_parent_id == $this->parent_id)
+            if ($this->old_parent_id !== false && $this->old_parent_id == $this->parent_id)
             {
                 if ($this->position > $this->old_position)
                 {
