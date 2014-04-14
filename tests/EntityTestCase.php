@@ -36,6 +36,7 @@ class EntityTestCase extends BaseTestCase {
         // TODO: Remove this when Laravel fixes the issue with model booting in tests
         if (self::$force_boot) {
             Entity::boot();
+            Page::boot();
         } else {
             self::$force_boot = true;
         }
@@ -92,6 +93,30 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals($entity->position, $this->readAttribute($entity, 'old_position'));
         $this->assertEquals(null, $entity->parent_id);
         $this->assertEquals($entity->parent_id, $this->readAttribute($entity, 'old_parent_id'));
+    }
+
+    public function testCreateUseGivenPosition()
+    {
+        $this->assertEquals(1, Page::find(2)->position);
+
+        $entity = new Page(['title' => 'Item 1']);
+        $entity->position = 1;
+        $entity->save();
+
+        $this->assertEquals(1, $entity->position);
+        $this->assertEquals(2, Page::find(2)->position);
+    }
+
+    public function testCreateGivenPosition0()
+    {
+        $this->assertEquals(0, Page::find(1)->position);
+
+        $entity = new Page(['title' => 'Item 1']);
+        $entity->position = 0;
+        $entity->save();
+
+        $this->assertEquals(0, $entity->position);
+        $this->assertEquals(1, Page::find(1)->position);
     }
 
     public function testCreateDoesNotChangePositionOfSiblings()
