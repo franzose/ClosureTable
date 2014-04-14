@@ -95,12 +95,12 @@ $newChild2 = new Page(array(
 	'content' => 'The content of a child'
 ));
 
-$page->appendChild($newChild);
+$page->addChild($newChild);
 
 //you can set child position
-$page->appendChild($newChild, 5);
+$page->addChild($newChild, 5);
 
-$page->appendChildren([$newChild, $newChild2]);
+$page->addChildren([$newChild, $newChild2]);
 
 $page->getChildAt(5);
 $page->getFirstChild();
@@ -160,7 +160,7 @@ $page->addSiblings([new Page, new Page], 5); //insert from fifth position
 ```php
 $roots = Page::getRoots();
 $isRoot = Page::find(23)->isRoot();
-Page::find(11)->makeRoot();
+Page::find(11)->makeRoot(0); //at the moment we always have to set a position when making node a root
 ```
 
 ### Entire tree
