@@ -36,7 +36,7 @@ class EntityTestCase extends BaseTestCase {
         // TODO: Remove this when Laravel fixes the issue with model booting in tests
         if (self::$force_boot) {
             Entity::boot();
-            Page::boot();
+           Page::boot();
         } else {
             self::$force_boot = true;
         }
@@ -78,6 +78,20 @@ class EntityTestCase extends BaseTestCase {
         $this->assertTrue(Entity::find(1)->isRoot());
     }
 
+    public function testCreate()
+    {
+        Entity::truncate();
+
+        $entity1 = new Entity;
+        $entity1->save();
+
+        $this->assertEquals(0, $entity1->position);
+
+        $entity2 = new Entity;
+        $entity2->save();
+        $this->assertEquals(1, $entity2->position);
+    }
+
     public function testCreateSetsPosition()
     {
         $entity = new Page(['title' => 'Item 1']);
@@ -95,28 +109,31 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals($entity->parent_id, $this->readAttribute($entity, 'old_parent_id'));
     }
 
-    public function testCreateUseGivenPosition()
+    /**
+     * @dataProvider createUseGivenPositionProvider
+     */
+    public function testCreateUseGivenPosition($initial_position, $test_entity, $assign_position, $expected_position, $test_position)
     {
-        $this->assertEquals(1, Page::find(2)->position);
+        $this->assertEquals($initial_position, Page::find($test_entity)->position, 'Prerequisite doesn\'t match expectation');
 
         $entity = new Page(['title' => 'Item 1']);
-        $entity->position = 1;
+        $entity->position = $assign_position;
         $entity->save();
 
-        $this->assertEquals(1, $entity->position);
-        $this->assertEquals(2, Page::find(2)->position);
+        $this->assertEquals($expected_position, $entity->position, 'Saved position should match expected position');
+        $this->assertEquals($test_position, Page::find($test_entity)->position, 'Test entity should have expected position');
     }
 
-    public function testCreateGivenPosition0()
+    public function createUseGivenPositionProvider()
     {
-        $this->assertEquals(0, Page::find(1)->position);
-
-        $entity = new Page(['title' => 'Item 1']);
-        $entity->position = 0;
-        $entity->save();
-
-        $this->assertEquals(0, $entity->position);
-        $this->assertEquals(1, Page::find(1)->position);
+        return [
+            [0, 1, -1, 0, 1, 1], // Negative clamps to 0
+            [0, 1, 0, 0, 1], // 0 moves previous 0 to 1
+            [3, 4, 3, 3, 4], // Test in mid range
+            [8, 9, 8, 8, 9], // Last existing entity
+            [8, 9, 9, 9, 8], // Add after last position
+            [8, 9, null, 9, 8], // Do not specify position = after last position
+        ];
     }
 
     public function testCreateDoesNotChangePositionOfSiblings()

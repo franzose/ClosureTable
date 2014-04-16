@@ -214,7 +214,7 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @param int $value
      */
-    public function setRealDepthAttribute($value)
+    protected function setRealDepthAttribute($value)
     {
         if ($this->real_depth === $value) {
             return;
@@ -1296,7 +1296,7 @@ class Entity extends Eloquent implements EntityInterface {
     public function getNextAfterLastPosition($parentId = false)
     {
         $position = $this->getLastPosition($parentId);
-        return $position === 0 ? 0 : $position + 1;
+        return $position === null ? 0 : $position + 1;
     }
 
     public function getLastPosition($parentId = false)
@@ -1311,7 +1311,7 @@ class Entity extends Eloquent implements EntityInterface {
             ->orderBy($positionColumn, 'desc')
             ->first();
 
-        return !is_null($entity) ?  $entity->position : 0;
+        return !is_null($entity) ? (int)$entity->position : null;
     }
 
     /**
