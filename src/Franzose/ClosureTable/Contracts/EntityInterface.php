@@ -8,32 +8,32 @@
 interface EntityInterface {
 
     /**
-     * The parent id column name.
+     * Gets the short name of the "parent id" column.
      *
-     * @var string
+     * @return string
      */
-    const PARENT_ID = 'parent_id';
+    public function getParentIdColumn();
 
     /**
-     * The position column name.
+     * Gets the short name of the "position" column.
      *
-     * @var string
+     * @return string
      */
-    const POSITION = 'position';
+    public function getPositionColumn();
 
     /**
-     * The "real depth" column name.
+     * Gets the short name of the "real depth" column.
      *
-     * @var string
+     * @return string
      */
-    const REAL_DEPTH = 'real_depth';
+    public function getRealDepthColumn();
 
     /**
-     * Relations array key that stores children collection.
+     * Gets the "children" relation index.
      *
-     * @var string
+     * @return string
      */
-    const CHILDREN = 'children';
+    public function getChildrenRelationIndex();
 
     /**
      * "Query all models" flag.

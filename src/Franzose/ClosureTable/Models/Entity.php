@@ -142,7 +142,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getQualifiedParentIdColumn()
     {
-        return $this->getTable() . '.' . static::PARENT_ID;
+        return $this->getTable() . '.' . $this->getParentIdColumn();
     }
 
     /**
@@ -152,7 +152,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getParentIdColumn()
     {
-        return static::PARENT_ID;
+        return 'parent_id';
     }
 
     /**
@@ -186,7 +186,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getQualifiedPositionColumn()
     {
-        return $this->getTable() . '.' . static::POSITION;
+        return $this->getTable() . '.' . $this->getPositionColumn();
     }
 
     /**
@@ -196,7 +196,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getPositionColumn()
     {
-        return static::POSITION;
+        return 'position';
     }
 
     /**
@@ -230,7 +230,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getQualifiedRealDepthColumn()
     {
-        return $this->getTable() . '.' . static::REAL_DEPTH;
+        return $this->getTable() . '.' . $this->getRealDepthColumn();
     }
 
     /**
@@ -240,7 +240,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getRealDepthColumn()
     {
-        return static::REAL_DEPTH;
+        return 'real_depth';
     }
 
     /**
@@ -250,7 +250,7 @@ class Entity extends Eloquent implements EntityInterface {
      */
     public function getChildrenRelationIndex()
     {
-        return static::CHILDREN;
+        return 'children';
     }
 
     /**
