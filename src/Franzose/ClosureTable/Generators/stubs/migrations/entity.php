@@ -7,9 +7,12 @@ class {{entity_class}} extends Migration {
 
     public function up()
     {
-	Schema::table('{{entity_table}}', function(Blueprint $table){
+	    Schema::table('{{entity_table}}', function(Blueprint $table)
+        {
             $table->engine = 'InnoDB';
-            Schema::create('{{entity_table}}', function(Blueprint $t){
+
+            Schema::create('{{entity_table}}', function(Blueprint $t)
+            {
                 $t->increments('id');
                 $t->integer('parent_id')->unsigned()->nullable();
                 $t->integer('position', false, true);

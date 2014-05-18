@@ -7,9 +7,12 @@ class {{closure_class}} extends Migration {
 
     public function up()
     {
-        Schema::table('{{closure_table}}', function(Blueprint $table){
+        Schema::table('{{closure_table}}', function(Blueprint $table)
+        {
             $table->engine = 'InnoDB';
-            Schema::create('{{closure_table}}', function(Blueprint $t){
+
+            Schema::create('{{closure_table}}', function(Blueprint $t)
+            {
                 $t->increments('ctid');
 
                 $t->integer('ancestor', false, true);
@@ -27,6 +30,6 @@ class {{closure_class}} extends Migration {
         Schema::table('{{closure_table}}', function(Blueprint $table)
         {
             Schema::dropIfExists('{{closure_table}}');
-        }
+        });
     }
 }
