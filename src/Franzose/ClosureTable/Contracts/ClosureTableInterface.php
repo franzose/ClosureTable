@@ -6,26 +6,27 @@
  * @package Franzose\ClosureTable
  */
 interface ClosureTableInterface {
-    /**
-     * The ancestor column name.
-     *
-     * @var string
-     */
-    const ANCESTOR = 'ancestor';
 
     /**
-     * The descendant column name.
+     * Get the short name of the "ancestor" column.
      *
-     * @var string
+     * @return string
      */
-    const DESCENDANT = 'descendant';
+    public function getAncestorColumn();
 
     /**
-     * The depth column name.
+     * Get the short name of the "descendant" column.
      *
-     * @var string
+     * @return string
      */
-    const DEPTH = 'depth';
+    public function getDescendantColumn();
+
+    /**
+     * Get the short name of the "depth" column.
+     *
+     * @return string
+     */
+    public function getDepthColumn();
 
     /**
      * Inserts new node into closure table.

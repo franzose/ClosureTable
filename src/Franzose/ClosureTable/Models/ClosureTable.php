@@ -187,7 +187,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function getQualifiedAncestorColumn()
     {
-        return $this->getTable() . '.' . static::ANCESTOR;
+        return $this->getTable() . '.' . $this->getAncestorColumn();
     }
 
     /**
@@ -197,7 +197,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function getAncestorColumn()
     {
-        return static::ANCESTOR;
+        return 'ancestor';
     }
 
     /**
@@ -227,7 +227,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function getQualifiedDescendantColumn()
     {
-        return $this->getTable() . '.' . static::DESCENDANT;
+        return $this->getTable() . '.' . $this->getDescendantColumn();
     }
 
     /**
@@ -237,7 +237,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function getDescendantColumn()
     {
-        return static::DESCENDANT;
+        return 'descendant';
     }
 
     /**
@@ -267,7 +267,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function getQualifiedDepthColumn()
     {
-        return $this->getTable() . '.' . static::DEPTH;
+        return $this->getTable() . '.' . $this->getDepthColumn();
     }
 
     /**
@@ -277,6 +277,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function getDepthColumn()
     {
-        return static::DEPTH;
+        return 'depth';
     }
 } 
