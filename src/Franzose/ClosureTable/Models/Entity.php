@@ -1127,7 +1127,8 @@ class Entity extends Eloquent implements EntityInterface {
          */
         $instance = new static;
 
-        return $instance->get($instance->prepareTreeQueryColumns($columns))->toTree();
+        return $instance->orderBy('parent_id')->orderBy('position')
+            ->get($instance->prepareTreeQueryColumns($columns))->toTree();
     }
 
     /**
