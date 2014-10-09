@@ -1251,9 +1251,11 @@ class Entity extends Eloquent implements EntityInterface {
      * Perform a model insert operation.
      *
      * @param  EloquentBuilder  $query
+     * @param  array            $options
+     * 
      * @return bool
      */
-    protected function performInsert(EloquentBuilder $query)
+    protected function performInsert(EloquentBuilder $query, array $options)
     {
         if ($this->isMoved === false)
         {
@@ -1261,18 +1263,20 @@ class Entity extends Eloquent implements EntityInterface {
             $this->real_depth = $this->getNewRealDepth($this->parent_id);
         }
 
-        return parent::performInsert($query);
+        return parent::performInsert($query, $options);
     }
 
     /**
      * Perform a model update operation.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  array                                  $options
+     * 
      * @return bool
      */
-    protected function performUpdate(EloquentBuilder $query)
+    protected function performUpdate(EloquentBuilder $query, array $options)
     {
-        if (parent::performUpdate($query))
+        if (parent::performUpdate($query, $options))
         {
             if ($this->real_depth != $this->old_real_depth && $this->isMoved === true)
             {
