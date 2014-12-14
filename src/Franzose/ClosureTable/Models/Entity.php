@@ -1490,7 +1490,11 @@ class Entity extends Eloquent implements EntityInterface {
         return new QueryBuilder($conn, $grammar, $conn->getPostProcessor());
     }
 
-    private static function echo_debug($string)
+    /**
+     *  Echo some debug information.
+     * 
+     */
+    protected static function echo_debug($string)
     {
         if (static::$debug)
         {
