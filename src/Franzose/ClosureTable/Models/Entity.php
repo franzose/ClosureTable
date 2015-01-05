@@ -1255,7 +1255,7 @@ class Entity extends Eloquent implements EntityInterface {
      * 
      * @return bool
      */
-    protected function performInsert(EloquentBuilder $query, array $options)
+    protected function performInsert(EloquentBuilder $query, array $options = [])
     {
         if ($this->isMoved === false)
         {
@@ -1274,7 +1274,7 @@ class Entity extends Eloquent implements EntityInterface {
      * 
      * @return bool
      */
-    protected function performUpdate(EloquentBuilder $query, array $options)
+    protected function performUpdate(EloquentBuilder $query, array $options = [])
     {
         if (parent::performUpdate($query, $options))
         {
