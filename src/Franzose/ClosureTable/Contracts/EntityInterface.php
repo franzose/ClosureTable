@@ -445,7 +445,7 @@ interface EntityInterface {
      *
      * @param bool $withSelf
      * @param bool $forceDelete
-     * @return mixed
+     * @return void
      */
     public function deleteSubtree($withSelf = false, $forceDelete = false);
 }

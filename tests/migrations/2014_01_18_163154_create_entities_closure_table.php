@@ -19,8 +19,8 @@ class CreateEntitiesClosureTable extends Migration {
             $table->integer('descendant');
             $table->integer('depth');
 
-            $table->foreign('ancestor')->references('id')->on('entities');
-            $table->foreign('descendant')->references('id')->on('entities');
+            $table->foreign('ancestor')->references('id')->on('entities')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('descendant')->references('id')->on('entities')->onDelete('cascade')->onUpdate('cascade');
 		});
 	}
 

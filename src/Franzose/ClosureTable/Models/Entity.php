@@ -266,21 +266,17 @@ class Entity extends Eloquent implements EntityInterface {
         // the closure table rows will update automatically.
         static::saving(function(Entity $entity)
         {
-            static::echo_debug(PHP_EOL.'>>>>> BEGIN SAVING >>>>>'.PHP_EOL);
             $entity->clampPosition();
             $entity->moveNode();
-            static::echo_debug(PHP_EOL.'<<<<< END SAVING <<<<<'.PHP_EOL);
         });
 
         // When entity is created, the appropriate
         // data will be put into the closure table.
         static::created(function(Entity $entity)
         {
-            static::echo_debug(PHP_EOL.'>>>>> BEGIN CREATED >>>>>'.PHP_EOL);
             $entity->old_parent_id = false;
             $entity->old_position = $entity->position;
             $entity->insertNode();
-            static::echo_debug(PHP_EOL.'<<<<< END CREATED <<<<<'.PHP_EOL);
         });
 
         // Everytime the model's position or parent
@@ -288,9 +284,7 @@ class Entity extends Eloquent implements EntityInterface {
         // so they will always keep the proper order.
         static::saved(function(Entity $entity)
         {
-            static::echo_debug(PHP_EOL.'>>>>> BEGIN SAVED >>>>>'.PHP_EOL);
             $entity->reorderSiblings();
-            static::echo_debug(PHP_EOL.'<<<<< END SAVED <<<<<'.PHP_EOL);
         });
     }
 
@@ -1457,13 +1451,20 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @param bool $withSelf
      * @param bool $forceDelete
-     * @return bool
+     * @return void
      */
     public function deleteSubtree($withSelf = false, $forceDelete = false)
     {
         $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-        return $this->subqueryClosureBy('descendant', $withSelf)->$action();
+        $ids = $this->joinClosureBy('descendant', $withSelf)->lists($this->getKeyName());
+
+        if ($forceDelete)
+        {
+            $this->closure->whereIn($this->closure->getDescendantColumn(), $ids)->delete();
+        }
+
+        $this->whereIn($this->getKeyName(), $ids)->$action();
     }
 
     /**
@@ -1488,17 +1489,5 @@ class Entity extends Eloquent implements EntityInterface {
         $grammar = $conn->getQueryGrammar();
 
         return new QueryBuilder($conn, $grammar, $conn->getPostProcessor());
-    }
-
-    /**
-     *  Echo some debug information.
-     * 
-     */
-    protected static function echo_debug($string)
-    {
-        if (static::$debug)
-        {
-            echo $string;
-        }
     }
 }

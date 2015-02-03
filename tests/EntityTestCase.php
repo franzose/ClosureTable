@@ -1,5 +1,6 @@
 <?php namespace Franzose\ClosureTable\Tests;
 
+use Franzose\ClosureTable\Models\ClosureTable;
 use Mockery;
 use Franzose\ClosureTable\Models\Entity;
 use Franzose\ClosureTable\Tests\Models\Page;
@@ -684,6 +685,15 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertCount(0, Entity::whereBetween('id', [9, 15])->get());
         $this->assertCount(8, Entity::whereBetween('id', [1, 8])->get());
+    }
+
+    public function testForceDeleteSubtree()
+    {
+        $entity = Entity::find(9);
+        $entity->deleteSubtree(false, true);
+
+        $this->assertCount(1, Entity::whereBetween('id', [9, 15])->get());
+        $this->assertCount(1, ClosureTable::whereBetween('ancestor', [9, 15])->get());
     }
 
     public function testCreateFromArray()
