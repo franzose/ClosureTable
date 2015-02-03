@@ -751,7 +751,7 @@ class Entity extends Eloquent implements EntityInterface {
         if ($this->exists)
         {
             $action = ($forceDelete === true ? 'forceDelete' : 'delete');
-            
+
             $this->children($position)->$action();
         }
 
