@@ -717,6 +717,15 @@ class EntityTestCase extends BaseTestCase {
         $this->assertEquals(1, ClosureTable::whereBetween('ancestor', [1, 9])->count());
     }
 
+    public function testForceDeleteSubtreeWithSelf()
+    {
+        $entity = Entity::find(9);
+        $entity->deleteSubtree(true, true);
+
+        $this->assertEquals(0, Entity::whereBetween('id', [9, 15])->count());
+        $this->assertEquals(0, ClosureTable::whereBetween('ancestor', [9, 15])->count());
+    }
+
     public function testCreateFromArray()
     {
         $array = [
