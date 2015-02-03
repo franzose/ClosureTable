@@ -19,8 +19,8 @@ class {{closure_class}} extends Migration {
                 $t->integer('descendant', false, true);
                 $t->integer('depth', false, true);
 
-                $t->foreign('ancestor')->references('id')->on('{{entity_table}}');
-                $t->foreign('descendant')->references('id')->on('{{entity_table}}');
+                $t->foreign('ancestor')->references('id')->on('{{entity_table}}')->onDelete('cascade');
+                $t->foreign('descendant')->references('id')->on('{{entity_table}}')->onDelete('cascade');
             });
         });
     }

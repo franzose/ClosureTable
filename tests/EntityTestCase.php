@@ -1,5 +1,6 @@
 <?php namespace Franzose\ClosureTable\Tests;
 
+use DB;
 use Franzose\ClosureTable\Models\ClosureTable;
 use Mockery;
 use Franzose\ClosureTable\Models\Entity;
@@ -81,7 +82,10 @@ class EntityTestCase extends BaseTestCase {
 
     public function testCreate()
     {
+        DB::statement("SET foreign_key_checks=0");
+        ClosureTable::truncate();
         Entity::truncate();
+        DB::statement("SET foreign_key_checks=1");
 
         $entity1 = new Entity;
         $entity1->save();

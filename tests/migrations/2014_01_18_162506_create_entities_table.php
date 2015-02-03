@@ -15,15 +15,17 @@ class CreateEntitiesTable extends Migration {
 		Schema::create('entities', function(Blueprint $table)
 		{
 			$table->increments('id');
-            $table->integer('parent_id')->nullable();
+            $table->unsignedInteger('parent_id')->nullable();
             $table->string('title')->default('The Title');
-            $table->text('excerpt')->default('The excerpt');
-            $table->longText('body')->default('The content');
+            $table->text('excerpt');
+            $table->longText('body');
             $table->integer('position', false, true);
             $table->integer('real_depth', false, true);
             $table->softDeletes();
 
-            $table->foreign('parent_id')->references('id')->on('entities');
+            $table->foreign('parent_id')->references('id')->on('entities')->onDelete('set null');
+
+			$table->engine = 'InnoDB';
 		});
 	}
 

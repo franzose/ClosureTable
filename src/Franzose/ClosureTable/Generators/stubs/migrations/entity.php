@@ -19,7 +19,7 @@ class {{entity_class}} extends Migration {
                 $t->integer('real_depth', false, true);
                 $t->softDeletes();
 
-                $t->foreign('parent_id')->references('id')->on('{{entity_table}}');
+                $t->foreign('parent_id')->references('id')->on('{{entity_table}}')->onDelete('set null');
             });
         });
     }
