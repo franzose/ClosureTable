@@ -15,12 +15,14 @@ class CreateEntitiesClosureTable extends Migration {
 		Schema::create('entities_closure', function(Blueprint $table)
 		{
             $table->increments('ctid');
-            $table->integer('ancestor');
-            $table->integer('descendant');
-            $table->integer('depth');
+            $table->unsignedInteger('ancestor');
+            $table->unsignedInteger('descendant');
+            $table->unsignedInteger('depth');
 
             $table->foreign('ancestor')->references('id')->on('entities')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('descendant')->references('id')->on('entities')->onDelete('cascade')->onUpdate('cascade');
+
+			$table->engine = 'InnoDB';
 		});
 	}
 
