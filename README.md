@@ -100,6 +100,9 @@ $page->addChild($newChild);
 //you can set child position
 $page->addChild($newChild, 5);
 
+//you can get the child
+$child = $page->addChild($newChild, null, true);
+
 $page->addChildren([$newChild, $newChild2]);
 
 $page->getChildAt(5);
@@ -150,6 +153,9 @@ $sibligns = $page->getSiblingsRange(0, 2);
 
 $page->addSibling(new Page);
 $page->addSibling(new Page, 3); //third position
+
+//add and get the sibling
+$sibling = $page->addSibling(new Page, null, true);
 
 $page->addSiblings([new Page, new Page]);
 $page->addSiblings([new Page, new Page], 5); //insert from fifth position

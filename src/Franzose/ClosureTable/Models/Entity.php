@@ -686,9 +686,10 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @param EntityInterface $child
      * @param int $position
-     * @return $this
+     * @param bool $returnChild
+     * @return EntityInterface
      */
-    public function addChild(EntityInterface $child, $position = null)
+    public function addChild(EntityInterface $child, $position = null, $returnChild = false)
     {
         if ($this->exists)
         {
@@ -700,7 +701,7 @@ class Entity extends Eloquent implements EntityInterface {
             $child->moveTo($position, $this);
         }
 
-        return $this;
+        return ($returnChild === true ? $child : $this);
     }
 
     /**
@@ -1024,9 +1025,10 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @param EntityInterface $sibling
      * @param int|null $position
-     * @return $this
+     * @param bool $returnSibling
+     * @return EntityInterface
      */
-    public function addSibling(EntityInterface $sibling, $position = null)
+    public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false)
     {
         if ($this->exists)
         {
@@ -1038,7 +1040,7 @@ class Entity extends Eloquent implements EntityInterface {
             $sibling->moveTo($position, $this->parent_id);
         }
 
-        return $this;
+        return ($returnSibling === true ? $sibling : $this);
     }
 
     /**

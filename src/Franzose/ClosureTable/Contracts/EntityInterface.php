@@ -224,9 +224,10 @@ interface EntityInterface {
      *
      * @param EntityInterface $child
      * @param int $position
-     * @return $this
+     * @param bool $returnChild
+     * @return EntityInterface
      */
-    public function addChild(EntityInterface $child, $position = null);
+    public function addChild(EntityInterface $child, $position = null, $returnChild = false);
 
     /**
      * Appends multiple children to the model.
@@ -387,9 +388,10 @@ interface EntityInterface {
      *
      * @param EntityInterface $sibling
      * @param int|null $position
-     * @return $this
+     * @param bool $returnSibling
+     * @return EntityInterface
      */
-    public function addSibling(EntityInterface $sibling, $position = null);
+    public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false);
 
     /**
      * Appends multiple siblings within the current depth.
