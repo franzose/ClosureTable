@@ -1,9 +1,11 @@
-# ClosureTable 3
+# ClosureTable
 [![Build Status](https://travis-ci.org/franzose/ClosureTable.png)](https://travis-ci.org/franzose/ClosureTable)
 [![Latest Stable Version](https://poser.pugx.org/franzose/closure-table/v/stable.png)](https://packagist.org/packages/franzose/closure-table)
 [![Total Downloads](https://poser.pugx.org/franzose/closure-table/downloads.png)](https://packagist.org/packages/franzose/closure-table)
 
-Let me introduce the third version of my package for Laravel 4. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The third version includes many bugfixes and improvements including models and migrations generator.
+## NOTE: This branch is for Laravel 4 users.<br>If you're happy with Laravel 5, please see the master branch! 
+
+Hi, this is a database package for Laravel. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The package includes generators for models and migrations.
 
 ## Installation
 To install the package, put the following in your composer.json:
