@@ -103,7 +103,7 @@ class Entity extends Eloquent implements EntityInterface {
         parent::__construct($attributes);
     }
 
-    public function newFromBuilder($attributes = array())
+    public function newFromBuilder($attributes = array(), $connection = null)
     {
         $instance = parent::newFromBuilder($attributes);
         $instance->old_parent_id = $instance->parent_id;
@@ -1249,7 +1249,7 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @param  EloquentBuilder  $query
      * @param  array            $options
-     * 
+     *
      * @return bool
      */
     protected function performInsert(EloquentBuilder $query, array $options = [])
@@ -1268,7 +1268,7 @@ class Entity extends Eloquent implements EntityInterface {
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  array                                  $options
-     * 
+     *
      * @return bool
      */
     protected function performUpdate(EloquentBuilder $query, array $options = [])
