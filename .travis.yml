@@ -10,6 +10,9 @@ sudo: false
 
 install: travis_retry composer install --no-interaction --prefer-source
 
+before_script:
+  - mysql -e 'create database closuretabletest;'
+
 script: vendor/bin/phpunit
 
 branches:

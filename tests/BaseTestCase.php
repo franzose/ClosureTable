@@ -79,7 +79,7 @@ abstract class BaseTestCase extends TestCase {
             $options = [
                 'driver'    => 'mysql',
                 'host'      => 'localhost',
-                'database'  => 'closure-table-test',
+                'database'  => 'closuretabletest',
                 'username'  => 'root',
                 'password'  => '',
                 'prefix'    => '',
