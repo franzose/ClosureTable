@@ -30,7 +30,7 @@ abstract class BaseTestCase extends TestCase {
             DB::statement('DROP TABLE IF EXISTS migrations');
         }
 
-        $artisan = $this->app->make('artisan');
+        $artisan = $this->app->make('Illuminate\Contracts\Console\Kernel');
         $artisan->call('migrate', [
             '--database' => 'closuretable',
             '--path' => '../tests/migrations'
@@ -79,7 +79,7 @@ abstract class BaseTestCase extends TestCase {
             $options = [
                 'driver'    => 'mysql',
                 'host'      => 'localhost',
-                'database'  => 'closure-table-test',
+                'database'  => 'closuretabletest',
                 'username'  => 'root',
                 'password'  => '',
                 'prefix'    => '',
@@ -103,4 +103,4 @@ abstract class BaseTestCase extends TestCase {
     {
         $this->assertEquals($actual, $expected, $message, $delta, $depth, true);
     }
-} 
+}
