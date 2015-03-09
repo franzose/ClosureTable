@@ -1,6 +1,8 @@
 ClosureTable 3 Documentation
 ============================
 
+## NOTE: This branch is for Laravel 4 users.<br>If you're happy with Laravel 5, please see the master branch!
+
 Let me introduce the third version of my package for Laravel 4. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The third version includes many bugfixes and improvements including models and migrations generator.
 
 .. image:: https://travis-ci.org/franzose/ClosureTable.png
