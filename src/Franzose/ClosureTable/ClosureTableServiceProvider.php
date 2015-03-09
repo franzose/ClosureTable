@@ -1,6 +1,7 @@
 <?php
 namespace Franzose\ClosureTable;
 
+use Illuminate\Foundation\Composer;
 use Illuminate\Support\ServiceProvider;
 use Franzose\ClosureTable\Console\ClosureTableCommand;
 use Franzose\ClosureTable\Console\MakeCommand;
@@ -49,10 +50,7 @@ class ClosureTableServiceProvider extends ServiceProvider
         });
 
         $this->app['command.closuretable.make'] = $this->app->share(function ($app) {
-            $migrator = new Migrator($app['files']);
-            $modeler = new Modeler($app['files']);
-
-            return new MakeCommand($migrator, $modeler);
+            return $app['Franzose\ClosureTable\Console\MakeCommand'];
         });
 
         $this->commands('command.closuretable', 'command.closuretable.make');
