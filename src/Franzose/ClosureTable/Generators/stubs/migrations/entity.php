@@ -11,15 +11,15 @@ class {{entity_class}} extends Migration
         {
             $table->engine = 'InnoDB';
 
-            Schema::create('{{entity_table}}', function(Blueprint $t)
+            Schema::create('{{entity_table}}', function(Blueprint $table)
             {
-                $t->increments('id');
-                $t->integer('parent_id')->unsigned()->nullable();
-                $t->integer('position', false, true);
-                $t->integer('real_depth', false, true);
-                $t->softDeletes();
+                $table->increments('id');
+                $table->integer('parent_id')->unsigned()->nullable();
+                $table->integer('position', false, true);
+                $table->integer('real_depth', false, true);
+                $table->softDeletes();
 
-                $t->foreign('parent_id')->references('id')->on('{{entity_table}}')->onDelete('set null');
+                $table->foreign('parent_id')->references('id')->on('{{entity_table}}')->onDelete('set null');
             });
         });
     }
