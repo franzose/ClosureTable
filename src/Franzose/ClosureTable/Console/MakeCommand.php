@@ -75,8 +75,6 @@ class MakeCommand extends Command
         $this->prepareOptions();
         $this->writeMigrations();
         $this->writeModels();
-
-        $this->call('dump-autoload');
     }
 
     /**
