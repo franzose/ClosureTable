@@ -7,20 +7,15 @@ class {{entity_class}} extends Migration
 {
     public function up()
     {
-        Schema::table('{{entity_table}}', function(Blueprint $table)
+        Schema::create('{{entity_table}}', function(Blueprint $table)
         {
-            $table->engine = 'InnoDB';
+            $table->increments('id');
+            $table->integer('parent_id')->unsigned()->nullable();
+            $table->integer('position', false, true);
+            $table->integer('real_depth', false, true);
+            $table->softDeletes();
 
-            Schema::create('{{entity_table}}', function(Blueprint $table)
-            {
-                $table->increments('id');
-                $table->integer('parent_id')->unsigned()->nullable();
-                $table->integer('position', false, true);
-                $table->integer('real_depth', false, true);
-                $table->softDeletes();
-
-                $table->foreign('parent_id')->references('id')->on('{{entity_table}}')->onDelete('set null');
-            });
+            $table->foreign('parent_id')->references('id')->on('{{entity_table}}')->onDelete('set null');
         });
     }
 

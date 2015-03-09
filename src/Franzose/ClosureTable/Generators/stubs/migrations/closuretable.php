@@ -7,21 +7,16 @@ class {{closure_class}} extends Migration
 {
     public function up()
     {
-        Schema::table('{{closure_table}}', function(Blueprint $table)
+        Schema::create('{{closure_table}}', function(Blueprint $table)
         {
-            $table->engine = 'InnoDB';
+            $table->increments('ctid');
 
-            Schema::create('{{closure_table}}', function(Blueprint $table)
-            {
-                $table->increments('ctid');
+            $table->integer('ancestor', false, true);
+            $table->integer('descendant', false, true);
+            $table->integer('depth', false, true);
 
-                $table->integer('ancestor', false, true);
-                $table->integer('descendant', false, true);
-                $table->integer('depth', false, true);
-
-                $table->foreign('ancestor')->references('id')->on('{{entity_table}}')->onDelete('cascade');
-                $table->foreign('descendant')->references('id')->on('{{entity_table}}')->onDelete('cascade');
-            });
+            $table->foreign('ancestor')->references('id')->on('{{entity_table}}')->onDelete('cascade');
+            $table->foreign('descendant')->references('id')->on('{{entity_table}}')->onDelete('cascade');
         });
     }
 

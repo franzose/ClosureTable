@@ -124,6 +124,7 @@ class MakeCommand extends Command
             ['closure-table', 'ct', InputOption::VALUE_OPTIONAL, 'Closure table name.'],
             ['models-path', 'mdl', InputOption::VALUE_OPTIONAL, 'Models path.'],
             ['migrations-path', 'mgr', InputOption::VALUE_OPTIONAL, 'Migrations path.'],
+            ['use-innodb', 'i', InputOption::VALUE_OPTIONAL, 'Use InnoDB tables.'],
         ];
     }
 
@@ -150,5 +151,6 @@ class MakeCommand extends Command
         $this->options[$options[4][0]] = $input[4] ?: ExtStr::tableize($input[1] . 'Closure');
         $this->options[$options[5][0]] = $input[5] ? $input[5] : './app';
         $this->options[$options[6][0]] = $input[6] ? $input[6] : './database/migrations';
+        $this->options[$options[7][0]] = $input[7] ?: false;
     }
 }
