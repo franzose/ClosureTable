@@ -3,17 +3,16 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateEntitiesClosureTable extends Migration {
-
-	/**
-	 * Run the migrations.
-	 *
-	 * @return void
-	 */
-	public function up()
-	{
-		Schema::create('entities_closure', function(Blueprint $table)
-		{
+class CreateEntitiesClosureTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('entities_closure', function (Blueprint $table) {
             $table->increments('ctid');
             $table->unsignedInteger('ancestor');
             $table->unsignedInteger('descendant');
@@ -22,18 +21,17 @@ class CreateEntitiesClosureTable extends Migration {
             $table->foreign('ancestor')->references('id')->on('entities')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('descendant')->references('id')->on('entities')->onDelete('cascade')->onUpdate('cascade');
 
-			$table->engine = 'InnoDB';
-		});
-	}
+            $table->engine = 'InnoDB';
+        });
+    }
 
-	/**
-	 * Reverse the migrations.
-	 *
-	 * @return void
-	 */
-	public function down()
-	{
-		Schema::drop('entities_closure');
-	}
-
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::drop('entities_closure');
+    }
 }

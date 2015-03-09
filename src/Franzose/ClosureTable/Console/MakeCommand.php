@@ -1,5 +1,7 @@
-<?php namespace Franzose\ClosureTable\Console;
+<?php
+namespace Franzose\ClosureTable\Console;
 
+use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Franzose\ClosureTable\Generators\Migration;
@@ -11,7 +13,9 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  *
  * @package Franzose\ClosureTable\Console
  */
-class MakeCommand extends Command {
+class MakeCommand extends Command
+{
+    use AppNamespaceDetectorTrait;
 
     /**
      * The console command name.
@@ -72,8 +76,6 @@ class MakeCommand extends Command {
         $this->prepareOptions();
         $this->writeMigrations();
         $this->writeModels();
-
-        $this->call('dump-autoload');
     }
 
     /**
@@ -85,8 +87,7 @@ class MakeCommand extends Command {
     {
         $files = $this->migrator->create($this->options);
 
-        foreach($files as $file)
-        {
+        foreach ($files as $file) {
             $path = pathinfo($file, PATHINFO_FILENAME);
             $this->line("      <fg=green;options=bold>create</fg=green;options=bold>  $path");
         }
@@ -101,8 +102,7 @@ class MakeCommand extends Command {
     {
         $files = $this->modeler->create($this->options);
 
-        foreach($files as $file)
-        {
+        foreach ($files as $file) {
             $path = pathinfo($file, PATHINFO_FILENAME);
             $this->line("      <fg=green;options=bold>create</fg=green;options=bold>  $path");
         }
@@ -123,6 +123,7 @@ class MakeCommand extends Command {
             ['closure-table', 'ct', InputOption::VALUE_OPTIONAL, 'Closure table name.'],
             ['models-path', 'mdl', InputOption::VALUE_OPTIONAL, 'Models path.'],
             ['migrations-path', 'mgr', InputOption::VALUE_OPTIONAL, 'Migrations path.'],
+            ['use-innodb', 'i', InputOption::VALUE_OPTIONAL, 'Use InnoDB tables.'],
         ];
     }
 
@@ -136,20 +137,19 @@ class MakeCommand extends Command {
         $options = $this->getOptions();
         $input = [];
 
-        foreach($options as $option)
-        {
+        foreach ($options as $option) {
             $input[] = $this->option($option[0]);
         }
 
-        $larapath = $this->laravel['path'];
         $lastnsdelim = strrpos($input[1], '\\');
 
-        $this->options[$options[0][0]] = $input[0] ?: substr($input[1], 0, $lastnsdelim);
+        $this->options[$options[0][0]] = $input[0] ?: rtrim($this->getAppNamespace(), '\\');
         $this->options[$options[1][0]] = substr($input[1], $lastnsdelim);
         $this->options[$options[2][0]] = $input[2] ?: ExtStr::tableize($input[1]);
-        $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]].'Closure';
-        $this->options[$options[4][0]] = $input[4] ?: ExtStr::tableize($input[1].'Closure');
-        $this->options[$options[5][0]] = $input[5] ?  $input[5] : $larapath . '/models';
-        $this->options[$options[6][0]] = $input[6] ?  $input[6] : $larapath . '/database/migrations';
+        $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]] . 'Closure';
+        $this->options[$options[4][0]] = $input[4] ?: ExtStr::tableize($input[1] . 'Closure');
+        $this->options[$options[5][0]] = $input[5] ? $input[5] : './app';
+        $this->options[$options[6][0]] = $input[6] ? $input[6] : './database/migrations';
+        $this->options[$options[7][0]] = $input[7] ?: false;
     }
-} 
+}

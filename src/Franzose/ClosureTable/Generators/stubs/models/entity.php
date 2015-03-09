@@ -1,7 +1,10 @@
-<?php {{namespace}}
+<?php
+{{namespace}}
 
-class {{entity_class}} extends \Franzose\ClosureTable\Models\Entity implements {{entity_class}}Interface {
+use Franzose\ClosureTable\Models\Entity;
 
+class {{entity_class}} extends Entity implements {{entity_class}}Interface
+{
     /**
      * The table associated with the model.
      *

@@ -1,5 +1,7 @@
-<?php namespace Franzose\ClosureTable\Generators;
+<?php
+namespace Franzose\ClosureTable\Generators;
 
+use Carbon\Carbon;
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 /**
@@ -7,7 +9,12 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  *
  * @package Franzose\ClosureTable\Generators
  */
-class Migration extends Generator {
+class Migration extends Generator
+{
+    /**
+     * @var array
+     */
+    private $usedTimestamps = [];
 
     /**
      * Creates migration files.
@@ -21,9 +28,11 @@ class Migration extends Generator {
 
         $entityClass = $this->getClassName($options['entity-table']);
         $closureClass = $this->getClassName($options['closure-table']);
+        $useInnoDB = $options['use-innodb'];
+        $stubPrefix = $useInnoDB ? '-innodb' : '';
 
         $paths[] = $path = $this->getPath($options['entity-table'], $options['migrations-path']);
-        $stub = $this->getStub('entity', 'migrations');
+        $stub = $this->getStub('entity' . $stubPrefix, 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'entity_table' => $options['entity-table'],
@@ -31,12 +40,12 @@ class Migration extends Generator {
         ]));
 
         $paths[] = $path = $this->getPath($options['closure-table'], $options['migrations-path']);
-        $stub = $this->getStub('closuretable', 'migrations');
+        $stub = $this->getStub('closuretable' . $stubPrefix, 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'closure_table' => $options['closure-table'],
             'closure_class' => $closureClass,
-            'entity_table'  => $options['entity-table']
+            'entity_table' => $options['entity-table']
         ]));
 
         return $paths;
@@ -73,6 +82,13 @@ class Migration extends Generator {
      */
     protected function getPath($name, $path)
     {
-        return $path . '/' . date('Y_m_d_His') . '_' . $this->getName($name) . '.php';
+        $timestamp = Carbon::now();
+
+        if (in_array($timestamp, $this->usedTimestamps)) {
+            $timestamp->addSecond();
+        }
+        $this->usedTimestamps[] = $timestamp;
+
+        return $path . '/' . $timestamp->format('Y_m_d_His') . '_' . $this->getName($name) . '.php';
     }
-} 
+}

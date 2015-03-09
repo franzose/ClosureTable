@@ -1,14 +1,15 @@
-<?php namespace Franzose\ClosureTable\Extensions;
+<?php
+namespace Franzose\ClosureTable\Extensions;
 
-use \Illuminate\Support\Str as BaseStr;
+use Illuminate\Support\Str as BaseStr;
 
 /**
  * Extension of the base Str class.
  *
  * @package Franzose\ClosureTable\Extensions
  */
-class Str extends BaseStr {
-
+class Str extends BaseStr
+{
     /**
      * Makes appropriate class name from given string.
      *
@@ -32,4 +33,4 @@ class Str extends BaseStr {
 
         return (ends_with($name, 'Closure') ? snake_case($name) : snake_case(str_plural($name)));
     }
-} 
+}

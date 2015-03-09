@@ -1,17 +1,20 @@
-<?php namespace Franzose\ClosureTable\Tests;
+<?php
+namespace Franzose\ClosureTable\Tests;
 
 use DB;
 use Event;
 use Orchestra\Testbench\TestCase;
 use Mockery;
 use Franzose\ClosureTable\Models\Entity;
+use Way\Tests\ModelHelpers;
 
 /**
  * Class BaseTestCase
  * @package Franzose\ClosureTable\Tests
  */
-abstract class BaseTestCase extends TestCase {
-    use \Way\Tests\ModelHelpers;
+abstract class BaseTestCase extends TestCase
+{
+    use ModelHelpers;
 
     public static $debug = false;
     public static $sqlite_in_memory = false;
@@ -23,8 +26,7 @@ abstract class BaseTestCase extends TestCase {
         $this->app->bind('Franzose\ClosureTable\Contracts\EntityInterface', 'Franzose\ClosureTable\Models\Entity');
         $this->app->bind('Franzose\ClosureTable\Contracts\ClosureTableInterface', 'Franzose\ClosureTable\Models\ClosureTable');
 
-        if (!static::$sqlite_in_memory)
-        {
+        if (!static::$sqlite_in_memory) {
             DB::statement('DROP TABLE IF EXISTS entities_closure');
             DB::statement('DROP TABLE IF EXISTS entities;');
             DB::statement('DROP TABLE IF EXISTS migrations');
@@ -40,13 +42,12 @@ abstract class BaseTestCase extends TestCase {
             '--class' => 'Franzose\ClosureTable\Tests\Seeds\EntitiesSeeder'
         ]);
 
-        if (static::$debug)
-        {
+        if (static::$debug) {
             Entity::$debug = true;
-            Event::listen('illuminate.query', function($sql, $bindings, $time){
+            Event::listen('illuminate.query', function ($sql, $bindings, $time) {
                 $sql = str_replace(array('%', '?'), array('%%', '%s'), $sql);
                 $full_sql = vsprintf($sql, $bindings);
-                echo PHP_EOL.'- BEGIN QUERY -'.PHP_EOL.$full_sql.PHP_EOL.'- END QUERY -'.PHP_EOL;
+                echo PHP_EOL . '- BEGIN QUERY -' . PHP_EOL . $full_sql . PHP_EOL . '- END QUERY -' . PHP_EOL;
             });
         }
     }
@@ -66,24 +67,21 @@ abstract class BaseTestCase extends TestCase {
 
         $app['config']->set('database.default', 'closuretable');
 
-        if (static::$sqlite_in_memory)
-        {
+        if (static::$sqlite_in_memory) {
             $options = [
-                'driver'   => 'sqlite',
+                'driver' => 'sqlite',
                 'database' => ':memory:',
-                'prefix'   => '',
+                'prefix' => '',
             ];
-        }
-        else
-        {
+        } else {
             $options = [
-                'driver'    => 'mysql',
-                'host'      => 'localhost',
-                'database'  => 'closuretabletest',
-                'username'  => 'root',
-                'password'  => '',
-                'prefix'    => '',
-                'charset'   => 'utf8',
+                'driver' => 'mysql',
+                'host' => 'localhost',
+                'database' => 'closuretabletest',
+                'username' => 'root',
+                'password' => '',
+                'prefix' => '',
+                'charset' => 'utf8',
                 'collation' => 'utf8_unicode_ci',
             ];
         }

@@ -1,4 +1,5 @@
-<?php namespace Franzose\ClosureTable\Models;
+<?php
+namespace Franzose\ClosureTable\Models;
 
 use DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
@@ -13,8 +14,8 @@ use Franzose\ClosureTable\Contracts\ClosureTableInterface;
  *
  * @package Franzose\ClosureTable
  */
-class ClosureTable extends Eloquent implements ClosureTableInterface {
-
+class ClosureTable extends Eloquent implements ClosureTableInterface
+{
     /**
      * The table associated with the model.
      *
@@ -46,8 +47,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function insertNode($ancestorId, $descendantId)
     {
-        if ( ! is_numeric($ancestorId) || ! is_numeric($descendantId))
-        {
+        if (!is_numeric($ancestorId) || !is_numeric($descendantId)) {
             throw new \InvalidArgumentException('`ancestorId` and `descendantId` arguments must be of type int.');
         }
 
@@ -77,8 +77,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
      */
     public function moveNodeTo($ancestorId = null)
     {
-        if ( ! is_null($ancestorId) && ! is_numeric($ancestorId))
-        {
+        if (!is_null($ancestorId) && !is_numeric($ancestorId)) {
             throw new \InvalidArgumentException('`ancestor` argument must be of type int.');
         }
 
@@ -91,8 +90,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         $thisDescendantId = $this->descendant;
 
         // Prevent constraint collision
-        if ( ! is_null($ancestorId) && $thisAncestorId === $ancestorId)
-        {
+        if (!is_null($ancestorId) && $thisAncestorId === $ancestorId) {
             return;
         }
 
@@ -101,8 +99,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
         // Since we have already unbound the node relationships,
         // given null ancestor id, we have nothing else to do,
         // because now the node is already root.
-        if (is_null($ancestorId))
-        {
+        if (is_null($ancestorId)) {
             return;
         }
 
@@ -279,4 +276,4 @@ class ClosureTable extends Eloquent implements ClosureTableInterface {
     {
         return 'depth';
     }
-} 
+}

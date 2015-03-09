@@ -1,4 +1,5 @@
-<?php namespace Franzose\ClosureTable\Generators;
+<?php
+namespace Franzose\ClosureTable\Generators;
 
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
@@ -7,8 +8,8 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  *
  * @package Franzose\ClosureTable\Generators
  */
-class Model extends Generator {
-
+class Model extends Generator
+{
     /**
      * Creates models and interfaces files.
      *
@@ -19,16 +20,13 @@ class Model extends Generator {
     {
         $paths = [];
 
-        $nspath = str_replace('\\', '/', $options['namespace']);
         $nsplaceholder = (!empty($options['namespace']) ? "namespace " . $options['namespace'] . ";" : '');
 
-        $closureInterface = $options['closure'].'Interface';
-        $qualifiedEntityName = $nspath . '/' . $options['entity'];
+        $closureInterface = $options['closure'] . 'Interface';
+        $qualifiedEntityName = $options['entity'];
         $qualifiedEntityInterfaceName = $qualifiedEntityName . 'Interface';
-        $qualifiedClosureName = $nspath . '/' . $options['closure'];
+        $qualifiedClosureName = $options['closure'];
         $qualifiedClosureInterfaceName = $qualifiedClosureName . 'Interface';
-
-        $this->makeDirectories(explode('/', $nspath), $options['models-path']);
 
         // First, we make entity classes
         $paths[] = $path = $this->getPath($qualifiedEntityName, $options['models-path']);
@@ -84,27 +82,4 @@ class Model extends Generator {
     {
         return $path . '/' . ExtStr::classify($name) . '.php';
     }
-
-    /**
-     * Creates directories with given names under the models path.
-     *
-     * @param array $directories
-     * @param string $modelsPath
-     */
-    protected function makeDirectories(array $directories, $modelsPath)
-    {
-        $dirsnum = count($directories);
-
-        if ($dirsnum > 1)
-        {
-            $mkpath = $modelsPath . '/';
-
-            for($i=0; $i<$dirsnum; $i++)
-            {
-                $mkpath .= $directories[$i] . '/';
-
-                $this->filesystem->makeDirectory($mkpath);
-            }
-        }
-    }
-} 
+}

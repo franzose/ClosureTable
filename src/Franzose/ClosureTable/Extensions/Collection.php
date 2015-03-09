@@ -1,15 +1,16 @@
-<?php namespace Franzose\ClosureTable\Extensions;
+<?php
+namespace Franzose\ClosureTable\Extensions;
 
-use \Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use \Franzose\ClosureTable\Models\Entity;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Franzose\ClosureTable\Models\Entity;
 
 /**
  * Extended Collection class. Provides some useful methods.
  *
  * @package Franzose\ClosureTable\Extensions
  */
-class Collection extends EloquentCollection {
-
+class Collection extends EloquentCollection
+{
     /**
      * Retrieves children relation.
      *
@@ -18,8 +19,7 @@ class Collection extends EloquentCollection {
      */
     public function getChildrenOf($position)
     {
-        if ( ! $this->hasChildren($position))
-        {
+        if (!$this->hasChildren($position)) {
             return null;
         }
 
@@ -69,21 +69,16 @@ class Collection extends EloquentCollection {
         /**
          * @var Entity $item
          */
-        foreach($items as $item)
-        {
+        foreach ($items as $item) {
             $result[$item->getKey()] = $item;
         }
 
-        foreach($items as $item)
-        {
+        foreach ($items as $item) {
             $parentId = $item->{$item->getParentIdColumn()};
 
-            if (array_key_exists($parentId, $result))
-            {
+            if (array_key_exists($parentId, $result)) {
                 $result[$parentId]->appendRelation($item->getChildrenRelationIndex(), $item);
-            }
-            else
-            {
+            } else {
                 $tops[] = $item;
             }
         }

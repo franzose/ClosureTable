@@ -1,14 +1,15 @@
-<?php namespace Franzose\ClosureTable\Generators;
+<?php
+namespace Franzose\ClosureTable\Generators;
 
-use \Illuminate\Filesystem\Filesystem;
+use Illuminate\Filesystem\Filesystem;
 
 /**
  * Basic generator class.
  *
  * @package Franzose\ClosureTable\Generators
  */
-abstract class Generator {
-
+abstract class Generator
+{
     /**
      * Filesystem instance.
      *
@@ -42,7 +43,7 @@ abstract class Generator {
      */
     protected function getStubsPath($type)
     {
-        return __DIR__.'/stubs/'.$type;
+        return __DIR__ . '/stubs/' . $type;
     }
 
     /**
@@ -54,12 +55,11 @@ abstract class Generator {
      */
     protected function getStub($name, $type)
     {
-        if (stripos($name, '.php') === false)
-        {
-            $name = $name.'.php';
+        if (stripos($name, '.php') === false) {
+            $name = $name . '.php';
         }
 
-        return $this->filesystem->get($this->getStubsPath($type).'/'.$name);
+        return $this->filesystem->get($this->getStubsPath($type) . '/' . $name);
     }
 
     /**
@@ -71,11 +71,10 @@ abstract class Generator {
      */
     protected function parseStub($stub, array $replacements = [])
     {
-        foreach($replacements as $key => $replacement)
-        {
-            $stub = str_replace('{{'.$key.'}}', $replacement, $stub);
+        foreach ($replacements as $key => $replacement) {
+            $stub = str_replace('{{' . $key . '}}', $replacement, $stub);
         }
 
         return $stub;
     }
-} 
+}

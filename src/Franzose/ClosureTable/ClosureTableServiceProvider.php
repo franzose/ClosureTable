@@ -1,4 +1,5 @@
-<?php namespace Franzose\ClosureTable;
+<?php
+namespace Franzose\ClosureTable;
 
 use Illuminate\Support\ServiceProvider;
 use Franzose\ClosureTable\Console\ClosureTableCommand;
@@ -11,19 +12,20 @@ use Franzose\ClosureTable\Generators\Model as Modeler;
  *
  * @package Franzose\ClosureTable
  */
-class ClosureTableServiceProvider extends ServiceProvider {
+class ClosureTableServiceProvider extends ServiceProvider
+{
 
     /**
      * Current library version
      */
     const VERSION = 3;
 
-	/**
-	 * Indicates if loading of the provider is deferred.
-	 *
-	 * @var bool
-	 */
-	protected $defer = false;
+    /**
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
+     */
+    protected $defer = false;
 
     /**
      * Bootstrap the application events.
@@ -32,39 +34,38 @@ class ClosureTableServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->package('franzose/ClosureTable');
     }
 
-	/**
-	 * Register the service provider.
-	 *
-	 * @return void
-	 */
-	public function register()
-	{
+    /**
+     * Register the service provider.
+     *
+     * @return void
+     */
+    public function register()
+    {
         // Here we register commands for artisan
-        $this->app['command.closuretable'] = $this->app->share(function($app){
+        $this->app['command.closuretable'] = $this->app->share(function ($app) {
             return new ClosureTableCommand;
         });
 
-        $this->app['command.closuretable.make'] = $this->app->share(function($app){
+        $this->app['command.closuretable.make'] = $this->app->share(function ($app) {
             $migrator = new Migrator($app['files']);
-            $modeler  = new Modeler($app['files']);
+            $modeler = new Modeler($app['files']);
 
             return new MakeCommand($migrator, $modeler);
         });
 
         $this->commands('command.closuretable', 'command.closuretable.make');
-	}
+    }
 
-	/**
-	 * Get the services provided by the provider.
-	 *
-	 * @return array
-	 */
-	public function provides()
-	{
-		return array();
-	}
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array
+     */
+    public function provides()
+    {
+        return array();
+    }
 
 }

@@ -1,3 +1,8 @@
-<?php {{namespace}}
+<?php
+{{namespace}}
 
-interface {{entity_class}}Interface extends \Franzose\ClosureTable\Contracts\EntityInterface {}
+use Franzose\ClosureTable\Contracts\EntityInterface;
+
+interface {{entity_class}}Interface extends EntityInterface
+{
+}
