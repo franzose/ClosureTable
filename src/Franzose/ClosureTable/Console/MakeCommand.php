@@ -3,6 +3,7 @@ namespace Franzose\ClosureTable\Console;
 
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Console\Command;
+use Illuminate\Foundation\Composer;
 use Symfony\Component\Console\Input\InputOption;
 use Franzose\ClosureTable\Generators\Migration;
 use Franzose\ClosureTable\Generators\Model;
@@ -51,19 +52,25 @@ class MakeCommand extends Command
      * @var array
      */
     protected $options;
+    /**
+     * @var Composer
+     */
+    private $composer;
 
     /**
      * Creates a new command instance.
      *
      * @param Migration $migrator
      * @param Model $modeler
+     * @param Composer $composer
      */
-    public function __construct(Migration $migrator, Model $modeler)
+    public function __construct(Migration $migrator, Model $modeler, Composer $composer)
     {
         parent::__construct();
 
         $this->migrator = $migrator;
         $this->modeler = $modeler;
+        $this->composer = $composer;
     }
 
     /**
@@ -91,6 +98,8 @@ class MakeCommand extends Command
             $path = pathinfo($file, PATHINFO_FILENAME);
             $this->line("      <fg=green;options=bold>create</fg=green;options=bold>  $path");
         }
+
+        $this->composer->dumpAutoloads();
     }
 
     /**
