@@ -1,6 +1,7 @@
 <?php
 namespace Franzose\ClosureTable\Generators;
 
+use Carbon\Carbon;
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 /**
@@ -10,6 +11,11 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  */
 class Migration extends Generator
 {
+    /**
+     * @var array
+     */
+    private $usedTimestamps = [];
+
     /**
      * Creates migration files.
      *
@@ -76,6 +82,13 @@ class Migration extends Generator
      */
     protected function getPath($name, $path)
     {
-        return $path . '/' . date('Y_m_d_His') . '_' . $this->getName($name) . '.php';
+        $timestamp = Carbon::now();
+
+        if (in_array($timestamp, $this->usedTimestamps)) {
+            $timestamp->addSecond();
+        }
+        $this->usedTimestamps[] = $timestamp;
+
+        return $path . '/' . $timestamp->format('Y_m_d_His') . '_' . $this->getName($name) . '.php';
     }
 }
