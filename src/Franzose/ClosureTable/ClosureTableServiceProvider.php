@@ -18,7 +18,7 @@ class ClosureTableServiceProvider extends ServiceProvider
     /**
      * Current library version
      */
-    const VERSION = 3;
+    const VERSION = 4;
 
     /**
      * Indicates if loading of the provider is deferred.
