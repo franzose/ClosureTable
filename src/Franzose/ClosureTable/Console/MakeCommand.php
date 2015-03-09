@@ -1,5 +1,6 @@
 <?php namespace Franzose\ClosureTable\Console;
 
+use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Franzose\ClosureTable\Generators\Migration;
@@ -11,7 +12,9 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  *
  * @package Franzose\ClosureTable\Console
  */
-class MakeCommand extends Command {
+class MakeCommand extends Command
+{
+    use AppNamespaceDetectorTrait;
 
     /**
      * The console command name.
@@ -144,7 +147,7 @@ class MakeCommand extends Command {
         $larapath = $this->laravel['path'];
         $lastnsdelim = strrpos($input[1], '\\');
 
-        $this->options[$options[0][0]] = $input[0] ?: substr($input[1], 0, $lastnsdelim);
+        $this->options[$options[0][0]] = $input[0] ?: rtrim($this->getAppNamespace(), '\\');
         $this->options[$options[1][0]] = substr($input[1], $lastnsdelim);
         $this->options[$options[2][0]] = $input[2] ?: ExtStr::tableize($input[1]);
         $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]].'Closure';
