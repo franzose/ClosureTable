@@ -7,8 +7,8 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  *
  * @package Franzose\ClosureTable\Generators
  */
-class Migration extends Generator {
-
+class Migration extends Generator
+{
     /**
      * Creates migration files.
      *
@@ -36,7 +36,7 @@ class Migration extends Generator {
         $this->filesystem->put($path, $this->parseStub($stub, [
             'closure_table' => $options['closure-table'],
             'closure_class' => $closureClass,
-            'entity_table'  => $options['entity-table']
+            'entity_table' => $options['entity-table']
         ]));
 
         return $paths;
@@ -75,4 +75,4 @@ class Migration extends Generator {
     {
         return $path . '/' . date('Y_m_d_His') . '_' . $this->getName($name) . '.php';
     }
-} 
+}

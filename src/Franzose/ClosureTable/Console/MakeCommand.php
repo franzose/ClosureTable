@@ -88,8 +88,7 @@ class MakeCommand extends Command
     {
         $files = $this->migrator->create($this->options);
 
-        foreach($files as $file)
-        {
+        foreach ($files as $file) {
             $path = pathinfo($file, PATHINFO_FILENAME);
             $this->line("      <fg=green;options=bold>create</fg=green;options=bold>  $path");
         }
@@ -104,8 +103,7 @@ class MakeCommand extends Command
     {
         $files = $this->modeler->create($this->options);
 
-        foreach($files as $file)
-        {
+        foreach ($files as $file) {
             $path = pathinfo($file, PATHINFO_FILENAME);
             $this->line("      <fg=green;options=bold>create</fg=green;options=bold>  $path");
         }
@@ -139,20 +137,18 @@ class MakeCommand extends Command
         $options = $this->getOptions();
         $input = [];
 
-        foreach($options as $option)
-        {
+        foreach ($options as $option) {
             $input[] = $this->option($option[0]);
         }
 
-        $larapath = $this->laravel['path'];
         $lastnsdelim = strrpos($input[1], '\\');
 
         $this->options[$options[0][0]] = $input[0] ?: rtrim($this->getAppNamespace(), '\\');
         $this->options[$options[1][0]] = substr($input[1], $lastnsdelim);
         $this->options[$options[2][0]] = $input[2] ?: ExtStr::tableize($input[1]);
-        $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]].'Closure';
-        $this->options[$options[4][0]] = $input[4] ?: ExtStr::tableize($input[1].'Closure');
-        $this->options[$options[5][0]] = $input[5] ?  $input[5] : $larapath . '/models';
-        $this->options[$options[6][0]] = $input[6] ?  $input[6] : $larapath . '/database/migrations';
+        $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]] . 'Closure';
+        $this->options[$options[4][0]] = $input[4] ?: ExtStr::tableize($input[1] . 'Closure');
+        $this->options[$options[5][0]] = $input[5] ? $input[5] : './app';
+        $this->options[$options[6][0]] = $input[6] ? $input[6] : './database/migrations';
     }
-} 
+}
