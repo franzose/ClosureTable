@@ -3,8 +3,8 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class {{closure_class}} extends Migration {
-
+class {{closure_class}} extends Migration
+{
     public function up()
     {
         Schema::table('{{closure_table}}', function(Blueprint $table)

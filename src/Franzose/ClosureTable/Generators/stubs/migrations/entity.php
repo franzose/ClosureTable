@@ -3,11 +3,11 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class {{entity_class}} extends Migration {
-
+class {{entity_class}} extends Migration
+{
     public function up()
     {
-	    Schema::table('{{entity_table}}', function(Blueprint $table)
+        Schema::table('{{entity_table}}', function(Blueprint $table)
         {
             $table->engine = 'InnoDB';
 
