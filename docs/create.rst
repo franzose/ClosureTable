@@ -7,7 +7,7 @@ Setup your ClosureTable
 Create models and migrations
 ----------------------------
 
-For example, let's assume you're working on pages. In version 3, you can just use an ``artisan`` command to create models and migrations automatically without preparing all the stuff by hand. Open terminal and put the following:
+For example, let's assume you're working on pages. You can just use an ``artisan`` command to create models and migrations automatically without preparing all the stuff by hand. Open terminal and put the following:
 
 .. code-block:: bash
 
@@ -22,6 +22,7 @@ All options of the command:
 5. ``--closure-table``, ``-ct`` *[optional]*: closure table name
 6. ``--models-path``, ``-mdl`` *[optional]*: custom models path
 7. ``--migrations-path``, ``-mgr`` *[optional]*: custom migrations path
+8. ``--use-innodb`` and ``-i`` *[optional]*: InnoDB migrations have been made optional as well with new paramaters. Setting this will enable the InnoDB engine.
 
 That's almost all, folks! The ‘dummy’ stuff has just been created for you. You will need to add some fields to your entity migration because the created ‘dummy’ includes just **required** ``id``, ``parent_id``, ``position``, and ``real depth`` columns:
 

@@ -3,7 +3,7 @@
 [![Latest Stable Version](https://poser.pugx.org/franzose/closure-table/v/stable.png)](https://packagist.org/packages/franzose/closure-table)
 [![Total Downloads](https://poser.pugx.org/franzose/closure-table/downloads.png)](https://packagist.org/packages/franzose/closure-table)
 
-## NOTE: Master branch is now for Laravel 5 (currently partial support).<br>If you use Laravel 4, please see L4 branch! 
+## NOTE: Master branch is now for Laravel 5.<br>If you use Laravel 4, please see L4 branch! 
 
 Hi, this is a database package for Laravel. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The package includes generators for models and migrations.
 
@@ -12,7 +12,7 @@ To install the package, put the following in your composer.json:
 
 ```json
 "require": {
-	"franzose/closure-table": "3.1.*"
+	"franzose/closure-table": "4.*"
 }
 ```
 
@@ -26,7 +26,7 @@ And to `app/config/app.php`:
 
 ## Setup your ClosureTable
 ### Create models and migrations
-For example, let's assume you're working on pages. In version 3, you can just use an `artisan` command to create models and migrations automatically without preparing all the stuff by hand. Open terminal and put the following:
+For example, let's assume you're working on pages. You can just use an `artisan` command to create models and migrations automatically without preparing all the stuff by hand. Open terminal and put the following:
 
 ```bash
 php artisan closuretable:make --entity=page
@@ -40,6 +40,7 @@ All options of the command:<br>
 5. `--closure-table` _[optional]_, `-ct`: closure table name<br>
 6. `--models-path`, `-mdl` _[optional]_: custom models path<br>
 7. `--migrations-path`, `-mgr` _[optional]_: custom migrations path<br>
+8.  `--use-innodb` and `-i` _[optional]_: InnoDB migrations have been made optional as well with new paramaters. Setting this will enable the InnoDB engine.
 
 That's almost all, folks! The ‘dummy’ stuff has just been created for you. You will need to add some fields to your entity migration because the created ‘dummy’ includes just **required** `id`, `parent_id`, `position`, and `real depth` columns:<br>
 
