@@ -1,12 +1,13 @@
-<?php namespace Franzose\ClosureTable\Contracts;
+<?php
+namespace Franzose\ClosureTable\Contracts;
 
 /**
  * Basic Entity model interface.
  *
  * @package Franzose\ClosureTable\Contracts
  */
-interface EntityInterface {
-
+interface EntityInterface
+{
     /**
      * Gets the short name of the "parent id" column.
      *

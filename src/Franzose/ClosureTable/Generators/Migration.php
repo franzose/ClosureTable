@@ -1,4 +1,5 @@
-<?php namespace Franzose\ClosureTable\Generators;
+<?php
+namespace Franzose\ClosureTable\Generators;
 
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 

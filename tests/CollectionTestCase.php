@@ -1,21 +1,22 @@
-<?php namespace Franzose\ClosureTable\Tests;
+<?php
+namespace Franzose\ClosureTable\Tests;
 
-use \Franzose\ClosureTable\Extensions\Collection;
-use \Franzose\ClosureTable\Models\Entity;
-use \Mockery;
+use Franzose\ClosureTable\Extensions\Collection;
+use Franzose\ClosureTable\Models\Entity;
+use Mockery;
 
-class CollectionTestCase extends BaseTestCase {
-
+class CollectionTestCase extends BaseTestCase
+{
     public function testToTree()
     {
-        $rootEntity  = new Entity;
+        $rootEntity = new Entity;
         $rootEntity->save();
         $childEntity = with(new Entity)->moveTo(0, $rootEntity);
         $grandEntity = with(new Entity)->moveTo(0, $childEntity);
 
         $childrenRelationIndex = $rootEntity->getChildrenRelationIndex();
 
-        $tree  = with(new Collection([$rootEntity, $childEntity, $grandEntity]))->toTree();
+        $tree = with(new Collection([$rootEntity, $childEntity, $grandEntity]))->toTree();
         $rootItem = $tree->get(0);
 
         $this->assertArrayHasKey($childrenRelationIndex, $rootItem->getRelations());
@@ -63,4 +64,4 @@ class CollectionTestCase extends BaseTestCase {
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $children);
         $this->assertCount(3, $children);
     }
-} 
+}

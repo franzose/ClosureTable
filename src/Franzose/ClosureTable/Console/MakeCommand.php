@@ -1,4 +1,5 @@
-<?php namespace Franzose\ClosureTable\Console;
+<?php
+namespace Franzose\ClosureTable\Console;
 
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Console\Command;

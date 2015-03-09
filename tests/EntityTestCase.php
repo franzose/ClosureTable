@@ -1,4 +1,5 @@
-<?php namespace Franzose\ClosureTable\Tests;
+<?php
+namespace Franzose\ClosureTable\Tests;
 
 use DB;
 use Franzose\ClosureTable\Models\ClosureTable;
@@ -6,8 +7,8 @@ use Mockery;
 use Franzose\ClosureTable\Models\Entity;
 use Franzose\ClosureTable\Tests\Models\Page;
 
-class EntityTestCase extends BaseTestCase {
-
+class EntityTestCase extends BaseTestCase
+{
     /**
      * Tested entity.
      *
@@ -38,7 +39,7 @@ class EntityTestCase extends BaseTestCase {
         // TODO: Remove this when Laravel fixes the issue with model booting in tests
         if (self::$force_boot) {
             Entity::boot();
-           Page::boot();
+            Page::boot();
         } else {
             self::$force_boot = true;
         }
@@ -143,16 +144,16 @@ class EntityTestCase extends BaseTestCase {
 
     public function testCreateDoesNotChangePositionOfSiblings()
     {
-         $entity1 = new Page(['title' => 'Item 1']);
-         $entity1->save();
+        $entity1 = new Page(['title' => 'Item 1']);
+        $entity1->save();
 
-         $id = $entity1->getKey();
+        $id = $entity1->getKey();
 
-         $entity2 = new Page(['title' => 'Item 2']);
-         $entity2->save();
+        $entity2 = new Page(['title' => 'Item 2']);
+        $entity2->save();
 
-         $this->assertEquals(10, $entity2->position);
-         $this->assertEquals(9, Entity::find($id)->position);
+        $this->assertEquals(10, $entity2->position);
+        $this->assertEquals(9, Entity::find($id)->position);
     }
 
     public function testCreateSetsRealDepth()
@@ -334,7 +335,7 @@ class EntityTestCase extends BaseTestCase {
     public function testGetChildAt()
     {
         $entity = Entity::find(9);
-        $child  = $entity->getChildAt(2);
+        $child = $entity->getChildAt(2);
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
         $this->assertEquals(2, $child->position);
@@ -343,7 +344,7 @@ class EntityTestCase extends BaseTestCase {
     public function testGetFirstChild()
     {
         $entity = Entity::find(9);
-        $child  = $entity->getFirstChild();
+        $child = $entity->getFirstChild();
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
         $this->assertEquals(0, $child->position);
@@ -352,7 +353,7 @@ class EntityTestCase extends BaseTestCase {
     public function testGetLastChild()
     {
         $entity = Entity::find(9);
-        $child  = $entity->getLastChild();
+        $child = $entity->getLastChild();
 
         $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
         $this->assertEquals(3, $child->position);
@@ -360,7 +361,7 @@ class EntityTestCase extends BaseTestCase {
 
     public function testGetChildrenRange()
     {
-        $entity   = Entity::find(9);
+        $entity = Entity::find(9);
         $children = $entity->getChildrenRange(0, 2);
 
         $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $children);
@@ -633,9 +634,8 @@ class EntityTestCase extends BaseTestCase {
 
         $this->assertCount(9, $roots);
 
-        foreach($roots as $idx => $root)
-        {
-            $this->assertEquals($idx+1, $roots->get($idx)->getKey());
+        foreach ($roots as $idx => $root) {
+            $this->assertEquals($idx + 1, $roots->get($idx)->getKey());
         }
     }
 
@@ -848,7 +848,7 @@ class EntityTestCase extends BaseTestCase {
         $child->moveTo(0, $entity);
 
         $closure = ClosureTable::whereDescendant($child->getKey())
-                            ->whereAncestor($entity->getKey())->first();
+            ->whereAncestor($entity->getKey())->first();
 
         $this->assertNotNull($closure);
         $this->assertEquals(1, $closure->depth);

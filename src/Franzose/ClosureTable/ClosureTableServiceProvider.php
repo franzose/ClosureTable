@@ -1,4 +1,5 @@
-<?php namespace Franzose\ClosureTable;
+<?php
+namespace Franzose\ClosureTable;
 
 use Illuminate\Support\ServiceProvider;
 use Franzose\ClosureTable\Console\ClosureTableCommand;

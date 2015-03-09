@@ -1,12 +1,13 @@
-<?php namespace Franzose\ClosureTable\Contracts;
+<?php
+namespace Franzose\ClosureTable\Contracts;
 
 /**
  * Basic ClosureTable model interface.
  *
  * @package Franzose\ClosureTable
  */
-interface ClosureTableInterface {
-
+interface ClosureTableInterface
+{
     /**
      * Get the short name of the "ancestor" column.
      *
@@ -46,4 +47,4 @@ interface ClosureTableInterface {
      * @throws \InvalidArgumentException
      */
     public function moveNodeTo($ancestorId = null);
-} 
+}

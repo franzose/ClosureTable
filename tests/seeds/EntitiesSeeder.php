@@ -1,10 +1,11 @@
-<?php namespace Franzose\ClosureTable\Tests\Seeds;
+<?php
+namespace Franzose\ClosureTable\Tests\Seeds;
 
 use \DB;
 use Illuminate\Database\Seeder;
 
-class EntitiesSeeder extends Seeder {
-
+class EntitiesSeeder extends Seeder
+{
     public function run()
     {
         $entitiesSql = 'insert into entities (id, parent_id, title, excerpt, body, position, real_depth) values(?, ?, ?, ?, ?, ?, ?)';
@@ -23,10 +24,9 @@ class EntitiesSeeder extends Seeder {
         // 9 > 14
         // 9 > 15
 
-        foreach(range(0, 8) as $idx)
-        {
-            DB::insert($entitiesSql, [$idx+1, null, 'The title', 'The excerpt', 'The body', $idx, 0]);
-            DB::insert($closuresSql, [$idx+1, $idx+1, 0]);
+        foreach (range(0, 8) as $idx) {
+            DB::insert($entitiesSql, [$idx + 1, null, 'The title', 'The excerpt', 'The body', $idx, 0]);
+            DB::insert($closuresSql, [$idx + 1, $idx + 1, 0]);
         }
 
         DB::insert($entitiesSql, [10, 9, 'The title', 'The excerpt', 'The body', 0, 1]);
@@ -56,4 +56,4 @@ class EntitiesSeeder extends Seeder {
         DB::insert($closuresSql, [15, 15, 0]);
         DB::insert($closuresSql, [9, 15, 1]);
     }
-} 
+}
