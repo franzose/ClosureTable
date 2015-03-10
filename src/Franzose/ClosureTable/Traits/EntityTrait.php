@@ -86,11 +86,12 @@ trait EntityTrait
     protected $isMoved = false;
 
     /**
-     * Entity constructor.
+     * Entity constructor
      *
      * @param array $attributes
+     * @return array
      */
-    public function __construct(array $attributes = [])
+    protected function initialiseEntityTrait(array $attributes = [])
     {
         $position = $this->getPositionColumn();
         $depth = $this->getRealDepthColumn();
@@ -111,7 +112,7 @@ trait EntityTrait
             $this->closure->setTable($table);
         }
 
-        parent::__construct($attributes);
+        return $attributes;
     }
 
     /**

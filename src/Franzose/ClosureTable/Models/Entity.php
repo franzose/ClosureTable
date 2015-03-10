@@ -12,6 +12,8 @@ use Franzose\ClosureTable\Contracts\EntityInterface;
  */
 class Entity extends Eloquent implements EntityInterface
 {
+    use EntityTrait;
+
     /**
      * Indicates if the model should soft delete.
      *
@@ -31,5 +33,10 @@ class Entity extends Eloquent implements EntityInterface
      */
     public static $debug = false;
 
-    use EntityTrait;
+    public function __construct(array $attributes = [])
+    {
+        $attributes = $this->initialiseEntityTrait($attributes);
+
+        parent::__construct($attributes);
+    }
 }
