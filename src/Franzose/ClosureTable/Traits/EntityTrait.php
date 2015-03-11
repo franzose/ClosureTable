@@ -1,11 +1,11 @@
 <?php
 namespace Franzose\ClosureTable\Traits;
 
-use Franzose\ClosureTable\Models\Entity;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Franzose\ClosureTable\Extensions\QueryBuilder;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
+use Franzose\ClosureTable\Extensions\QueryBuilder;
+use Franzose\ClosureTable\Models\Entity;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 
 /**
  * Basic entity trait.
@@ -272,14 +272,14 @@ trait EntityTrait
     {
         // If model's parent identifier was changed,
         // the closure table rows will update automatically.
-        static::saving(function (Entity $entity) {
+        static::saving(function (EntityInterface $entity) {
             $entity->clampPosition();
             $entity->moveNode();
         });
 
         // When entity is created, the appropriate
         // data will be put into the closure table.
-        static::created(function (Entity $entity) {
+        static::created(function (EntityInterface $entity) {
             $entity->old_parent_id = false;
             $entity->old_position = $entity->position;
             $entity->insertNode();
@@ -288,7 +288,7 @@ trait EntityTrait
         // Everytime the model's position or parent
         // is changed, its siblings reordering will happen,
         // so they will always keep the proper order.
-        static::saved(function (Entity $entity) {
+        static::saved(function (EntityInterface $entity) {
             $entity->reorderSiblings();
         });
     }
