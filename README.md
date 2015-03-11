@@ -3,7 +3,7 @@
 [![Latest Stable Version](https://poser.pugx.org/franzose/closure-table/v/stable.png)](https://packagist.org/packages/franzose/closure-table)
 [![Total Downloads](https://poser.pugx.org/franzose/closure-table/downloads.png)](https://packagist.org/packages/franzose/closure-table)
 
-## NOTE: Master branch is now for Laravel 5.<br>If you use Laravel 4, please see L4 branch! 
+## NOTE: Master branch is now for Laravel 5.<br>If you use Laravel 4, please see L4 branch!
 
 Hi, this is a database package for Laravel. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The package includes generators for models and migrations.
 
@@ -61,6 +61,41 @@ Remember that many things are made customizable, so see ‘<a href="#customizati
 
 ## Time of coding
 Once your models and their database tables are created, at last, you can start actually coding. Here I will show you ClosureTable's specific approaches.
+
+### Extend vs traits
+
+Previously you were required to extend the ClosureTable `Entity` class.
+
+```php
+<?php
+
+use Franzose\ClosureTable\Models\Entity;
+
+class Page extends Entity
+{
+}
+```
+
+There is now a trait that can be used instead of using the class
+
+```php
+<?php
+
+use Franzose\ClosureTable\Traits\EntityTrait as ClosureEntity;
+use Illuminate\Database\Eloquent\Model;
+
+class Page extends Model
+{
+    use ClosureEntity;
+
+    public function __construct(array $attributes = [])
+    {
+        $attributes = $this->initialiseEntityTrait($attributes);
+
+        parent::__construct($attributes);
+    }
+}
+```
 
 ### Direct ancestor (parent)
 
