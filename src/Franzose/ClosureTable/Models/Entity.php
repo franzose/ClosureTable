@@ -33,6 +33,13 @@ class Entity extends Eloquent implements EntityInterface
      */
     public static $debug = false;
 
+    /**
+     * ClosureTable model instance.
+     *
+     * @var ClosureTable
+     */
+    protected $closure = 'Franzose\ClosureTable\Models\ClosureTable';
+
     public function __construct(array $attributes = [])
     {
         $attributes = $this->initialiseEntityTrait($attributes);

@@ -51,13 +51,6 @@ trait EntityTrait
     public $real_depth;
 
     /**
-     * ClosureTable model instance.
-     *
-     * @var ClosureTable
-     */
-    protected $closure = 'Franzose\ClosureTable\Models\ClosureTable';
-
-    /**
      * Cached "previous" (i.e. before the model is moved) direct ancestor id of this model.
      *
      * @var int
