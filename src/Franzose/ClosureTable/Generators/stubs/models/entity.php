@@ -1,10 +1,27 @@
 <?php
 {{namespace}}
 
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Traits\EntityTrait;
+use Illuminate\Database\Eloquent\Model;
 
-class {{entity_class}} extends Entity implements {{entity_class}}Interface
+class {{entity_class}} extends Model implements {{entity_class}}Interface
 {
+    use EntityTrait;
+
+    /**
+     * Indicates if the model should soft delete.
+     *
+     * @var bool
+     */
+    protected $softDelete = true;
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
     /**
      * The table associated with the model.
      *
@@ -18,4 +35,12 @@ class {{entity_class}} extends Entity implements {{entity_class}}Interface
      * @var {{closure_class_short}}
      */
     protected $closure = '{{closure_class}}';
+
+    public function __construct(array $attributes = [])
+    {
+        $attributes = $this->initialiseEntityTrait($attributes);
+
+        parent::__construct($attributes);
+    }
+
 }
