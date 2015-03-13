@@ -1,14 +1,12 @@
 <?php
 namespace Franzose\ClosureTable\Models;
 
+use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Traits\EntityTrait;
 use Illuminate\Database\Eloquent\Model as Eloquent;
-use Franzose\ClosureTable\Contracts\EntityInterface;
 
 /**
  * Basic entity class.
- *
- * @package Franzose\ClosureTable
  */
 class Entity extends Eloquent implements EntityInterface
 {

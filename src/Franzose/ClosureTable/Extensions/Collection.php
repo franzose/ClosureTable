@@ -1,13 +1,11 @@
 <?php
 namespace Franzose\ClosureTable\Extensions;
 
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Franzose\ClosureTable\Models\Entity;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
  * Extended Collection class. Provides some useful methods.
- *
- * @package Franzose\ClosureTable\Extensions
  */
 class Collection extends EloquentCollection
 {
@@ -15,12 +13,13 @@ class Collection extends EloquentCollection
      * Retrieves children relation.
      *
      * @param $position
+     *
      * @return Collection|null
      */
     public function getChildrenOf($position)
     {
         if (!$this->hasChildren($position)) {
-            return null;
+            return;
         }
 
         $item = $this->get($position);
@@ -33,6 +32,7 @@ class Collection extends EloquentCollection
      * Indicates whether an item has children.
      *
      * @param $position
+     *
      * @return bool
      */
     public function hasChildren($position)
@@ -59,6 +59,7 @@ class Collection extends EloquentCollection
      * Performs actual tree building.
      *
      * @param array $items
+     *
      * @return array
      */
     protected function makeTree(array &$items)
@@ -66,8 +67,8 @@ class Collection extends EloquentCollection
         $result = [];
         $tops = [];
 
-        /**
-         * @var Entity $item
+        /*
+         * @var Entity
          */
         foreach ($items as $item) {
             $result[$item->getKey()] = $item;

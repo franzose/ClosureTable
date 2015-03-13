@@ -1,5 +1,5 @@
 <?php
-namespace Franzose\ClosureTable\Tests\Models;
+namespace Franzose\ClosureTable\tests\models;
 
 use Franzose\ClosureTable\Models\Entity;
 

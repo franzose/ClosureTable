@@ -1,7 +1,7 @@
 <?php
-namespace Franzose\ClosureTable\Tests\Seeds;
+namespace Franzose\ClosureTable\tests\seeds;
 
-use \DB;
+use DB;
 use Illuminate\Database\Seeder;
 
 class EntitiesSeeder extends Seeder

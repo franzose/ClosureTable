@@ -5,8 +5,6 @@ use Illuminate\Filesystem\Filesystem;
 
 /**
  * Basic generator class.
- *
- * @package Franzose\ClosureTable\Generators
  */
 abstract class Generator
 {
@@ -31,6 +29,7 @@ abstract class Generator
      * Generates files from stubs.
      *
      * @param array $options
+     *
      * @return mixed
      */
     abstract public function create(array $options);
@@ -39,6 +38,7 @@ abstract class Generator
      * Gets stub files absolute path.
      *
      * @param string $type
+     *
      * @return string
      */
     protected function getStubsPath($type)
@@ -51,6 +51,7 @@ abstract class Generator
      *
      * @param string $name
      * @param string $type
+     *
      * @return string
      */
     protected function getStub($name, $type)
@@ -66,7 +67,8 @@ abstract class Generator
      * Parses a stub file replacing tags with provided values.
      *
      * @param string $stub
-     * @param array $replacements
+     * @param array  $replacements
+     *
      * @return string
      */
     protected function parseStub($stub, array $replacements = [])

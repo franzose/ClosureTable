@@ -5,8 +5,6 @@ use Illuminate\Support\Str as BaseStr;
 
 /**
  * Extension of the base Str class.
- *
- * @package Franzose\ClosureTable\Extensions
  */
 class Str extends BaseStr
 {
@@ -14,6 +12,7 @@ class Str extends BaseStr
      * Makes appropriate class name from given string.
      *
      * @param $name
+     *
      * @return string
      */
     public static function classify($name)
@@ -25,6 +24,7 @@ class Str extends BaseStr
      * Makes database table name from given class name.
      *
      * @param $name
+     *
      * @return string
      */
     public static function tableize($name)

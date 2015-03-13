@@ -1,5 +1,5 @@
 <?php
-namespace Franzose\ClosureTable\Tests;
+namespace Franzose\ClosureTable\tests;
 
 use Franzose\ClosureTable\Models\ClosureTable;
 
@@ -29,7 +29,7 @@ class ClosureTableTestCase extends BaseTestCase
     {
         parent::setUp();
 
-        $this->ctable = new ClosureTable;
+        $this->ctable = new ClosureTable();
         $this->ancestorColumn = $this->ctable->getAncestorColumn();
         $this->descendantColumn = $this->ctable->getDescendantColumn();
         $this->depthColumn = $this->ctable->getDepthColumn();

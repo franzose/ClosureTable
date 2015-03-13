@@ -6,8 +6,6 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 /**
  * ClosureTable specific migrations generator class.
- *
- * @package Franzose\ClosureTable\Generators
  */
 class Migration extends Generator
 {
@@ -20,6 +18,7 @@ class Migration extends Generator
      * Creates migration files.
      *
      * @param array $options
+     *
      * @return array
      */
     public function create(array $options)
@@ -36,7 +35,7 @@ class Migration extends Generator
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'entity_table' => $options['entity-table'],
-            'entity_class' => $entityClass
+            'entity_class' => $entityClass,
         ]));
 
         $paths[] = $path = $this->getPath($options['closure-table'], $options['migrations-path']);
@@ -45,7 +44,7 @@ class Migration extends Generator
         $this->filesystem->put($path, $this->parseStub($stub, [
             'closure_table' => $options['closure-table'],
             'closure_class' => $closureClass,
-            'entity_table' => $options['entity-table']
+            'entity_table'  => $options['entity-table'],
         ]));
 
         return $paths;
@@ -55,6 +54,7 @@ class Migration extends Generator
      * Constructs migration name in Laravel style.
      *
      * @param $name
+     *
      * @return string
      */
     protected function getName($name)
@@ -66,6 +66,7 @@ class Migration extends Generator
      * Constructs migration class name from the migration name.
      *
      * @param $name
+     *
      * @return string
      */
     protected function getClassName($name)
@@ -78,13 +79,14 @@ class Migration extends Generator
      *
      * @param $name
      * @param $path
+     *
      * @return string
      */
     protected function getPath($name, $path)
     {
         $timestamp = Carbon::now();
 
-        if (in_array($timestamp, $this->usedTimestamps)) {
+        if (in_array($timestamp, $this->usedTimestamps, true)) {
             $timestamp->addSecond();
         }
         $this->usedTimestamps[] = $timestamp;

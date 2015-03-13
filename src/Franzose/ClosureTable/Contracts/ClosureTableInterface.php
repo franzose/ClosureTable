@@ -3,8 +3,6 @@ namespace Franzose\ClosureTable\Contracts;
 
 /**
  * Basic ClosureTable model interface.
- *
- * @package Franzose\ClosureTable
  */
 interface ClosureTableInterface
 {
@@ -34,8 +32,10 @@ interface ClosureTableInterface
      *
      * @param int $ancestorId
      * @param int $descendantId
-     * @return mixed
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return mixed
      */
     public function insertNode($ancestorId, $descendantId);
 
@@ -43,8 +43,10 @@ interface ClosureTableInterface
      * Make a node a descendant of another ancestor or makes it a root node.
      *
      * @param int $ancestorId
-     * @return mixed
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return mixed
      */
     public function moveNodeTo($ancestorId = null);
 }

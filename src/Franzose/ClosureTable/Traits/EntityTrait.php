@@ -17,34 +17,32 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
  * @property int position Alias for the current position attribute name
  * @property int parent_id Alias for the direct ancestor identifier attribute name
  * @property int real_depth Alias for the real depth attribute name
- *
- * @package Franzose\ClosureTable
  */
 trait EntityTrait
 {
     /**
-     * Column name for the parent ID of an entity
+     * Column name for the parent ID of an entity.
      *
      * @var string
      */
     protected $parentIdColumn = 'parent_id';
 
     /**
-     * Column name for the real depth of an entity
+     * Column name for the real depth of an entity.
      *
      * @var string
      */
     protected $realDepthColumn = 'real_depth';
 
     /**
-     * Column name for the position of an entity
+     * Column name for the position of an entity.
      *
      * @var string
      */
     protected $positionColumn = 'position';
 
     /**
-     * The real depth of an entity
+     * The real depth of an entity.
      *
      * @var
      */
@@ -79,9 +77,10 @@ trait EntityTrait
     protected $isMoved = false;
 
     /**
-     * Entity constructor
+     * Entity constructor.
      *
      * @param array $attributes
+     *
      * @return array
      */
     protected function initialiseEntityTrait(array $attributes = [])
@@ -95,12 +94,12 @@ trait EntityTrait
             $attributes[$depth] = 0;
         }
 
-        $this->closure = new $this->closure;
+        $this->closure = new $this->closure();
 
         // The default class name of the closure table was not changed
         // so we define and set default closure table name automagically.
         // This can prevent useless copy paste of closure table models.
-        if (get_class($this->closure) == 'Franzose\ClosureTable\Models\ClosureTable') {
+        if (get_class($this->closure) === 'Franzose\ClosureTable\Models\ClosureTable') {
             $table = $this->getTable() . '_closure';
             $this->closure->setTable($table);
         }
@@ -110,14 +109,16 @@ trait EntityTrait
 
     /**
      * @param array $attributes
-     * @param null $connection
+     * @param null  $connection
+     *
      * @return mixed
      */
-    public function newFromBuilder($attributes = array(), $connection = null)
+    public function newFromBuilder($attributes = [], $connection = null)
     {
         $instance = parent::newFromBuilder($attributes);
         $instance->old_parent_id = $instance->parent_id;
         $instance->old_position = $instance->position;
+
         return $instance;
     }
 
@@ -321,6 +322,7 @@ trait EntityTrait
      * Retrieves direct ancestor of a model.
      *
      * @param array $columns
+     *
      * @return Entity
      */
     public function getParent(array $columns = ['*'])
@@ -332,7 +334,8 @@ trait EntityTrait
      * Builds closure table join based on the given column.
      *
      * @param string $column
-     * @param bool $withSelf
+     * @param bool   $withSelf
+     *
      * @return QueryBuilder
      */
     protected function joinClosureBy($column, $withSelf = false)
@@ -365,7 +368,8 @@ trait EntityTrait
      * Builds closure table "where in" query on the given column.
      *
      * @param string $column
-     * @param bool $withSelf
+     * @param bool   $withSelf
+     *
      * @return QueryBuilder
      */
     protected function subqueryClosureBy($column, $withSelf = false)
@@ -398,6 +402,7 @@ trait EntityTrait
      * Retrieves all ancestors of a model.
      *
      * @param array $columns
+     *
      * @return Collection
      */
     public function getAncestors(array $columns = ['*'])
@@ -412,6 +417,7 @@ trait EntityTrait
      * @param mixed $operator
      * @param mixed $value
      * @param array $columns
+     *
      * @return Collection
      */
     public function getAncestorsWhere($column, $operator = null, $value = null, array $columns = ['*'])
@@ -443,6 +449,7 @@ trait EntityTrait
      * Retrieves all descendants of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getDescendants(array $columns = ['*'])
@@ -457,6 +464,7 @@ trait EntityTrait
      * @param mixed $operator
      * @param mixed $value
      * @param array $columns
+     *
      * @return Collection
      */
     public function getDescendantsWhere($column, $operator = null, $value = null, array $columns = ['*'])
@@ -488,15 +496,16 @@ trait EntityTrait
      * Shorthand of the children query part.
      *
      * @param array|int|null $position
-     * @param string $order
+     * @param string         $order
+     *
      * @return QueryBuilder
      */
     protected function children($position = null, $order = 'asc')
     {
-        /**
-         * @var QueryBuilder $query
+        /*
+         * @var QueryBuilder
          */
-        $query = $this->where($this->getParentIdColumn(), '=', (int)$this->getKey());
+        $query = $this->where($this->getParentIdColumn(), '=', (int) $this->getKey());
 
         if (!is_null($position)) {
             if (is_array($position)) {
@@ -521,6 +530,7 @@ trait EntityTrait
      * Retrieves all children of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getChildren(array $columns = ['*'])
@@ -544,7 +554,7 @@ trait EntityTrait
         if ($this->hasChildrenRelation()) {
             $result = $this->getRelation($this->getChildrenRelationIndex())->count();
         } else {
-            $query = $this->where($this->getParentIdColumn(), '=', (int)$this->getKey());
+            $query = $this->where($this->getParentIdColumn(), '=', (int) $this->getKey());
             $result = $query->count();
         }
 
@@ -576,6 +586,7 @@ trait EntityTrait
      *
      * @param $relation
      * @param $value
+     *
      * @return $this
      */
     public function appendRelation($relation, $value)
@@ -592,8 +603,9 @@ trait EntityTrait
     /**
      * Retrieves a child with given position.
      *
-     * @param $position
+     * @param       $position
      * @param array $columns
+     *
      * @return Entity
      */
     public function getChildAt($position, array $columns = ['*'])
@@ -611,6 +623,7 @@ trait EntityTrait
      * Retrieves the first child.
      *
      * @param array $columns
+     *
      * @return Entity
      */
     public function getFirstChild(array $columns = ['*'])
@@ -622,6 +635,7 @@ trait EntityTrait
      * Retrieves the last child.
      *
      * @param array $columns
+     *
      * @return Entity
      */
     public function getLastChild(array $columns = ['*'])
@@ -638,9 +652,10 @@ trait EntityTrait
     /**
      * Retrieves children within given positions range.
      *
-     * @param int $from
-     * @param int $to
+     * @param int   $from
+     * @param int   $to
      * @param array $columns
+     *
      * @return Collection
      */
     public function getChildrenRange($from, $to = null, array $columns = ['*'])
@@ -664,8 +679,9 @@ trait EntityTrait
      * Appends a child to the model.
      *
      * @param EntityInterface $child
-     * @param int $position
-     * @param bool $returnChild
+     * @param int             $position
+     * @param bool            $returnChild
+     *
      * @return EntityInterface
      */
     public function addChild(EntityInterface $child, $position = null, $returnChild = false)
@@ -685,8 +701,10 @@ trait EntityTrait
      * Appends a collection of children to the model.
      *
      * @param array $children
-     * @return $this
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return $this
      */
     public function addChildren(array $children)
     {
@@ -715,8 +733,9 @@ trait EntityTrait
     /**
      * Removes a model's child with given position.
      *
-     * @param int $position
+     * @param int  $position
      * @param bool $forceDelete
+     *
      * @return $this
      */
     public function removeChild($position = null, $forceDelete = false)
@@ -733,11 +752,13 @@ trait EntityTrait
     /**
      * Removes model's children within a range of positions.
      *
-     * @param int $from
-     * @param int $to
+     * @param int  $from
+     * @param int  $to
      * @param bool $forceDelete
-     * @return $this
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return $this
      */
     public function removeChildren($from, $to = null, $forceDelete = false)
     {
@@ -758,16 +779,17 @@ trait EntityTrait
      * Builds a part of the siblings query.
      *
      * @param string|int|array $direction
-     * @param int|bool $parentId
-     * @param string $order
+     * @param int|bool         $parentId
+     * @param string           $order
+     *
      * @return QueryBuilder
      */
     protected function siblings($direction = '', $parentId = false, $order = 'asc')
     {
         $parentId = ($parentId === false ? $this->parent_id : $parentId);
 
-        /**
-         * @var QueryBuilder $query
+        /*
+         * @var QueryBuilder
          */
         $query = $this->where($this->getParentIdColumn(), '=', $parentId);
 
@@ -805,7 +827,7 @@ trait EntityTrait
 
         if (is_int($direction)) {
             $query->where($column, '=', $direction);
-        } else if (is_array($direction)) {
+        } elseif (is_array($direction)) {
             $query->buildWherePosition($this->getPositionColumn(), $direction);
         }
 
@@ -816,6 +838,7 @@ trait EntityTrait
      * Retrives all siblings of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getSiblings(array $columns = ['*'])
@@ -847,6 +870,7 @@ trait EntityTrait
      * Retrieves neighbors (immediate previous and immediate next models) of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getNeighbors(array $columns = ['*'])
@@ -857,8 +881,9 @@ trait EntityTrait
     /**
      * Retrieves a model's sibling with given position.
      *
-     * @param int $position
+     * @param int   $position
      * @param array $columns
+     *
      * @return Entity
      */
     public function getSiblingAt($position, array $columns = ['*'])
@@ -870,6 +895,7 @@ trait EntityTrait
      * Retrieves the first model's sibling.
      *
      * @param array $columns
+     *
      * @return Entity
      */
     public function getFirstSibling(array $columns = ['*'])
@@ -881,6 +907,7 @@ trait EntityTrait
      * Retrieves the last model's sibling.
      *
      * @param array $columns
+     *
      * @return Entity
      */
     public function getLastSibling(array $columns = ['*'])
@@ -892,6 +919,7 @@ trait EntityTrait
      * Retrieves immediate previous sibling of a model.
      *
      * @param array $columns
+     *
      * @return Entity
      */
     public function getPrevSibling(array $columns = ['*'])
@@ -903,6 +931,7 @@ trait EntityTrait
      * Retrieves all previous siblings of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getPrevSiblings(array $columns = ['*'])
@@ -934,6 +963,7 @@ trait EntityTrait
      * Retrieves immediate next sibling of a model.
      *
      * @param array $columns
+     *
      * @return Entity
      */
     public function getNextSibling(array $columns = ['*'])
@@ -945,6 +975,7 @@ trait EntityTrait
      * Retrieves all next siblings of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getNextSiblings(array $columns = ['*'])
@@ -975,9 +1006,10 @@ trait EntityTrait
     /**
      * Retrieves siblings within given positions range.
      *
-     * @param int $from
-     * @param int $to
+     * @param int   $from
+     * @param int   $to
      * @param array $columns
+     *
      * @return Collection
      */
     public function getSiblingsRange($from, $to = null, array $columns = ['*'])
@@ -989,8 +1021,9 @@ trait EntityTrait
      * Appends a sibling within the current depth.
      *
      * @param EntityInterface $sibling
-     * @param int|null $position
-     * @param bool $returnSibling
+     * @param int|null        $position
+     * @param bool            $returnSibling
+     *
      * @return EntityInterface
      */
     public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false)
@@ -1009,8 +1042,9 @@ trait EntityTrait
     /**
      * Appends multiple siblings within the current depth.
      *
-     * @param array $siblings
+     * @param array    $siblings
      * @param int|null $from
+     *
      * @return $this
      */
     public function addSiblings(array $siblings, $from = null)
@@ -1021,8 +1055,8 @@ trait EntityTrait
             }
 
             $parent = $this->getParent();
-            /**
-             * @var Entity $sibling
+            /*
+             * @var Entity
              */
             foreach ($siblings as $sibling) {
                 $sibling->moveTo($from, $parent);
@@ -1037,14 +1071,15 @@ trait EntityTrait
      * Retrieves root (with no ancestors) models.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function getRoots(array $columns = ['*'])
     {
-        /**
-         * @var Entity $instance
+        /*
+         * @var Entity
          */
-        $instance = new static;
+        $instance = new static();
 
         return $instance->whereNull($instance->getParentIdColumn())->get($columns);
     }
@@ -1053,6 +1088,7 @@ trait EntityTrait
      * Makes model a root with given position.
      *
      * @param int $position
+     *
      * @return $this
      */
     public function makeRoot($position)
@@ -1064,6 +1100,7 @@ trait EntityTrait
      * Adds "parent id" column to columns list for proper tree querying.
      *
      * @param array $columns
+     *
      * @return array
      */
     protected function prepareTreeQueryColumns(array $columns)
@@ -1075,14 +1112,15 @@ trait EntityTrait
      * Retrieves entire tree.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function getTree(array $columns = ['*'])
     {
-        /**
-         * @var Entity $instance
+        /*
+         * @var Entity
          */
-        $instance = new static;
+        $instance = new static();
 
         return $instance->orderBy('parent_id')->orderBy('position')
             ->get($instance->prepareTreeQueryColumns($columns))->toTree();
@@ -1095,14 +1133,15 @@ trait EntityTrait
      * @param mixed $operator
      * @param mixed $value
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function getTreeWhere($column, $operator = null, $value = null, array $columns = ['*'])
     {
-        /**
-         * @var Entity $instance
+        /*
+         * @var Entity
          */
-        $instance = new static;
+        $instance = new static();
         $columns = $instance->prepareTreeQueryColumns($columns);
 
         return $instance->where($column, $operator, $value)->get($columns)->toTree();
@@ -1111,20 +1150,21 @@ trait EntityTrait
     /**
      * Saves models from the given attributes array.
      *
-     * @param array $tree
+     * @param array                                            $tree
      * @param \Franzose\ClosureTable\Contracts\EntityInterface $parent
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function createFromArray(array $tree, EntityInterface $parent = null)
     {
-        $childrenRelationIndex = with(new static)->getChildrenRelationIndex();
+        $childrenRelationIndex = with(new static())->getChildrenRelationIndex();
         $entities = [];
 
         foreach ($tree as $item) {
             $children = array_pull($item, $childrenRelationIndex);
 
-            /**
-             * @var Entity $entity
+            /*
+             * @var Entity
              */
             $entity = new static($item);
             $entity->parent_id = $parent ? $parent->getKey() : null;
@@ -1145,20 +1185,22 @@ trait EntityTrait
     /**
      * Makes the model a child or a root with given position. Do not use moveTo to move a node within the same ancestor (call position = value and save instead).
      *
-     * @param int $position
+     * @param int                 $position
      * @param EntityInterface|int $ancestor
-     * @return Entity
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return Entity
      */
     public function moveTo($position, $ancestor = null)
     {
         $parentId = (!$ancestor instanceof EntityInterface ? $ancestor : $ancestor->getKey());
 
-        if ($this->parent_id == $parentId && !is_null($this->parent_id)) {
+        if ($this->parent_id === $parentId && !is_null($this->parent_id)) {
             return $this;
         }
 
-        if ($this->getKey() == $parentId) {
+        if ($this->getKey() === $parentId) {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
@@ -1179,6 +1221,7 @@ trait EntityTrait
      * Gets real depth of the new ancestor of the model.
      *
      * @param Entity|int|null $ancestor
+     *
      * @return int
      */
     protected function getNewRealDepth($ancestor)
@@ -1197,8 +1240,8 @@ trait EntityTrait
     /**
      * Perform a model insert operation.
      *
-     * @param  EloquentBuilder $query
-     * @param  array $options
+     * @param EloquentBuilder $query
+     * @param array           $options
      *
      * @return bool
      */
@@ -1215,15 +1258,15 @@ trait EntityTrait
     /**
      * Perform a model update operation.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder $query
-     * @param  array $options
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array                                 $options
      *
      * @return bool
      */
     protected function performUpdate(EloquentBuilder $query, array $options = [])
     {
         if (parent::performUpdate($query, $options)) {
-            if ($this->real_depth != $this->old_real_depth && $this->isMoved === true) {
+            if ($this->real_depth !== $this->old_real_depth && $this->isMoved === true) {
                 $action = ($this->real_depth > $this->old_real_depth ? 'increment' : 'decrement');
                 $amount = abs($this->real_depth - $this->old_real_depth);
 
@@ -1240,16 +1283,19 @@ trait EntityTrait
      * Gets the next sibling position after the last one at the given ancestor.
      *
      * @param int|bool $parentId
+     *
      * @return int
      */
     public function getNextAfterLastPosition($parentId = false)
     {
         $position = $this->getLastPosition($parentId);
+
         return $position === null ? 0 : $position + 1;
     }
 
     /**
      * @param bool $parentId
+     *
      * @return int|null
      */
     public function getLastPosition($parentId = false)
@@ -1264,13 +1310,14 @@ trait EntityTrait
             ->orderBy($positionColumn, 'desc')
             ->first();
 
-        return !is_null($entity) ? (int)$entity->position : null;
+        return !is_null($entity) ? (int) $entity->position : null;
     }
 
     /**
      * Reorders model's siblings when one is moved to another position or ancestor.
      *
      * @param bool $parentIdChanged
+     *
      * @return void
      */
     protected function reorderSiblings($parentIdChanged = false)
@@ -1302,6 +1349,7 @@ trait EntityTrait
      * that will be used in reordering ('increment' or 'decrement').
      *
      * @param bool $parentIdChanged
+     *
      * @return array
      */
     protected function setupReordering($parentIdChanged)
@@ -1316,11 +1364,11 @@ trait EntityTrait
             // TODO: There's probably a bug here where if you just created an entity and you set it to be
             // a root (parent_id = null) then it comes in here (while it should have gone in the else)
             // Reordering within the same ancestor
-            if ($this->old_parent_id !== false && $this->old_parent_id == $this->parent_id) {
+            if ($this->old_parent_id !== false && $this->old_parent_id === $this->parent_id) {
                 if ($this->position > $this->old_position) {
                     $range = [$this->old_position, $this->position];
                     $action = 'decrement';
-                } else if ($this->position < $this->old_position) {
+                } elseif ($this->position < $this->old_position) {
                     $range = [$this->position, $this->old_position];
                     $action = 'increment';
                 }
@@ -1390,6 +1438,7 @@ trait EntityTrait
      *
      * @param bool $withSelf
      * @param bool $forceDelete
+     *
      * @return void
      */
     public function deleteSubtree($withSelf = false, $forceDelete = false)
@@ -1408,10 +1457,11 @@ trait EntityTrait
     /**
      * Create a new Eloquent Collection instance.
      *
-     * @param  array $models
+     * @param array $models
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function newCollection(array $models = array())
+    public function newCollection(array $models = [])
     {
         return new Collection($models);
     }

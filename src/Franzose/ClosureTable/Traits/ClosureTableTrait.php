@@ -4,9 +4,8 @@ namespace Franzose\ClosureTable\Traits;
 use DB;
 
 /**
- * Basic ClosureTable trait. Performs actions on the relationships table
+ * Basic ClosureTable trait. Performs actions on the relationships table.
  *
- * @package Franzose\ClosureTable\Traits *
  * @property int ancestor Alias for the ancestor attribute name
  * @property int descendant Alias for the descendant attribute name
  * @property int depth Alias for the depth attribute name
@@ -14,13 +13,14 @@ use DB;
 trait ClosureTableTrait
 {
     /**
-     * Column name for the descendant column
+     * Column name for the descendant column.
+     *
      * @var string
      */
     protected $descendantColumn = 'descendant';
 
     /**
-     * Column name for the ancestor ID
+     * Column name for the ancestor ID.
      *
      * @var string
      */
@@ -38,8 +38,10 @@ trait ClosureTableTrait
      *
      * @param int $ancestorId
      * @param int $descendantId
-     * @return void
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return void
      */
     public function insertNode($ancestorId, $descendantId)
     {
@@ -68,8 +70,10 @@ trait ClosureTableTrait
      * Make a node a descendant of another ancestor or makes it a root node.
      *
      * @param int $ancestorId
-     * @return void
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return void
      */
     public function moveNodeTo($ancestorId = null)
     {

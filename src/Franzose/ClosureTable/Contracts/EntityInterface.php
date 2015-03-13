@@ -3,8 +3,6 @@ namespace Franzose\ClosureTable\Contracts;
 
 /**
  * Basic Entity model interface.
- *
- * @package Franzose\ClosureTable\Contracts
  */
 interface EntityInterface
 {
@@ -103,6 +101,7 @@ interface EntityInterface
      * Retrieves direct ancestor of a model.
      *
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getParent(array $columns = ['*']);
@@ -111,6 +110,7 @@ interface EntityInterface
      * Retrieves all ancestors of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getAncestors(array $columns = ['*']);
@@ -122,6 +122,7 @@ interface EntityInterface
      * @param mixed $operator
      * @param mixed $value
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getAncestorsWhere($column, $operator = null, $value = null, array $columns = ['*']);
@@ -144,6 +145,7 @@ interface EntityInterface
      * Retrieves all descendants of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getDescendants(array $columns = ['*']);
@@ -155,6 +157,7 @@ interface EntityInterface
      * @param mixed $operator
      * @param mixed $value
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getDescendantsWhere($column, $operator = null, $value = null, array $columns = ['*']);
@@ -177,6 +180,7 @@ interface EntityInterface
      * Retrieves all children of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getChildren(array $columns = ['*']);
@@ -200,6 +204,7 @@ interface EntityInterface
      *
      * @param $position
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getChildAt($position, array $columns = ['*']);
@@ -208,6 +213,7 @@ interface EntityInterface
      * Retrieves the first child.
      *
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getFirstChild(array $columns = ['*']);
@@ -216,6 +222,7 @@ interface EntityInterface
      * Retrieves the last child.
      *
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getLastChild(array $columns = ['*']);
@@ -224,8 +231,9 @@ interface EntityInterface
      * Appends a child to the model.
      *
      * @param EntityInterface $child
-     * @param int $position
-     * @param bool $returnChild
+     * @param int             $position
+     * @param bool            $returnChild
+     *
      * @return EntityInterface
      */
     public function addChild(EntityInterface $child, $position = null, $returnChild = false);
@@ -234,16 +242,19 @@ interface EntityInterface
      * Appends multiple children to the model.
      *
      * @param array $children
-     * @return $this
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return $this
      */
     public function addChildren(array $children);
 
     /**
      * Removes a model's child with given position.
      *
-     * @param int $position
+     * @param int  $position
      * @param bool $forceDelete
+     *
      * @return $this
      */
     public function removeChild($position = null, $forceDelete = false);
@@ -251,11 +262,13 @@ interface EntityInterface
     /**
      * Removes model's children within a range of positions.
      *
-     * @param int $from
-     * @param int $to
+     * @param int  $from
+     * @param int  $to
      * @param bool $forceDelete
-     * @return $this
+     *
      * @throws \InvalidArgumentException
+     *
+     * @return $this
      */
     public function removeChildren($from, $to = null, $forceDelete = false);
 
@@ -263,6 +276,7 @@ interface EntityInterface
      * Retrieves all siblings of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getSiblings(array $columns = ['*']);
@@ -285,6 +299,7 @@ interface EntityInterface
      * Retrieves neighbors (immediate previous and immediate next models) of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getNeighbors(array $columns = ['*']);
@@ -292,8 +307,9 @@ interface EntityInterface
     /**
      * Retrieves a model's sibling with given position.
      *
-     * @param int $position
+     * @param int   $position
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getSiblingAt($position, array $columns = ['*']);
@@ -302,6 +318,7 @@ interface EntityInterface
      * Retrieves the first model's sibling.
      *
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getFirstSibling(array $columns = ['*']);
@@ -310,6 +327,7 @@ interface EntityInterface
      * Retrieves the last model's sibling.
      *
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getLastSibling(array $columns = ['*']);
@@ -318,6 +336,7 @@ interface EntityInterface
      * Retrieves immediate previous sibling of a model.
      *
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getPrevSibling(array $columns = ['*']);
@@ -326,6 +345,7 @@ interface EntityInterface
      * Retrieves all previous siblings of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getPrevSiblings(array $columns = ['*']);
@@ -348,6 +368,7 @@ interface EntityInterface
      * Retrieves immediate next sibling of a model.
      *
      * @param array $columns
+     *
      * @return EntityInterface
      */
     public function getNextSibling(array $columns = ['*']);
@@ -356,6 +377,7 @@ interface EntityInterface
      * Retrieves all next siblings of a model.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getNextSiblings(array $columns = ['*']);
@@ -377,9 +399,10 @@ interface EntityInterface
     /**
      * Retrieves siblings within given positions range.
      *
-     * @param int $from
-     * @param int $to
+     * @param int   $from
+     * @param int   $to
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public function getSiblingsRange($from, $to = null, array $columns = ['*']);
@@ -388,8 +411,9 @@ interface EntityInterface
      * Appends a sibling within the current depth.
      *
      * @param EntityInterface $sibling
-     * @param int|null $position
-     * @param bool $returnSibling
+     * @param int|null        $position
+     * @param bool            $returnSibling
+     *
      * @return EntityInterface
      */
     public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false);
@@ -397,8 +421,9 @@ interface EntityInterface
     /**
      * Appends multiple siblings within the current depth.
      *
-     * @param array $siblings
+     * @param array    $siblings
      * @param int|null $from
+     *
      * @return mixed
      */
     public function addSiblings(array $siblings, $from = null);
@@ -407,6 +432,7 @@ interface EntityInterface
      * Retrieves root (with no ancestors) models.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function getRoots(array $columns = ['*']);
@@ -415,6 +441,7 @@ interface EntityInterface
      * Makes model a root with given position.
      *
      * @param int $position
+     *
      * @return EntityInterface
      */
     public function makeRoot($position);
@@ -423,6 +450,7 @@ interface EntityInterface
      * Retrieves entire tree.
      *
      * @param array $columns
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function getTree(array $columns = ['*']);
@@ -430,15 +458,17 @@ interface EntityInterface
     /**
      * Saves models from the given attributes array.
      *
-     * @param array $tree
+     * @param array           $tree
      * @param EntityInterface $parent
+     *
      * @return \Franzose\ClosureTable\Extensions\Collection
      */
     public static function createFromArray(array $tree, EntityInterface $parent);
 
     /**
-     * @param int $position
+     * @param int                 $position
      * @param EntityInterface|int $ancestor
+     *
      * @return EntityInterface
      */
     public function moveTo($position, $ancestor = null);
@@ -448,6 +478,7 @@ interface EntityInterface
      *
      * @param bool $withSelf
      * @param bool $forceDelete
+     *
      * @return void
      */
     public function deleteSubtree($withSelf = false, $forceDelete = false);

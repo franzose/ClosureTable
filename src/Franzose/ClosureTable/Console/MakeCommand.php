@@ -1,18 +1,16 @@
 <?php
 namespace Franzose\ClosureTable\Console;
 
+use Franzose\ClosureTable\Extensions\Str as ExtStr;
+use Franzose\ClosureTable\Generators\Migration;
+use Franzose\ClosureTable\Generators\Model;
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Composer;
 use Symfony\Component\Console\Input\InputOption;
-use Franzose\ClosureTable\Generators\Migration;
-use Franzose\ClosureTable\Generators\Model;
-use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 /**
  * ClosureTable scaffolding command, created migrations and models.
- *
- * @package Franzose\ClosureTable\Console
  */
 class MakeCommand extends Command
 {
@@ -61,8 +59,8 @@ class MakeCommand extends Command
      * Creates a new command instance.
      *
      * @param Migration $migrator
-     * @param Model $modeler
-     * @param Composer $composer
+     * @param Model     $modeler
+     * @param Composer  $composer
      */
     public function __construct(Migration $migrator, Model $modeler, Composer $composer)
     {

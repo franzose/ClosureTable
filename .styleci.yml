@@ -1,0 +1,6 @@
+preset: recommended
+
+enabled:
+  - strict
+  - strict_param
+  - concat_with_spaces

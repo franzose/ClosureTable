@@ -6,8 +6,6 @@ use Illuminate\Console\Command;
 
 /**
  * Basic ClosureTable command, outputs information about the library in short.
- *
- * @package Franzose\ClosureTable\Console
  */
 class ClosureTableCommand extends Command
 {

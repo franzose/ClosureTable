@@ -1,11 +1,11 @@
 <?php
-namespace Franzose\ClosureTable\Tests;
+namespace Franzose\ClosureTable\tests;
 
 use DB;
 use Franzose\ClosureTable\Models\ClosureTable;
-use Mockery;
 use Franzose\ClosureTable\Models\Entity;
 use Franzose\ClosureTable\Tests\Models\Page;
+use Mockery;
 
 class EntityTestCase extends BaseTestCase
 {
@@ -44,7 +44,7 @@ class EntityTestCase extends BaseTestCase
             self::$force_boot = true;
         }
 
-        $this->entity = new Entity;
+        $this->entity = new Entity();
         $this->entity->fillable(['title', 'excerpt', 'body', 'position', 'real_depth']);
 
         $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
@@ -88,12 +88,12 @@ class EntityTestCase extends BaseTestCase
         Entity::truncate();
         DB::statement("SET foreign_key_checks=1");
 
-        $entity1 = new Entity;
+        $entity1 = new Entity();
         $entity1->save();
 
         $this->assertEquals(0, $entity1->position);
 
-        $entity2 = new Entity;
+        $entity2 = new Entity();
         $entity2->save();
         $this->assertEquals(1, $entity2->position);
     }
@@ -380,7 +380,7 @@ class EntityTestCase extends BaseTestCase
     public function testAddChildWithPosition()
     {
         $entity = Entity::find(15);
-        $newone = new Entity;
+        $newone = new Entity();
         $result = $entity->addChild($newone, 0);
 
         $this->assertEquals(0, $newone->position);
@@ -391,7 +391,7 @@ class EntityTestCase extends BaseTestCase
     public function testAddChildWithoutPosition()
     {
         $entity = Entity::find(9);
-        $newone = new Entity;
+        $newone = new Entity();
         $result = $entity->addChild($newone);
 
         $this->assertEquals(4, $newone->position);
@@ -402,9 +402,9 @@ class EntityTestCase extends BaseTestCase
     public function testAddChildren()
     {
         $entity = Entity::find(15);
-        $child1 = new Entity;
-        $child2 = new Entity;
-        $child3 = new Entity;
+        $child1 = new Entity();
+        $child2 = new Entity();
+        $child3 = new Entity();
 
         $result = $entity->addChildren([$child1, $child2, $child3]);
 
@@ -593,7 +593,7 @@ class EntityTestCase extends BaseTestCase
     public function testAddSibling()
     {
         $entity = Entity::find(15);
-        $entity->addSibling(new Entity);
+        $entity->addSibling(new Entity());
 
         $sibling = $entity->getNextSibling();
 
@@ -604,7 +604,7 @@ class EntityTestCase extends BaseTestCase
     public function testAddSiblings()
     {
         $entity = Entity::find(15);
-        $entity->addSiblings([new Entity, new Entity, new Entity]);
+        $entity->addSiblings([new Entity(), new Entity(), new Entity()]);
 
         $siblings = $entity->getNextSiblings();
 
@@ -618,7 +618,7 @@ class EntityTestCase extends BaseTestCase
     {
         $entity = Entity::find(15);
 
-        $entity->addSiblings([new Entity, new Entity, new Entity, new Entity], 1);
+        $entity->addSiblings([new Entity(), new Entity(), new Entity(), new Entity()], 1);
 
         $siblings = $entity->getSiblingsRange(1, 4);
 
@@ -657,7 +657,7 @@ class EntityTestCase extends BaseTestCase
     {
         $tree = Entity::getTreeWhere($this->entity->getPositionColumn(), '>=', 1, [
             $this->entity->getKeyName(),
-            $this->entity->getPositionColumn()
+            $this->entity->getPositionColumn(),
         ]);
 
         $this->assertCount(8, $tree);
@@ -730,25 +730,25 @@ class EntityTestCase extends BaseTestCase
     {
         $array = [
             [
-                'id' => 90,
-                'title' => 'About',
+                'id'       => 90,
+                'title'    => 'About',
                 'position' => 0,
                 'children' => [
                     [
-                        'id' => 93,
-                        'title' => 'Testimonials'
-                    ]
-                ]
+                        'id'    => 93,
+                        'title' => 'Testimonials',
+                    ],
+                ],
             ],
             [
-                'id' => 91,
-                'title' => 'Blog',
-                'position' => 1
+                'id'       => 91,
+                'title'    => 'Blog',
+                'position' => 1,
             ],
             [
-                'id' => 92,
-                'title' => 'Portfolio',
-                'position' => 2
+                'id'       => 92,
+                'title'    => 'Portfolio',
+                'position' => 2,
             ],
         ];
 
@@ -771,10 +771,10 @@ class EntityTestCase extends BaseTestCase
     {
         $array = [
             [
-                'title' => 'About',
+                'title'    => 'About',
                 'children' => [
                     [
-                        'title' => 'Testimonials',
+                        'title'    => 'Testimonials',
                         'children' => [
                             [
                                 'title' => 'child 1',
@@ -782,9 +782,9 @@ class EntityTestCase extends BaseTestCase
                             [
                                 'title' => 'child 2',
                             ],
-                        ]
-                    ]
-                ]
+                        ],
+                    ],
+                ],
             ],
             [
                 'title' => 'Blog',

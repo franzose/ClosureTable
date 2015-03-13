@@ -1,16 +1,15 @@
 <?php
-namespace Franzose\ClosureTable\Tests;
+namespace Franzose\ClosureTable\tests;
 
 use DB;
 use Event;
-use Orchestra\Testbench\TestCase;
-use Mockery;
 use Franzose\ClosureTable\Models\Entity;
+use Mockery;
+use Orchestra\Testbench\TestCase;
 use Way\Tests\ModelHelpers;
 
 /**
- * Class BaseTestCase
- * @package Franzose\ClosureTable\Tests
+ * Class BaseTestCase.
  */
 abstract class BaseTestCase extends TestCase
 {
@@ -35,17 +34,17 @@ abstract class BaseTestCase extends TestCase
         $artisan = $this->app->make('Illuminate\Contracts\Console\Kernel');
         $artisan->call('migrate', [
             '--database' => 'closuretable',
-            '--path' => '../tests/migrations'
+            '--path'     => '../tests/migrations',
         ]);
 
         $artisan->call('db:seed', [
-            '--class' => 'Franzose\ClosureTable\Tests\Seeds\EntitiesSeeder'
+            '--class' => 'Franzose\ClosureTable\Tests\Seeds\EntitiesSeeder',
         ]);
 
         if (static::$debug) {
             Entity::$debug = true;
             Event::listen('illuminate.query', function ($sql, $bindings, $time) {
-                $sql = str_replace(array('%', '?'), array('%%', '%s'), $sql);
+                $sql = str_replace(['%', '?'], ['%%', '%s'], $sql);
                 $full_sql = vsprintf($sql, $bindings);
                 echo PHP_EOL . '- BEGIN QUERY -' . PHP_EOL . $full_sql . PHP_EOL . '- END QUERY -' . PHP_EOL;
             });
@@ -69,19 +68,19 @@ abstract class BaseTestCase extends TestCase
 
         if (static::$sqlite_in_memory) {
             $options = [
-                'driver' => 'sqlite',
+                'driver'   => 'sqlite',
                 'database' => ':memory:',
-                'prefix' => '',
+                'prefix'   => '',
             ];
         } else {
             $options = [
-                'driver' => 'mysql',
-                'host' => 'localhost',
-                'database' => 'closuretabletest',
-                'username' => 'root',
-                'password' => '',
-                'prefix' => '',
-                'charset' => 'utf8',
+                'driver'    => 'mysql',
+                'host'      => 'localhost',
+                'database'  => 'closuretabletest',
+                'username'  => 'root',
+                'password'  => '',
+                'prefix'    => '',
+                'charset'   => 'utf8',
                 'collation' => 'utf8_unicode_ci',
             ];
         }
@@ -91,11 +90,12 @@ abstract class BaseTestCase extends TestCase
 
     /**
      * Asserts if two arrays have similar values, sorting them before the fact in order to "ignore" ordering.
-     * @param array $actual
-     * @param array $expected
+     *
+     * @param array  $actual
+     * @param array  $expected
      * @param string $message
-     * @param float $delta
-     * @param int $depth
+     * @param float  $delta
+     * @param int    $depth
      */
     protected function assertArrayValuesEquals(array $actual, array $expected, $message = '', $delta = 0.0, $depth = 10)
     {
