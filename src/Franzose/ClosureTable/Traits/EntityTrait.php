@@ -544,7 +544,8 @@ trait EntityTrait
         if ($this->hasChildrenRelation()) {
             $result = $this->getRelation($this->getChildrenRelationIndex())->count();
         } else {
-            $result = $this->children()->count();
+            $query = $this->where($this->getParentIdColumn(), '=', (int)$this->getKey());
+            $result = $query->count();
         }
 
         return $result;
