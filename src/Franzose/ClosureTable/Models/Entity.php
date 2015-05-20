@@ -681,7 +681,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addChildren(array $children)
     {
         if ($this->exists) {
-            \DB::transaction(function () use ($children) {
+            \DB::connection($this->connection)->transaction(function () use ($children) {
                 $lastChildPosition = $this->getLastChildPosition();
 
                 foreach ($children as $child) {
