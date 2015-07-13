@@ -73,6 +73,7 @@ $parent = Page::find(15)->getParent();
 ```php
 $page = Page::find(15);
 $ancestors = $page->getAncestors();
+$ancestors = $page->getAncestorsTree(); // Tree structure
 $ancestors = $page->getAncestorsWhere('position', '=', 1);
 $hasAncestors = $page->hasAncestors();
 $ancestorsNumber = $page->countAncestors();
