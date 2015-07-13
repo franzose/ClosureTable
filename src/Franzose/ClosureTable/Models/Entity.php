@@ -405,6 +405,17 @@ class Entity extends Eloquent implements EntityInterface {
     }
 
     /**
+     * Retrieves tree structured ancestors of a model.
+     *
+     * @param array $columns
+     * @return Collection
+     */
+    public function getAncestorsTree(array $columns = ['*'])
+    {
+        return $this->getAncestors($columns)->toTree();
+    }
+
+    /**
      * Retrieves ancestors applying given conditions.
      *
      * @param mixed $column
@@ -447,6 +458,17 @@ class Entity extends Eloquent implements EntityInterface {
     public function getDescendants(array $columns = ['*'])
     {
         return $this->joinClosureBy('descendant')->get($columns);
+    }
+
+    /**
+     * Retrieves tree structured descendants of a model.
+     *
+     * @param array $columns
+     * @return Collection
+     */
+    public function getDescendantsTree(array $columns = ['*'])
+    {
+        return $this->getDescendants($columns)->toTree();
     }
 
     /**
