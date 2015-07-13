@@ -506,10 +506,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     protected function children($position = null, $order = 'asc')
     {
-        /**
-         * @var QueryBuilder $query
-         */
-        $query = $this->where($this->getParentIdColumn(), '=', (int)$this->getKey());
+        $query = $this->queryByParentId();
 
         if (!is_null($position)) {
             if (is_array($position)) {
@@ -528,6 +525,19 @@ class Entity extends Eloquent implements EntityInterface
         }
 
         return $query;
+    }
+
+    /**
+     * Starts a query by parent identifier.
+     *
+     * @param mixed $id
+     * @return QueryBuilder
+     */
+    protected function queryByParentId($id = null)
+    {
+        $id = ($id ?: $this->getKey());
+
+        return $this->where($this->getParentIdColumn(), '=', $id);
     }
 
     /**
@@ -557,7 +567,7 @@ class Entity extends Eloquent implements EntityInterface
         if ($this->hasChildrenRelation()) {
             $result = $this->getRelation($this->getChildrenRelationIndex())->count();
         } else {
-            $result = $this->children()->count();
+            $result = $this->queryByParentId()->count();
         }
 
         return $result;
