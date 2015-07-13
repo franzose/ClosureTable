@@ -13,7 +13,7 @@ class CreateEntitiesClosureTable extends Migration
     public function up()
     {
         Schema::create('entities_closure', function (Blueprint $table) {
-            $table->increments('ctid');
+            $table->increments('closure_id');
             $table->unsignedInteger('ancestor');
             $table->unsignedInteger('descendant');
             $table->unsignedInteger('depth');

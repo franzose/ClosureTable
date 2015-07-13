@@ -28,7 +28,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      *
      * @var string
      */
-    protected $primaryKey = 'ctid';
+    protected $primaryKey = 'closure_id';
 
     /**
      * Indicates if the model should be timestamped.
