@@ -3,7 +3,7 @@ namespace Franzose\ClosureTable\Console;
 
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Console\Command;
-use Illuminate\Foundation\Composer;
+use Illuminate\Support\Composer;
 use Symfony\Component\Console\Input\InputOption;
 use Franzose\ClosureTable\Generators\Migration;
 use Franzose\ClosureTable\Generators\Model;
