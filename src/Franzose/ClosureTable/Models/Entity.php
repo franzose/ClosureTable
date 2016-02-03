@@ -1131,6 +1131,22 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Retrieves tree with any conditions using QueryBuilder
+     * @param EloquentBuilder $query
+     * @param array $columns
+     * @return \Franzose\ClosureTable\Extensions\Collection
+     */
+    public static function getTreeByQuery(EloquentBuilder $query, array $columns = ['*'])
+    {
+        /**
+         * @var Entity $instance
+         */
+        $instance = new static;
+        $columns = $instance->prepareTreeQueryColumns($columns);
+        return $query->get($columns)->toTree();
+    }
+
+    /**
      * Saves models from the given attributes array.
      *
      * @param array $tree
