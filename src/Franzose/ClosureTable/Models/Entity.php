@@ -713,7 +713,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addChildren(array $children)
     {
         if ($this->exists) {
-            \DB::transaction(function () use ($children) {
+            \DB::connection($this->connection)->transaction(function () use ($children) {
                 $lastChildPosition = $this->getLastChildPosition();
 
                 foreach ($children as $child) {
@@ -1106,7 +1106,7 @@ class Entity extends Eloquent implements EntityInterface
          */
         $instance = new static;
 
-        return $instance->orderBy('parent_id')->orderBy('position')
+        return $instance->orderBy($instance->getParentIdColumn())->orderBy($instance->getPositionColumn())
             ->get($instance->prepareTreeQueryColumns($columns))->toTree();
     }
 
@@ -1128,6 +1128,22 @@ class Entity extends Eloquent implements EntityInterface
         $columns = $instance->prepareTreeQueryColumns($columns);
 
         return $instance->where($column, $operator, $value)->get($columns)->toTree();
+    }
+
+    /**
+     * Retrieves tree with any conditions using QueryBuilder
+     * @param EloquentBuilder $query
+     * @param array $columns
+     * @return \Franzose\ClosureTable\Extensions\Collection
+     */
+    public static function getTreeByQuery(EloquentBuilder $query, array $columns = ['*'])
+    {
+        /**
+         * @var Entity $instance
+         */
+        $instance = new static;
+        $columns = $instance->prepareTreeQueryColumns($columns);
+        return $query->get($columns)->toTree();
     }
 
     /**

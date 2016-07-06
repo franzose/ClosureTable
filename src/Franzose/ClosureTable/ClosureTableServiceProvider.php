@@ -1,7 +1,6 @@
 <?php
 namespace Franzose\ClosureTable;
 
-use Illuminate\Foundation\Composer;
 use Illuminate\Support\ServiceProvider;
 use Franzose\ClosureTable\Console\ClosureTableCommand;
 use Franzose\ClosureTable\Console\MakeCommand;

@@ -61,7 +61,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
             SELECT {$descendantId}, {$descendantId}, 0
         ";
 
-        DB::statement($query);
+        DB::connection($this->connection)->statement($query);
     }
 
     /**
@@ -104,7 +104,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
             AND subtbl.{$ancestor} = {$thisDescendantId}
         ";
 
-        DB::statement($query);
+        DB::connection($this->connection)->statement($query);
     }
 
     /**
@@ -136,7 +136,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
             )
         ";
 
-        DB::delete($query);
+        DB::connection($this->connection)->delete($query);
     }
 
     /**
@@ -146,7 +146,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function getPrefixedTable()
     {
-        return DB::getTablePrefix() . $this->getTable();
+        return DB::connection($this->connection)->getTablePrefix() . $this->getTable();
     }
 
     /**

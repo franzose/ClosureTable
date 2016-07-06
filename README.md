@@ -3,7 +3,10 @@
 [![Latest Stable Version](https://poser.pugx.org/franzose/closure-table/v/stable.png)](https://packagist.org/packages/franzose/closure-table)
 [![Total Downloads](https://poser.pugx.org/franzose/closure-table/downloads.png)](https://packagist.org/packages/franzose/closure-table)
 
-## NOTE: Master branch is now for Laravel 5.<br>If you use Laravel 4, please see L4 branch! 
+## Branches
+1. <strong>L4</strong> supports Laravel 4
+2. <strong>L5.1</strong> supports Laravel < 5.2
+3. <strong>master</strong> is for any actual Laravel version
 
 Hi, this is a database package for Laravel. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The package includes generators for models and migrations.
 
