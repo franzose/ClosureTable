@@ -47,10 +47,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function insertNode($ancestorId, $descendantId)
     {
-        if (!is_numeric($ancestorId) || !is_numeric($descendantId)) {
-            throw new \InvalidArgumentException('`ancestorId` and `descendantId` arguments must be of type int.');
-        }
-
         $table = $this->getPrefixedTable();
         $ancestor = $this->getAncestorColumn();
         $descendant = $this->getDescendantColumn();
@@ -77,10 +73,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function moveNodeTo($ancestorId = null)
     {
-        if (!is_null($ancestorId) && !is_numeric($ancestorId)) {
-            throw new \InvalidArgumentException('`ancestor` argument must be of type int.');
-        }
-
         $table = $this->getPrefixedTable();
         $ancestor = $this->getAncestorColumn();
         $descendant = $this->getDescendantColumn();
