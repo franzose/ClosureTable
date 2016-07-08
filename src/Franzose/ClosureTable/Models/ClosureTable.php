@@ -54,14 +54,14 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
 
         $query = "
             INSERT INTO {$table} ({$ancestor}, {$descendant}, {$depth})
-            SELECT tbl.{$ancestor}, ?, tbl.{$depth}+1
+            SELECT tbl.{$ancestor}, {$descendantId}, tbl.{$depth}+1
             FROM {$table} AS tbl
-            WHERE tbl.{$descendant} = ?
+            WHERE tbl.{$descendant} = {$ancestorId}
             UNION ALL
-            SELECT ?, ?, 0
+            SELECT {$descendantId}, {$descendantId}, 0
         ";
 
-        DB::connection($this->connection)->statement($query, [$descendantId, $ancestorId, $descendantId, $descendantId]);
+        DB::connection($this->connection)->statement($query);
     }
 
     /**
@@ -100,11 +100,11 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
             SELECT supertbl.{$ancestor}, subtbl.{$descendant}, supertbl.{$depth}+subtbl.{$depth}+1
             FROM {$table} as supertbl
             CROSS JOIN {$table} as subtbl
-            WHERE supertbl.{$descendant} = ?
-            AND subtbl.{$ancestor} = ?
+            WHERE supertbl.{$descendant} = {$ancestorId}
+            AND subtbl.{$ancestor} = {$thisDescendantId}
         ";
 
-        DB::connection($this->connection)->statement($query, [$ancestorId, $thisDescendantId]);
+        DB::connection($this->connection)->statement($query);
     }
 
     /**
@@ -124,19 +124,19 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
             WHERE {$descendantColumn} IN (
               SELECT d FROM (
                 SELECT {$descendantColumn} as d FROM {$table}
-                WHERE {$ancestorColumn} = ?
+                WHERE {$ancestorColumn} = {$descendant}
               ) as dct
             )
             AND {$ancestorColumn} IN (
               SELECT a FROM (
                 SELECT {$ancestorColumn} AS a FROM {$table}
-                WHERE {$descendantColumn} = ?
-                AND {$ancestorColumn} <> ?
+                WHERE {$descendantColumn} = {$descendant}
+                AND {$ancestorColumn} <> {$descendant}
               ) as ct
             )
         ";
 
-        DB::connection($this->connection)->delete($query, [$descendant, $descendant, $descendant]);
+        DB::connection($this->connection)->delete($query);
     }
 
     /**
