@@ -1430,7 +1430,7 @@ class Entity extends Eloquent implements EntityInterface
     {
         $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-        $ids = $this->joinClosureBy('descendant', $withSelf)->lists($this->getKeyName());
+        $ids = $this->joinClosureBy('descendant', $withSelf)->pluck($this->getKeyName());
 
         if ($forceDelete) {
             $this->closure->whereIn($this->closure->getDescendantColumn(), $ids)->delete();
