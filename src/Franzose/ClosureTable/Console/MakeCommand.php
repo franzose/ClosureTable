@@ -1,7 +1,7 @@
 <?php
 namespace Franzose\ClosureTable\Console;
 
-use Illuminate\Console\AppNamespaceDetectorTrait;
+use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Console\Command;
 use Illuminate\Support\Composer;
 use Symfony\Component\Console\Input\InputOption;
@@ -16,7 +16,7 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  */
 class MakeCommand extends Command
 {
-    use AppNamespaceDetectorTrait;
+    use DetectsApplicationNamespace;
 
     /**
      * The console command name.
