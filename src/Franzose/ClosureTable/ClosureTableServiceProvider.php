@@ -44,11 +44,11 @@ class ClosureTableServiceProvider extends ServiceProvider
     public function register()
     {
         // Here we register commands for artisan
-        $this->app['command.closuretable'] = $this->app->share(function ($app) {
+        $this->app->singleton('command.closuretable', function ($app) {
             return new ClosureTableCommand;
         });
 
-        $this->app['command.closuretable.make'] = $this->app->share(function ($app) {
+        $this->app->singleton('command.closuretable.make', function ($app) {
             return $app['Franzose\ClosureTable\Console\MakeCommand'];
         });
 
