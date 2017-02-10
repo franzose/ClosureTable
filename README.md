@@ -6,7 +6,8 @@
 ## Branches
 1. <strong>L4</strong> supports Laravel 4
 2. <strong>L5.1</strong> supports Laravel < 5.2
-3. <strong>master</strong> is for any actual Laravel version
+3. <strong>L5.3</strong> supports Laravel 5.2-5.3
+4. <strong>master</strong> is for any actual Laravel version, so be careful
 
 Hi, this is a database package for Laravel. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The package includes generators for models and migrations.
 
