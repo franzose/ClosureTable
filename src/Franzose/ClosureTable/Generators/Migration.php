@@ -24,31 +24,22 @@ class Migration extends Generator
      */
     public function create(array $options)
     {
-        $paths = [];
-
         $entityClass = $this->getClassName($options['entity-table']);
         $closureClass = $this->getClassName($options['closure-table']);
         $useInnoDB = $options['use-innodb'];
         $stubPrefix = $useInnoDB ? '-innodb' : '';
 
-        $paths[] = $path = $this->getPath($options['entity-table'], $options['migrations-path']);
-        $stub = $this->getStub('entity' . $stubPrefix, 'migrations');
+        $path = $this->getPath($options['entity-table'], $options['migrations-path']);
+        $stub = $this->getPath('migration' . $stubPrefix, 'migrations');
 
-        $this->filesystem->put($path, $this->parseStub($stub, [
+        $this->filesystem->put($path, $this->parseStub($stub), [
             'entity_table' => $options['entity-table'],
-            'entity_class' => $entityClass
-        ]));
-
-        $paths[] = $path = $this->getPath($options['closure-table'], $options['migrations-path']);
-        $stub = $this->getStub('closuretable' . $stubPrefix, 'migrations');
-
-        $this->filesystem->put($path, $this->parseStub($stub, [
+            'entity_class' => $entityClass,
             'closure_table' => $options['closure-table'],
             'closure_class' => $closureClass,
-            'entity_table' => $options['entity-table']
-        ]));
+        ]);
 
-        return $paths;
+        return [$path];
     }
 
     /**
