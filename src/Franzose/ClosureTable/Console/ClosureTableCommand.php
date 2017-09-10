@@ -30,7 +30,7 @@ class ClosureTableCommand extends Command
      *
      * @return void
      */
-    public function fire()
+    public function handle()
     {
         $this->info('ClosureTable v' . CT::VERSION);
         $this->line('Closure Table database design pattern implementation for Laravel framework.');
