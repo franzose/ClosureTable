@@ -83,6 +83,6 @@ class Migration extends Generator
         }
         $this->usedTimestamps[] = $timestamp;
 
-        return $path . '/' . $timestamp->format('Y_m_d_His') . '_' . $this->getName($name) . '.php';
+        return $path . '/' . $timestamp->format('Y_m_d_His') . '_' . $this->getName($name) . '_migration.php';
     }
 }
