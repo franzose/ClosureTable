@@ -30,14 +30,14 @@ class Migration extends Generator
         $stubPrefix = $useInnoDB ? '-innodb' : '';
 
         $path = $this->getPath($options['entity-table'], $options['migrations-path']);
-        $stub = $this->getPath('migration' . $stubPrefix, 'migrations');
+        $stub = $this->getStub('migration' . $stubPrefix, 'migrations');
 
-        $this->filesystem->put($path, $this->parseStub($stub), [
+        $this->filesystem->put($path, $this->parseStub($stub, [
             'entity_table' => $options['entity-table'],
             'entity_class' => $entityClass,
             'closure_table' => $options['closure-table'],
             'closure_class' => $closureClass,
-        ]);
+        ]));
 
         return [$path];
     }
