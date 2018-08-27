@@ -28,6 +28,13 @@
             "Franzose\\ClosureTable": "src/"
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Franzose\\ClosureTable\\ClosureTableServiceProvider"
+            ]
+        }
+    },
     "config": {
         "preferred-install": "dist"
     },
