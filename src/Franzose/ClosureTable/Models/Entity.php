@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Franzose\ClosureTable\Extensions\QueryBuilder;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
+use Illuminate\Support\Arr;
 
 /**
  * Basic entity class.
@@ -1159,7 +1160,7 @@ class Entity extends Eloquent implements EntityInterface
         $entities = [];
 
         foreach ($tree as $item) {
-            $children = array_pull($item, $childrenRelationIndex);
+            $children = Arr::pull($item, $childrenRelationIndex);
 
             /**
              * @var Entity $entity

@@ -18,7 +18,7 @@ class Str extends BaseStr
      */
     public static function classify($name)
     {
-        return studly_case(str_singular($name));
+        return static::studly(static::singular($name));
     }
 
     /**
@@ -31,6 +31,6 @@ class Str extends BaseStr
     {
         $name = str_replace('\\', '', $name);
 
-        return (ends_with($name, 'Closure') ? snake_case($name) : snake_case(str_plural($name)));
+        return (static::endsWith($name, 'Closure') ? static::snake($name) : static::snake(static::plural($name)));
     }
 }
