@@ -8,22 +8,22 @@ class ClosureTableTestCase extends BaseTestCase
     /**
      * @var ClosureTable;
      */
-    protected $ctable;
+    private $ctable;
 
     /**
      * @var string
      */
-    protected $ancestorColumn;
+    private $ancestorColumn;
 
     /**
      * @var string
      */
-    protected $descendantColumn;
+    private $descendantColumn;
 
     /**
      * @var string
      */
-    protected $depthColumn;
+    private $depthColumn;
 
     public function setUp()
     {
@@ -37,16 +37,25 @@ class ClosureTableTestCase extends BaseTestCase
 
     public function testAncestorQualifiedKeyName()
     {
-        $this->assertEquals($this->ctable->getTable() . '.' . $this->ancestorColumn, $this->ctable->getQualifiedAncestorColumn());
+        static::assertEquals(
+            $this->ctable->getTable() . '.' . $this->ancestorColumn,
+            $this->ctable->getQualifiedAncestorColumn()
+        );
     }
 
     public function testDescendantQualifiedKeyName()
     {
-        $this->assertEquals($this->ctable->getTable() . '.' . $this->descendantColumn, $this->ctable->getQualifiedDescendantColumn());
+        static::assertEquals(
+            $this->ctable->getTable() . '.' . $this->descendantColumn,
+            $this->ctable->getQualifiedDescendantColumn()
+        );
     }
 
     public function testDepthQualifiedKeyName()
     {
-        $this->assertEquals($this->ctable->getTable() . '.' . $this->depthColumn, $this->ctable->getQualifiedDepthColumn());
+        static::assertEquals(
+            $this->ctable->getTable() . '.' . $this->depthColumn,
+            $this->ctable->getQualifiedDepthColumn()
+        );
     }
 }
