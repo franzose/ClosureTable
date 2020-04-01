@@ -3,7 +3,6 @@ namespace Franzose\ClosureTable\Tests;
 
 use DB;
 use Franzose\ClosureTable\Models\ClosureTable;
-use Mockery;
 use Franzose\ClosureTable\Models\Entity;
 use Franzose\ClosureTable\Tests\Models\Page;
 
@@ -15,13 +14,6 @@ class EntityTestCase extends BaseTestCase
      * @var Entity;
      */
     protected $entity;
-
-    /**
-     * Mocked closure object.
-     *
-     * @var Mockery\MockInterface|\Yay_MockObject
-     */
-    protected $closure;
 
     protected static $force_boot = false;
 

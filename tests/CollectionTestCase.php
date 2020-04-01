@@ -3,7 +3,6 @@ namespace Franzose\ClosureTable\Tests;
 
 use Franzose\ClosureTable\Extensions\Collection;
 use Franzose\ClosureTable\Models\Entity;
-use Mockery;
 
 class CollectionTestCase extends BaseTestCase
 {
