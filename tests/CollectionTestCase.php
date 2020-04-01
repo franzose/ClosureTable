@@ -8,59 +8,90 @@ class CollectionTestCase extends BaseTestCase
 {
     public function testToTree()
     {
-        $rootEntity = new Entity;
+        $rootEntity = new Entity();
         $rootEntity->save();
-        $childEntity = with(new Entity)->moveTo(0, $rootEntity);
-        $grandEntity = with(new Entity)->moveTo(0, $childEntity);
+        $childEntity = (new Entity())->moveTo(0, $rootEntity);
+        $grandEntity = (new Entity())->moveTo(0, $childEntity);
 
         $childrenRelationIndex = $rootEntity->getChildrenRelationIndex();
 
-        $tree = with(new Collection([$rootEntity, $childEntity, $grandEntity]))->toTree();
+        $tree = (new Collection([$rootEntity, $childEntity, $grandEntity]))->toTree();
+
+        /** @var Entity $rootItem */
         $rootItem = $tree->get(0);
 
-        $this->assertArrayHasKey($childrenRelationIndex, $rootItem->getRelations());
+        static::assertArrayHasKey($childrenRelationIndex, $rootItem->getRelations());
 
+        /** @var Collection $children */
         $children = $rootItem->getRelation($childrenRelationIndex);
 
-        $this->assertCount(1, $children);
+        static::assertCount(1, $children);
 
+        /** @var Entity $childItem */
         $childItem = $children->get(0);
 
-        $this->assertEquals($childEntity->getKey(), $childItem->getKey());
-        $this->assertArrayHasKey($childrenRelationIndex, $childItem->getRelations());
+        static::assertEquals($childEntity->getKey(), $childItem->getKey());
+        static::assertArrayHasKey($childrenRelationIndex, $childItem->getRelations());
 
+        /** @var Collection $grandItems */
         $grandItems = $childItem->getRelation($childrenRelationIndex);
 
-        $this->assertCount(1, $grandItems);
+        static::assertCount(1, $grandItems);
 
+        /** @var Entity $grandItem */
         $grandItem = $grandItems->get(0);
 
-        $this->assertEquals($grandEntity->getKey(), $grandItem->getKey());
-        $this->assertArrayNotHasKey($childrenRelationIndex, $grandItem->getRelations());
+        static::assertEquals($grandEntity->getKey(), $grandItem->getKey());
+        static::assertArrayNotHasKey($childrenRelationIndex, $grandItem->getRelations());
     }
 
     public function testHasChildren()
     {
-        $entity = new Entity;
+        $entity = new Entity();
         $childrenRelationIndex = $entity->getChildrenRelationIndex();
 
-        $collection = new Collection([$entity, new Entity, new Entity]);
-        $collection->get(0)->setRelation($childrenRelationIndex, new Collection([new Entity, new Entity, new Entity]));
+        $collection = new Collection([
+            $entity,
+            new Entity(),
+            new Entity()
+        ]);
 
-        $this->assertTrue($collection->hasChildren(0));
+        $children = new Collection([
+            new Entity(),
+            new Entity(),
+            new Entity()
+        ]);
+
+        /** @var Entity $firstEntity */
+        $firstEntity = $collection->get(0);
+        $firstEntity->setRelation($childrenRelationIndex, $children);
+
+        static::assertTrue($collection->hasChildren(0));
     }
 
     public function testGetChildrenOf()
     {
-        $entity = new Entity;
+        $entity = new Entity();
         $childrenRelationIndex = $entity->getChildrenRelationIndex();
 
-        $collection = new Collection([$entity, new Entity, new Entity]);
-        $collection->get(0)->setRelation($childrenRelationIndex, new Collection([new Entity, new Entity, new Entity]));
+        $collection = new Collection([
+            $entity,
+            new Entity(),
+            new Entity()
+        ]);
 
-        $children = $collection->getChildrenOf(0);
+        $expected = new Collection([
+            new Entity(),
+            new Entity(),
+            new Entity()
+        ]);
 
-        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $children);
-        $this->assertCount(3, $children);
+        /** @var Entity $firstEntity */
+        $firstEntity = $collection->get(0);
+        $firstEntity->setRelation($childrenRelationIndex, $expected);
+
+        $actual = $collection->getChildrenOf(0);
+
+        static::assertSame($expected, $actual);
     }
 }

@@ -15,14 +15,15 @@ class Collection extends EloquentCollection
      * Retrieves children relation.
      *
      * @param $position
-     * @return Collection|null
+     * @return Collection
      */
     public function getChildrenOf($position)
     {
         if (!$this->hasChildren($position)) {
-            return null;
+            return new static();
         }
 
+        /** @var Entity $item */
         $item = $this->get($position);
         $relation = $item->getChildrenRelationIndex();
 
@@ -37,6 +38,7 @@ class Collection extends EloquentCollection
      */
     public function hasChildren($position)
     {
+        /** @var Entity $item */
         $item = $this->get($position);
         $relation = $item->getChildrenRelationIndex();
 
