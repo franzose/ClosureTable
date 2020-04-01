@@ -19,9 +19,13 @@
         "orchestra/testbench": "3.4.12"
     },
     "autoload": {
-        "classmap": ["tests"],
         "psr-0": {
             "Franzose\\ClosureTable": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Franzose\\ClosureTable\\Tests\\": "tests/"
         }
     },
     "config": {

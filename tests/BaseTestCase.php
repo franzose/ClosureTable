@@ -5,7 +5,6 @@ use Dotenv\Dotenv;
 use Franzose\ClosureTable\Contracts\ClosureTableInterface;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Models\ClosureTable;
-use Franzose\ClosureTable\Tests\Seeds\EntitiesSeeder;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase;

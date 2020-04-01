@@ -4,7 +4,6 @@ namespace Franzose\ClosureTable\Tests;
 use DB;
 use Franzose\ClosureTable\Models\ClosureTable;
 use Franzose\ClosureTable\Models\Entity;
-use Franzose\ClosureTable\Tests\Models\Page;
 
 class EntityTestCase extends BaseTestCase
 {

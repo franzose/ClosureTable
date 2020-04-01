@@ -1,5 +1,5 @@
 <?php
-namespace Franzose\ClosureTable\Tests\Seeds;
+namespace Franzose\ClosureTable\Tests;
 
 use \DB;
 use Illuminate\Database\Seeder;
