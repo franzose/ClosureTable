@@ -35,32 +35,6 @@ class ClosureTableTestCase extends BaseTestCase
         $this->depthColumn = $this->ctable->getDepthColumn();
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @dataProvider insertNodeProvider
-     */
-    public function testInsertNodeValidatesItsArguments($ancestorId, $descendantId)
-    {
-        $this->ctable->insertNode($ancestorId, $descendantId);
-    }
-
-    public function insertNodeProvider()
-    {
-        return [
-            ['wrong', 12],
-            [12, 'wrong'],
-            ['wrong', 'wrong'],
-        ];
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testMoveNodeToValidatesItsArgument()
-    {
-        $this->ctable->moveNodeTo('wrong');
-    }
-
     public function testAncestorQualifiedKeyName()
     {
         $this->assertEquals($this->ctable->getTable() . '.' . $this->ancestorColumn, $this->ctable->getQualifiedAncestorColumn());

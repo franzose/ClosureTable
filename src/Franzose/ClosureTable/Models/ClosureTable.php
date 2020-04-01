@@ -1,15 +1,14 @@
 <?php
 namespace Franzose\ClosureTable\Models;
 
-use DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Franzose\ClosureTable\Contracts\ClosureTableInterface;
 
 /**
  * Basic ClosureTable model. Performs actions on the relationships table.
  *
- * @property int ancestor Alias for the ancestor attribute name
- * @property int descendant Alias for the descendant attribute name
+ * @property mixed ancestor Alias for the ancestor attribute name
+ * @property mixed descendant Alias for the descendant attribute name
  * @property int depth Alias for the depth attribute name
  *
  * @package Franzose\ClosureTable
@@ -40,10 +39,9 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
     /**
      * Inserts new node into closure table.
      *
-     * @param int $ancestorId
-     * @param int $descendantId
+     * @param mixed $ancestorId
+     * @param mixed $descendantId
      * @return void
-     * @throws \InvalidArgumentException
      */
     public function insertNode($ancestorId, $descendantId)
     {
@@ -54,22 +52,26 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
 
         $query = "
             INSERT INTO {$table} ({$ancestor}, {$descendant}, {$depth})
-            SELECT tbl.{$ancestor}, {$descendantId}, tbl.{$depth}+1
+            SELECT tbl.{$ancestor}, ?, tbl.{$depth}+1
             FROM {$table} AS tbl
-            WHERE tbl.{$descendant} = {$ancestorId}
+            WHERE tbl.{$descendant} = ?
             UNION ALL
-            SELECT {$descendantId}, {$descendantId}, 0
+            SELECT ?, ?, 0
         ";
 
-        DB::connection($this->connection)->statement($query);
+        $this->getConnection()->statement($query, [
+            $descendantId,
+            $ancestorId,
+            $descendantId,
+            $descendantId
+        ]);
     }
 
     /**
      * Make a node a descendant of another ancestor or makes it a root node.
      *
-     * @param int $ancestorId
+     * @param mixed $ancestorId
      * @return void
-     * @throws \InvalidArgumentException
      */
     public function moveNodeTo($ancestorId = null)
     {
@@ -78,11 +80,8 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
         $descendant = $this->getDescendantColumn();
         $depth = $this->getDepthColumn();
 
-        $thisAncestorId = $this->ancestor;
-        $thisDescendantId = $this->descendant;
-
         // Prevent constraint collision
-        if (!is_null($ancestorId) && $thisAncestorId === $ancestorId) {
+        if ($ancestorId !== null && $this->ancestor === $ancestorId) {
             return;
         }
 
@@ -91,7 +90,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
         // Since we have already unbound the node relationships,
         // given null ancestor id, we have nothing else to do,
         // because now the node is already root.
-        if (is_null($ancestorId)) {
+        if ($ancestorId === null) {
             return;
         }
 
@@ -100,11 +99,14 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
             SELECT supertbl.{$ancestor}, subtbl.{$descendant}, supertbl.{$depth}+subtbl.{$depth}+1
             FROM {$table} as supertbl
             CROSS JOIN {$table} as subtbl
-            WHERE supertbl.{$descendant} = {$ancestorId}
-            AND subtbl.{$ancestor} = {$thisDescendantId}
+            WHERE supertbl.{$descendant} = ?
+            AND subtbl.{$ancestor} = ?
         ";
 
-        DB::connection($this->connection)->statement($query);
+        $this->getConnection()->statement($query, [
+            $ancestorId,
+            $this->descendant
+        ]);
     }
 
     /**
@@ -117,26 +119,29 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
         $table = $this->getPrefixedTable();
         $ancestorColumn = $this->getAncestorColumn();
         $descendantColumn = $this->getDescendantColumn();
-        $descendant = $this->descendant;
 
         $query = "
             DELETE FROM {$table}
             WHERE {$descendantColumn} IN (
               SELECT d FROM (
-                SELECT {$descendantColumn} as d FROM {$table}
-                WHERE {$ancestorColumn} = {$descendant}
-              ) as dct
+                SELECT {$descendantColumn} AS d FROM {$table}
+                WHERE {$ancestorColumn} = ?
+              ) AS dct
             )
             AND {$ancestorColumn} IN (
               SELECT a FROM (
                 SELECT {$ancestorColumn} AS a FROM {$table}
-                WHERE {$descendantColumn} = {$descendant}
-                AND {$ancestorColumn} <> {$descendant}
-              ) as ct
+                WHERE {$descendantColumn} = ?
+                AND {$ancestorColumn} <> ?
+              ) AS ct
             )
         ";
 
-        DB::connection($this->connection)->delete($query);
+        $this->getConnection()->delete($query, [
+            $this->descendant,
+            $this->descendant,
+            $this->descendant
+        ]);
     }
 
     /**
@@ -146,7 +151,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function getPrefixedTable()
     {
-        return DB::connection($this->connection)->getTablePrefix() . $this->getTable();
+        return $this->getConnection()->getTablePrefix() . $this->getTable();
     }
 
     /**
@@ -166,7 +171,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function setAncestorAttribute($value)
     {
-        $this->attributes[$this->getAncestorColumn()] = intval($value);
+        $this->attributes[$this->getAncestorColumn()] = $value;
     }
 
     /**
@@ -206,7 +211,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function setDescendantAttribute($value)
     {
-        $this->attributes[$this->getDescendantColumn()] = intval($value);
+        $this->attributes[$this->getDescendantColumn()] = $value;
     }
 
     /**
@@ -246,7 +251,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function setDepthAttribute($value)
     {
-        $this->attributes[$this->getDepthColumn()] = intval($value);
+        $this->attributes[$this->getDepthColumn()] = (int) $value;
     }
 
     /**
