@@ -41,26 +41,6 @@ class EntityTestCase extends BaseTestCase
         $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
     }
 
-    public function testPositionIsFillable()
-    {
-        $this->assertContains($this->entity->getPositionColumn(), $this->entity->getFillable());
-    }
-
-    public function testPositionDefaultValue()
-    {
-        $this->assertEquals(0, $this->entity->position);
-    }
-
-    public function testRealDepthIsFillable()
-    {
-        $this->assertContains($this->entity->getRealDepthColumn(), $this->entity->getFillable());
-    }
-
-    public function testRealDepthDefaultValue()
-    {
-        $this->assertEquals(0, $this->entity->real_depth);
-    }
-
     public function testIsParent()
     {
         $this->assertFalse($this->entity->isParent());
