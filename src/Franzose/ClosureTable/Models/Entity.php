@@ -296,7 +296,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function isParent()
     {
-        return $this->exists === true && $this->hasChildren();
+        return $this->exists && $this->hasChildren();
     }
 
     /**
@@ -306,7 +306,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function isRoot()
     {
-        return $this->exists === true && $this->parent_id === null;
+        return $this->exists && $this->parent_id === null;
     }
 
     /**
@@ -317,11 +317,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getParent(array $columns = ['*'])
     {
-        if ($this->exists === false) {
-            return null;
-        }
-
-        return $this->find($this->parent_id, $columns);
+        return $this->exists ? $this->find($this->parent_id, $columns) : null;
     }
 
     /**
