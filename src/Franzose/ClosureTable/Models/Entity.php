@@ -180,7 +180,7 @@ class Entity extends Eloquent implements EntityInterface
             return;
         }
         $this->previousPosition = $this->position;
-        $this->attributes[$this->getPositionColumn()] = intval($value);
+        $this->attributes[$this->getPositionColumn()] = (int) $value;
     }
 
     /**
@@ -224,7 +224,7 @@ class Entity extends Eloquent implements EntityInterface
             return;
         }
         $this->previousRealDepth = $this->real_depth;
-        $this->attributes[$this->getRealDepthColumn()] = intval($value);
+        $this->attributes[$this->getRealDepthColumn()] = (int) $value;
     }
 
     /**
