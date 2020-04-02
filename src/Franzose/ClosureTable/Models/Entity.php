@@ -296,7 +296,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function isParent()
     {
-        return $this->hasChildren();
+        return $this->exists === true && $this->hasChildren();
     }
 
     /**
@@ -313,11 +313,15 @@ class Entity extends Eloquent implements EntityInterface
      * Retrieves direct ancestor of a model.
      *
      * @param array $columns
-     * @return Entity
+     * @return Entity|null
      */
     public function getParent(array $columns = ['*'])
     {
-        return static::find($this->parent_id, $columns);
+        if ($this->exists === false) {
+            return null;
+        }
+
+        return $this->find($this->parent_id, $columns);
     }
 
     /**

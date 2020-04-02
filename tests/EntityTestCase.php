@@ -41,17 +41,6 @@ class EntityTestCase extends BaseTestCase
         $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
     }
 
-    public function testIsParent()
-    {
-        $this->assertFalse($this->entity->isParent());
-    }
-
-    public function testIsRoot()
-    {
-        $this->assertFalse($this->entity->isRoot());
-        $this->assertTrue(Entity::find(1)->isRoot());
-    }
-
     public function testCreate()
     {
         DB::statement("SET foreign_key_checks=0");
@@ -190,15 +179,6 @@ class EntityTestCase extends BaseTestCase
         $entity->save();
 
         $this->assertEquals($ancestor->countChildren(), $entity->position);
-    }
-
-    public function testGetParent()
-    {
-        $entity = Entity::find(10);
-        $parent = $entity->getParent();
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $parent);
-        $this->assertEquals(9, $parent->getKey());
     }
 
     public function testGetParentAfterMovingToAnAncestor()
