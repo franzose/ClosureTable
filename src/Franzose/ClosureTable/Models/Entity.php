@@ -306,11 +306,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function isRoot()
     {
-        if (!$this->exists) {
-            return false;
-        }
-
-        return is_null($this->parent_id);
+        return $this->exists === true && $this->parent_id === null;
     }
 
     /**
@@ -513,7 +509,7 @@ class Entity extends Eloquent implements EntityInterface
     {
         $query = $this->queryByParentId();
 
-        if (!is_null($position)) {
+        if ($position !== null) {
             if (is_array($position)) {
                 $query->buildWherePosition($this->getPositionColumn(), $position);
             } else {
@@ -684,7 +680,7 @@ class Entity extends Eloquent implements EntityInterface
     {
         $lastChild = $this->getLastChild([$this->getPositionColumn()]);
 
-        return (is_null($lastChild) ? 0 : $lastChild->position);
+        return $lastChild === null ? 0 : $lastChild->position;
     }
 
     /**
@@ -698,7 +694,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addChild(EntityInterface $child, $position = null, $returnChild = false)
     {
         if ($this->exists) {
-            if (is_null($position)) {
+            if ($position === null) {
                 $position = $this->getNextAfterLastPosition($this->getKey());
             }
 
@@ -768,7 +764,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function removeChildren($from, $to = null, $forceDelete = false)
     {
-        if (!is_numeric($from) || (!is_null($to) && !is_numeric($to))) {
+        if (!is_numeric($from) || ($to !== null && !is_numeric($to))) {
             throw new \InvalidArgumentException('`from` and `to` are the position boundaries. They must be of type int.');
         }
 
@@ -1023,7 +1019,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false)
     {
         if ($this->exists) {
-            if (is_null($position)) {
+            if ($position === null) {
                 $position = $this->getNextAfterLastPosition();
             }
 
@@ -1043,7 +1039,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addSiblings(array $siblings, $from = null)
     {
         if ($this->exists) {
-            if (is_null($from)) {
+            if ($from === null) {
                 $from = $this->getNextAfterLastPosition();
             }
 
@@ -1173,7 +1169,7 @@ class Entity extends Eloquent implements EntityInterface
             $entity->parent_id = $parent ? $parent->getKey() : null;
             $entity->save();
 
-            if (!is_null($children)) {
+            if ($children !== null) {
                 $children = static::createFromArray($children, $entity);
                 $entity->setRelation($childrenRelationIndex, $children);
                 $entity->addChildren($children->all());
@@ -1197,11 +1193,11 @@ class Entity extends Eloquent implements EntityInterface
     {
         $parentId = (!$ancestor instanceof EntityInterface ? $ancestor : $ancestor->getKey());
 
-        if ($this->parent_id == $parentId && !is_null($this->parent_id)) {
+        if ($this->parent_id === $parentId && $this->parent_id !== null) {
             return $this;
         }
 
-        if ($this->getKey() == $parentId) {
+        if ($this->getKey() === $parentId) {
             throw new \InvalidArgumentException('Target entity is equal to the sender.');
         }
 
@@ -1227,7 +1223,7 @@ class Entity extends Eloquent implements EntityInterface
     protected function getNewRealDepth($ancestor)
     {
         if (!$ancestor instanceof EntityInterface) {
-            if (is_null($ancestor)) {
+            if ($ancestor === null) {
                 return 0;
             } else {
                 return static::find($ancestor)->real_depth + 1;
@@ -1303,7 +1299,7 @@ class Entity extends Eloquent implements EntityInterface
             ->orderBy($positionColumn, 'desc')
             ->first();
 
-        return !is_null($entity) ? (int)$entity->position : null;
+        return $entity !== null ? (int)$entity->position : null;
     }
 
     /**
@@ -1398,7 +1394,7 @@ class Entity extends Eloquent implements EntityInterface
     protected function moveNode()
     {
         if ($this->exists) {
-            if (is_null($this->closure->ancestor)) {
+            if ($this->closure->ancestor === null) {
                 $primaryKey = $this->getKey();
                 $this->closure->ancestor = $primaryKey;
                 $this->closure->descendant = $primaryKey;
