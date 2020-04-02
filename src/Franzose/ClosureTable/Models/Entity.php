@@ -27,7 +27,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @var ClosureTable
      */
-    protected $closure = 'Franzose\ClosureTable\Models\ClosureTable';
+    protected $closure = ClosureTable::class;
 
     /**
      * Cached "previous" (i.e. before the model is moved) direct ancestor id of this model.
@@ -85,7 +85,11 @@ class Entity extends Eloquent implements EntityInterface
 
         $this->fillable(array_merge($this->getFillable(), [$position, $depth]));
 
-        if (!isset($attributes[$depth])) {
+        if (isset($attributes[$position]) && $attributes[$position] < 0) {
+            $attributes[$position] = 0;
+        }
+
+        if (!isset($attributes[$depth]) || $attributes[$depth] < 0) {
             $attributes[$depth] = 0;
         }
 
@@ -94,7 +98,7 @@ class Entity extends Eloquent implements EntityInterface
         // The default class name of the closure table was not changed
         // so we define and set default closure table name automagically.
         // This can prevent useless copy paste of closure table models.
-        if (get_class($this->closure) == 'Franzose\ClosureTable\Models\ClosureTable') {
+        if (get_class($this->closure) === ClosureTable::class) {
             $table = $this->getTable() . '_closure';
             $this->closure->setTable($table);
         }
@@ -102,11 +106,12 @@ class Entity extends Eloquent implements EntityInterface
         parent::__construct($attributes);
     }
 
-    public function newFromBuilder($attributes = array(), $connection = null)
+    public function newFromBuilder($attributes = [], $connection = null)
     {
         $instance = parent::newFromBuilder($attributes);
         $instance->old_parent_id = $instance->parent_id;
         $instance->old_position = $instance->position;
+        $instance->old_real_depth = $instance->real_depth;
         return $instance;
     }
 
