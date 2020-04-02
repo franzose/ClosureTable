@@ -439,7 +439,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function hasAncestors()
     {
-        return !!$this->countAncestors();
+        return (bool) $this->countAncestors();
     }
 
     /**

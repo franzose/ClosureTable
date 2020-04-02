@@ -191,45 +191,6 @@ class EntityTestCase extends BaseTestCase
         $this->assertEquals(15, $parent->getKey());
     }
 
-    public function testGetAncestors()
-    {
-        $entity = Entity::find(12);
-        $ancestors = $entity->getAncestors();
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $ancestors);
-        $this->assertCount(3, $ancestors);
-        $this->assertArrayValuesEquals($ancestors->modelKeys(), [9, 10, 11]);
-    }
-
-    public function testGetAncestorsWhere()
-    {
-        $entity = Entity::find(12);
-        $ancestors = $entity->getAncestorsWhere('excerpt', '=', '');
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $ancestors);
-        $this->assertCount(0, $ancestors);
-
-        $ancestors = $entity->getAncestorsWhere($this->entity->getPositionColumn(), '=', 0);
-        $this->assertCount(2, $ancestors);
-        $this->assertArrayValuesEquals($ancestors->modelKeys(), [10, 11]);
-    }
-
-    public function testCountAncestors()
-    {
-        $entity = Entity::find(12);
-        $ancestors = $entity->countAncestors();
-
-        $this->assertEquals(3, $ancestors);
-    }
-
-    public function testHasAncestors()
-    {
-        $entity = Entity::find(12);
-        $hasAncestors = $entity->hasAncestors();
-
-        $this->assertTrue($hasAncestors);
-    }
-
     public function testGetDescendants()
     {
         $entity = Entity::find(9);
