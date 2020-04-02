@@ -495,7 +495,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function hasDescendants()
     {
-        return !!$this->countDescendants();
+        return (bool) $this->countDescendants();
     }
 
     /**
