@@ -33,4 +33,15 @@ class ParentRootTests extends BaseTestCase
         static::assertNull(Entity::find(1)->getParent());
         static::assertNull((new Entity())->getParent());
     }
+
+    public function testGetRoots()
+    {
+        $roots = Entity::getRoots();
+
+        static::assertCount(9, $roots);
+
+        foreach ($roots as $idx => $root) {
+            static::assertEquals($idx + 1, $roots->get($idx)->getKey());
+        }
+    }
 }

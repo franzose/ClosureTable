@@ -505,17 +505,6 @@ class EntityTestCase extends BaseTestCase
         $this->assertEquals(19, $siblings[3]->getKey());
     }
 
-    public function testGetRoots()
-    {
-        $roots = Entity::getRoots();
-
-        $this->assertCount(9, $roots);
-
-        foreach ($roots as $idx => $root) {
-            $this->assertEquals($idx + 1, $roots->get($idx)->getKey());
-        }
-    }
-
     public function testGetTree()
     {
         $tree = Entity::getTree();
