@@ -51,18 +51,18 @@ class Entity extends Eloquent implements EntityInterface
     private $previousRealDepth;
 
     /**
+     * Indicates if the model is being moved to another ancestor.
+     *
+     * @var bool
+     */
+    private $isMoved = false;
+
+    /**
      * Indicates if the model should soft delete.
      *
      * @var bool
      */
     protected $softDelete = true;
-
-    /**
-     * Indicates if the model is being moved to another ancestor.
-     *
-     * @var bool
-     */
-    protected $isMoved = false;
 
     /**
      * Indicates if the model should be timestamped.
