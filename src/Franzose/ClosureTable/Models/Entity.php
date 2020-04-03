@@ -1149,11 +1149,11 @@ class Entity extends Eloquent implements EntityInterface
             ->scopeSiblings($builder)
             ->where($position, '>=', $from);
 
-        if ($to === null) {
-            return $query;
+        if ($to !== null) {
+           $query->where($position, '<=', $to);
         }
 
-        return $query->where($position, '<=', $to);
+        return $query;
     }
 
     /**
@@ -1183,6 +1183,10 @@ class Entity extends Eloquent implements EntityInterface
             $position = $position === null ? $this->getLatestPosition() : $position;
 
             $sibling->moveTo($position, $this->parent_id);
+
+            if ($position < $this->position) {
+                $this->position++;
+            }
         }
 
         return ($returnSibling === true ? $sibling : $this);
@@ -1191,26 +1195,26 @@ class Entity extends Eloquent implements EntityInterface
     /**
      * Appends multiple siblings within the current depth.
      *
-     * @param array $siblings
+     * @param Entity[] $siblings
      * @param int|null $from
-     * @return $this
+     *
+     * @return Entity
+     * @throws Throwable
      */
     public function addSiblings(array $siblings, $from = null)
     {
-        if ($this->exists) {
-            if ($from === null) {
-                $from = $this->getLatestPosition();
-            }
+        if (!$this->exists) {
+            return $this;
+        }
 
-            $parent = $this->getParent();
-            /**
-             * @var Entity $sibling
-             */
+        $from = $from === null ? $this->getLatestPosition() : $from;
+
+        $this->getConnection()->transaction(function () use ($siblings, &$from) {
             foreach ($siblings as $sibling) {
-                $sibling->moveTo($from, $parent);
+                $this->addSibling($sibling, $from);
                 $from++;
             }
-        }
+        });
 
         return $this;
     }

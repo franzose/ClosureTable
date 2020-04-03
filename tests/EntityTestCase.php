@@ -191,44 +191,6 @@ class EntityTestCase extends BaseTestCase
         $this->assertEquals(15, $parent->getKey());
     }
 
-    public function testAddSibling()
-    {
-        $entity = Entity::find(15);
-        $entity->addSibling(new Entity);
-
-        $sibling = $entity->getNextSibling();
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $sibling);
-        $this->assertEquals(4, $sibling->position);
-    }
-
-    public function testAddSiblings()
-    {
-        $entity = Entity::find(15);
-        $entity->addSiblings([new Entity, new Entity, new Entity]);
-
-        $siblings = $entity->getNextSiblings();
-
-        $this->assertCount(3, $siblings);
-        $this->assertEquals(4, $siblings[0]->position);
-        $this->assertEquals(5, $siblings[1]->position);
-        $this->assertEquals(6, $siblings[2]->position);
-    }
-
-    public function testAddSiblingsFromPosition()
-    {
-        $entity = Entity::find(15);
-
-        $entity->addSiblings([new Entity, new Entity, new Entity, new Entity], 1);
-
-        $siblings = $entity->getSiblingsRange(1, 4);
-
-        $this->assertEquals(16, $siblings[0]->getKey());
-        $this->assertEquals(17, $siblings[1]->getKey());
-        $this->assertEquals(18, $siblings[2]->getKey());
-        $this->assertEquals(19, $siblings[3]->getKey());
-    }
-
     public function testGetTree()
     {
         $tree = Entity::getTree();
