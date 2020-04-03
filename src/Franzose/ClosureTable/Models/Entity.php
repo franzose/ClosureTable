@@ -8,6 +8,8 @@ use Franzose\ClosureTable\Extensions\QueryBuilder;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use InvalidArgumentException;
+use Throwable;
 
 /**
  * Basic entity class.
@@ -506,49 +508,6 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Shorthand of the children query part.
-     *
-     * @param array|int|null $position
-     * @param string $order
-     * @return QueryBuilder
-     */
-    protected function childrenQuery($position = null, $order = 'asc')
-    {
-        $query = $this->queryByParentId();
-
-        if ($position !== null) {
-            if (is_array($position)) {
-                $query->buildWherePosition($this->getPositionColumn(), $position);
-            } else {
-                if ($position === static::QUERY_LAST) {
-                    $query->orderBy($this->getPositionColumn(), 'desc');
-                } else {
-                    $query->where($this->getPositionColumn(), '=', $position);
-                }
-            }
-        }
-
-        if ($position !== static::QUERY_LAST) {
-            $query->orderBy($this->getPositionColumn(), $order);
-        }
-
-        return $query;
-    }
-
-    /**
-     * Starts a query by parent identifier.
-     *
-     * @param mixed $id
-     * @return QueryBuilder
-     */
-    protected function queryByParentId($id = null)
-    {
-        $id = ($id ?: $this->getKey());
-
-        return $this->where($this->getParentIdColumn(), '=', $id);
-    }
-
-    /**
      * Returns one-to-many relationship to child nodes.
      *
      * @return HasMany
@@ -703,6 +662,64 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Appends a child to the model.
+     *
+     * @param EntityInterface $child
+     * @param int $position
+     * @param bool $returnChild
+     * @return EntityInterface
+     */
+    public function addChild(EntityInterface $child, $position = null, $returnChild = false)
+    {
+        if ($this->exists) {
+            $position = $position ?: $this->getLatestPosition();
+
+            $child->moveTo($position, $this);
+        }
+
+        return $returnChild === true ? $child : $this;
+    }
+
+    /**
+     * Appends a collection of children to the model.
+     *
+     * @param Entity[] $children
+     *
+     * @return Entity
+     * @throws InvalidArgumentException
+     * @throws Throwable
+     */
+    public function addChildren(array $children)
+    {
+        return $this->insertChildren($this->getLastChildPosition(), ...$children);
+    }
+
+    /**
+     * Inserts children nodes starting from the specified position.
+     *
+     * @param int $position
+     * @param Entity[] $children
+     *
+     * @return Entity
+     * @throws Throwable
+     */
+    public function insertChildren($position, Entity... $children)
+    {
+        if (!$this->exists) {
+            return $this;
+        }
+
+        $this->getConnection()->transaction(function () use (&$position, $children) {
+            foreach ($children as $child) {
+                $this->addChild($child, $position);
+                $position++;
+            }
+        });
+
+        return $this;
+    }
+
+    /**
      * Gets last child position.
      *
      * @return int
@@ -715,58 +732,6 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Appends a child to the model.
-     *
-     * @param EntityInterface $child
-     * @param int $position
-     * @param bool $returnChild
-     * @return EntityInterface
-     */
-    public function addChild(EntityInterface $child, $position = null, $returnChild = false)
-    {
-        if ($this->exists) {
-            if ($position === null) {
-                $position = $this->getNextAfterLastPosition($this->getKey());
-            }
-
-            $child->moveTo($position, $this);
-        }
-
-        return ($returnChild === true ? $child : $this);
-    }
-
-    /**
-     * Appends a collection of children to the model.
-     *
-     * @param array $children
-     * @return $this
-     * @throws \InvalidArgumentException
-     */
-    public function addChildren(array $children)
-    {
-        if ($this->exists) {
-            \DB::connection($this->connection)->transaction(function () use ($children) {
-                $lastChildPosition = $this->getLastChildPosition();
-
-                foreach ($children as $child) {
-                    if (!$child instanceof EntityInterface) {
-                        if (isset($child['id'])) {
-                            unset($child['id']);
-                        }
-
-                        $child = new static($child);
-                    }
-
-                    $this->addChild($child, $lastChildPosition);
-                    $lastChildPosition++;
-                }
-            });
-        }
-
-        return $this;
-    }
-
-    /**
      * Removes a model's child with given position.
      *
      * @param int $position
@@ -775,11 +740,13 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function removeChild($position = null, $forceDelete = false)
     {
-        if ($this->exists) {
-            $action = ($forceDelete === true ? 'forceDelete' : 'delete');
-
-            $this->childrenQuery($position)->$action();
+        if (!$this->exists) {
+            return $this;
         }
+
+        $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+
+        $this->childAt($position)->{$action}();
 
         return $this;
     }
@@ -791,19 +758,21 @@ class Entity extends Eloquent implements EntityInterface
      * @param int $to
      * @param bool $forceDelete
      * @return $this
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function removeChildren($from, $to = null, $forceDelete = false)
     {
         if (!is_numeric($from) || ($to !== null && !is_numeric($to))) {
-            throw new \InvalidArgumentException('`from` and `to` are the position boundaries. They must be of type int.');
+            throw new InvalidArgumentException('`from` and `to` are the position boundaries. They must be of type int.');
         }
 
-        if ($this->exists) {
-            $action = ($forceDelete === true ? 'forceDelete' : 'delete');
-
-            $this->childrenQuery([$from, $to])->$action();
+        if (!$this->exists) {
+            return $this;
         }
+
+        $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+
+        $this->childrenRange($from, $to)->{$action}();
 
         return $this;
     }
@@ -1055,7 +1024,7 @@ class Entity extends Eloquent implements EntityInterface
     {
         if ($this->exists) {
             if ($position === null) {
-                $position = $this->getNextAfterLastPosition();
+                $position = $this->getLatestPosition();
             }
 
             $sibling->moveTo($position, $this->parent_id);
@@ -1075,7 +1044,7 @@ class Entity extends Eloquent implements EntityInterface
     {
         if ($this->exists) {
             if ($from === null) {
-                $from = $this->getNextAfterLastPosition();
+                $from = $this->getLatestPosition();
             }
 
             $parent = $this->getParent();
@@ -1228,7 +1197,7 @@ class Entity extends Eloquent implements EntityInterface
      * @param int $position
      * @param EntityInterface|int $ancestor
      * @return Entity
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function moveTo($position, $ancestor = null)
     {
@@ -1239,7 +1208,7 @@ class Entity extends Eloquent implements EntityInterface
         }
 
         if ($this->getKey() === $parentId) {
-            throw new \InvalidArgumentException('Target entity is equal to the sender.');
+            throw new InvalidArgumentException('Target entity is equal to the sender.');
         }
 
         $this->parent_id = $parentId;
@@ -1285,7 +1254,7 @@ class Entity extends Eloquent implements EntityInterface
     protected function performInsert(EloquentBuilder $query, array $options = [])
     {
         if ($this->isMoved === false) {
-            $this->position = $this->position !== null ? $this->position : $this->getNextAfterLastPosition();
+            $this->position = $this->position !== null ? $this->position : $this->getLatestPosition();
             $this->real_depth = $this->getNewRealDepth($this->parent_id);
         }
 
@@ -1317,30 +1286,23 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Gets the next sibling position after the last one at the given ancestor.
+     * Gets the next sibling position after the last one.
      *
-     * @param int|bool $parentId
      * @return int
      */
-    public function getNextAfterLastPosition($parentId = false)
-    {
-        $position = $this->getLastPosition($parentId);
-        return $position === null ? 0 : $position + 1;
-    }
-
-    public function getLastPosition($parentId = false)
+    private function getLatestPosition()
     {
         $positionColumn = $this->getPositionColumn();
         $parentIdColumn = $this->getParentIdColumn();
 
-        $parentId = ($parentId === false ? $this->parent_id : $parentId);
-
         $entity = $this->select($positionColumn)
-            ->where($parentIdColumn, '=', $parentId)
-            ->orderBy($positionColumn, 'desc')
+            ->where($parentIdColumn, '=', $this->parent_id)
+            ->latest($positionColumn)
             ->first();
 
-        return $entity !== null ? (int)$entity->position : null;
+        $position = $entity !== null ? $entity->position : -1;
+
+        return $position + 1;
     }
 
     /**
@@ -1457,7 +1419,7 @@ class Entity extends Eloquent implements EntityInterface
         if (!$this->isDirty($this->getPositionColumn())) {
             return;
         }
-        $newPosition = max(0, min($this->position, $this->getNextAfterLastPosition()));
+        $newPosition = max(0, min($this->position, $this->getLatestPosition()));
         $this->attributes[$this->getPositionColumn()] = $newPosition;
     }
 
