@@ -4,11 +4,11 @@ namespace Franzose\ClosureTable\Extensions;
 use Illuminate\Support\Str as BaseStr;
 
 /**
- * Extension of the base Str class.
+ * Custom string functions extenstion.
  *
  * @package Franzose\ClosureTable\Extensions
  */
-class Str extends BaseStr
+class Str
 {
     /**
      * Makes appropriate class name from given string.
@@ -18,7 +18,7 @@ class Str extends BaseStr
      */
     public static function classify($name)
     {
-        return studly_case(str_singular($name));
+        return BaseStr::studly(BaseStr::singular($name));
     }
 
     /**
@@ -31,6 +31,8 @@ class Str extends BaseStr
     {
         $name = str_replace('\\', '', $name);
 
-        return (ends_with($name, 'Closure') ? snake_case($name) : snake_case(str_plural($name)));
+        return BaseStr::endsWith($name, 'Closure')
+            ? BaseStr::snake($name)
+            : BaseStr::snake(BaseStr::plural($name));
     }
 }
