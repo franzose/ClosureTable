@@ -53,43 +53,30 @@ class CollectionTestCase extends BaseTestCase
         static::assertEquals([1, 2, 3], $collection->getRange(1, 3)->pluck('position')->toArray());
     }
 
-    public function testToTree()
+    public function testGetChildrenOf()
     {
-        $rootEntity = new Entity();
-        $rootEntity->save();
-        $childEntity = (new Entity())->moveTo(0, $rootEntity);
-        $grandEntity = (new Entity())->moveTo(0, $childEntity);
+        $entity = new Page(['position' => 0]);
+        $childrenRelationIndex = $entity->getChildrenRelationIndex();
 
-        $childrenRelationIndex = $rootEntity->getChildrenRelationIndex();
+        $collection = new Collection([
+            $entity,
+            new Page(['position' => 1]),
+            new Page(['position' => 2])
+        ]);
 
-        $tree = (new Collection([$rootEntity, $childEntity, $grandEntity]))->toTree();
+        $expected = new Collection([
+            new Page(['position' => 0]),
+            new Page(['position' => 1]),
+            new Page(['position' => 2])
+        ]);
 
-        /** @var Entity $rootItem */
-        $rootItem = $tree->get(0);
+        /** @var Entity $firstEntity */
+        $firstEntity = $collection->get(0);
+        $firstEntity->setRelation($childrenRelationIndex, $expected);
 
-        static::assertArrayHasKey($childrenRelationIndex, $rootItem->getRelations());
+        $actual = $collection->getChildrenOf(0);
 
-        /** @var Collection $children */
-        $children = $rootItem->getRelation($childrenRelationIndex);
-
-        static::assertCount(1, $children);
-
-        /** @var Entity $childItem */
-        $childItem = $children->get(0);
-
-        static::assertEquals($childEntity->getKey(), $childItem->getKey());
-        static::assertArrayHasKey($childrenRelationIndex, $childItem->getRelations());
-
-        /** @var Collection $grandItems */
-        $grandItems = $childItem->getRelation($childrenRelationIndex);
-
-        static::assertCount(1, $grandItems);
-
-        /** @var Entity $grandItem */
-        $grandItem = $grandItems->get(0);
-
-        static::assertEquals($grandEntity->getKey(), $grandItem->getKey());
-        static::assertArrayNotHasKey($childrenRelationIndex, $grandItem->getRelations());
+        static::assertSame($expected, $actual);
     }
 
     public function testHasChildren()
@@ -116,29 +103,22 @@ class CollectionTestCase extends BaseTestCase
         static::assertTrue($collection->hasChildren(0));
     }
 
-    public function testGetChildrenOf()
+    public function testToTree()
     {
-        $entity = new Page(['position' => 0]);
-        $childrenRelationIndex = $entity->getChildrenRelationIndex();
+        $root = new Page(['id' => 1]);
+        $child = new Page(['id' => 2, 'parent_id' => 1]);
+        $grandChild = new Page(['id' => 3, 'parent_id' => 2]);
 
-        $collection = new Collection([
-            $entity,
-            new Page(['position' => 1]),
-            new Page(['position' => 2])
-        ]);
+        $tree = (new Collection([$root, $child, $grandChild]))->toTree();
 
-        $expected = new Collection([
-            new Page(['position' => 0]),
-            new Page(['position' => 1]),
-            new Page(['position' => 2])
-        ]);
+        static::assertCount(1, $tree);
 
-        /** @var Entity $firstEntity */
-        $firstEntity = $collection->get(0);
-        $firstEntity->setRelation($childrenRelationIndex, $expected);
+        $children = $tree->get(0)->children;
+        static::assertCount(1, $children);
+        static::assertSame($child, $children->get(0));
 
-        $actual = $collection->getChildrenOf(0);
-
-        static::assertSame($expected, $actual);
+        $grandChildren = $children->get(0)->children;
+        static::assertCount(1, $grandChildren);
+        static::assertSame($grandChild, $grandChildren->get(0));
     }
 }

@@ -1,11 +1,13 @@
 <?php
 namespace Franzose\ClosureTable\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Franzose\ClosureTable\Extensions\QueryBuilder;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Basic entity class.
@@ -17,6 +19,11 @@ use Franzose\ClosureTable\Extensions\Collection;
  * @property int position Alias for the current position attribute name
  * @property int parent_id Alias for the direct ancestor identifier attribute name
  * @property int real_depth Alias for the real depth attribute name
+ * @property Collection children Child nodes loaded from the database
+ * @method HasMany childAt(int $position)
+ * @method HasMany firstChild()
+ * @method HasMany lastChild()
+ * @method HasMany childrenRange(int $from, int $to = null)
  *
  * @package Franzose\ClosureTable
  */
@@ -505,7 +512,7 @@ class Entity extends Eloquent implements EntityInterface
      * @param string $order
      * @return QueryBuilder
      */
-    protected function children($position = null, $order = 'asc')
+    protected function childrenQuery($position = null, $order = 'asc')
     {
         $query = $this->queryByParentId();
 
@@ -542,20 +549,25 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Returns one-to-many relationship to child nodes.
+     *
+     * @return HasMany
+     */
+    public function children()
+    {
+        return $this->hasMany(get_class($this), $this->getParentIdColumn());
+    }
+
+    /**
      * Retrieves all children of a model.
      *
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public function getChildren(array $columns = ['*'])
     {
-        if ($this->hasChildrenRelation()) {
-            $result = $this->getRelation($this->getChildrenRelationIndex());
-        } else {
-            $result = $this->children()->get($columns);
-        }
-
-        return $result;
+        return $this->children()->get($columns);
     }
 
     /**
@@ -565,13 +577,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function countChildren()
     {
-        if ($this->hasChildrenRelation()) {
-            $result = $this->getRelation($this->getChildrenRelationIndex())->count();
-        } else {
-            $result = $this->queryByParentId()->count();
-        }
-
-        return $result;
+        return $this->children()->count();
     }
 
     /**
@@ -581,53 +587,53 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function hasChildren()
     {
-        return !!$this->countChildren();
+        return (bool) $this->countChildren();
     }
 
     /**
      * Indicates whether a model has children as a relation.
      *
      * @return bool
+     * @deprecated from 6.0
      */
     public function hasChildrenRelation()
     {
-        return array_key_exists($this->getChildrenRelationIndex(), $this->getRelations());
+        return $this->relationLoaded($this->getChildrenRelationIndex());
     }
 
     /**
-     * Pushes a new item to a relation.
+     * Returns relationship to a child at the given position.
      *
-     * @param $relation
-     * @param $value
-     * @return $this
+     * @param Builder $builder
+     * @param int $position
+     *
+     * @return HasMany
      */
-    public function appendRelation($relation, $value)
+    public function scopeChildAt($builder, $position)
     {
-        if (!array_key_exists($relation, $this->getRelations())) {
-            $this->setRelation($relation, new Collection([$value]));
-        } else {
-            $this->getRelation($relation)->add($value);
-        }
-
-        return $this;
+        return $this->children()->where($this->getPositionColumn(), '=', $position);
     }
 
     /**
      * Retrieves a child with given position.
      *
-     * @param $position
+     * @param int $position
      * @param array $columns
      * @return Entity
      */
     public function getChildAt($position, array $columns = ['*'])
     {
-        if ($this->hasChildrenRelation()) {
-            $result = $this->getRelation($this->getChildrenRelationIndex())->get($position);
-        } else {
-            $result = $this->children($position)->first($columns);
-        }
+        return $this->childAt($position)->first($columns);
+    }
 
-        return $result;
+    /**
+     * Returns relationship to the first child node.
+     *
+     * @return HasMany
+     */
+    public function scopeFirstChild()
+    {
+        return $this->childAt(0);
     }
 
     /**
@@ -642,6 +648,16 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Returns relationship to the last child node.
+     *
+     * @return HasMany
+     */
+    public function scopeLastChild()
+    {
+        return $this->children()->orderBy($this->getPositionColumn(), 'desc');
+    }
+
+    /**
      * Retrieves the last child.
      *
      * @param array $columns
@@ -649,13 +665,28 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getLastChild(array $columns = ['*'])
     {
-        if ($this->hasChildrenRelation()) {
-            $result = $this->getRelation($this->getChildrenRelationIndex())->last();
-        } else {
-            $result = $this->children(static::QUERY_LAST)->first($columns);
+        return $this->lastChild()->first($columns);
+    }
+
+    /**
+     * Returns relationship to child nodes in the range of the given positions.
+     *
+     * @param Builder $builder
+     * @param int $from
+     * @param int|null $to
+     *
+     * @return HasMany
+     */
+    public function scopeChildrenRange($builder, $from, $to = null)
+    {
+        $position = $this->getPositionColumn();
+        $query = $this->children()->where($position, '>=', $from);
+
+        if ($to !== null) {
+            $query->where($position, '<=', $to);
         }
 
-        return $result;
+        return $query;
     }
 
     /**
@@ -668,7 +699,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getChildrenRange($from, $to = null, array $columns = ['*'])
     {
-        return $this->children([$from, $to])->get($columns);
+        return $this->childrenRange($from, $to)->get($columns);
     }
 
     /**
@@ -747,7 +778,7 @@ class Entity extends Eloquent implements EntityInterface
         if ($this->exists) {
             $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-            $this->children($position)->$action();
+            $this->childrenQuery($position)->$action();
         }
 
         return $this;
@@ -771,7 +802,7 @@ class Entity extends Eloquent implements EntityInterface
         if ($this->exists) {
             $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-            $this->children([$from, $to])->$action();
+            $this->childrenQuery([$from, $to])->$action();
         }
 
         return $this;
@@ -839,7 +870,8 @@ class Entity extends Eloquent implements EntityInterface
      * Retrives all siblings of a model.
      *
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public function getSiblings(array $columns = ['*'])
     {
@@ -870,7 +902,8 @@ class Entity extends Eloquent implements EntityInterface
      * Retrieves neighbors (immediate previous and immediate next models) of a model.
      *
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public function getNeighbors(array $columns = ['*'])
     {
@@ -926,7 +959,8 @@ class Entity extends Eloquent implements EntityInterface
      * Retrieves all previous siblings of a model.
      *
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public function getPrevSiblings(array $columns = ['*'])
     {
@@ -968,7 +1002,8 @@ class Entity extends Eloquent implements EntityInterface
      * Retrieves all next siblings of a model.
      *
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public function getNextSiblings(array $columns = ['*'])
     {
@@ -1060,7 +1095,8 @@ class Entity extends Eloquent implements EntityInterface
      * Retrieves root (with no ancestors) models.
      *
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public static function getRoots(array $columns = ['*'])
     {
@@ -1098,7 +1134,8 @@ class Entity extends Eloquent implements EntityInterface
      * Retrieves entire tree.
      *
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public static function getTree(array $columns = ['*'])
     {
@@ -1118,7 +1155,8 @@ class Entity extends Eloquent implements EntityInterface
      * @param mixed $operator
      * @param mixed $value
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public static function getTreeWhere($column, $operator = null, $value = null, array $columns = ['*'])
     {
@@ -1133,9 +1171,11 @@ class Entity extends Eloquent implements EntityInterface
 
     /**
      * Retrieves tree with any conditions using QueryBuilder
+     *
      * @param EloquentBuilder $query
      * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public static function getTreeByQuery(EloquentBuilder $query, array $columns = ['*'])
     {
@@ -1152,7 +1192,8 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @param array $tree
      * @param \Franzose\ClosureTable\Contracts\EntityInterface $parent
-     * @return \Franzose\ClosureTable\Extensions\Collection
+     *
+     * @return Collection
      */
     public static function createFromArray(array $tree, EntityInterface $parent = null)
     {

@@ -191,69 +191,6 @@ class EntityTestCase extends BaseTestCase
         $this->assertEquals(15, $parent->getKey());
     }
 
-    public function testGetChildren()
-    {
-        $entity = Entity::find(9);
-        $children = $entity->getChildren();
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $children);
-        $this->assertCount(4, $children);
-        $this->assertArrayValuesEquals($children->modelKeys(), [10, 13, 14, 15]);
-    }
-
-    public function testCountChildren()
-    {
-        $entity = Entity::find(9);
-        $children = $entity->countChildren();
-
-        $this->assertEquals(4, $children);
-    }
-
-    public function testGetChildAt()
-    {
-        $entity = Entity::find(9);
-        $child = $entity->getChildAt(2);
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(2, $child->position);
-    }
-
-    public function testGetFirstChild()
-    {
-        $entity = Entity::find(9);
-        $child = $entity->getFirstChild();
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(0, $child->position);
-    }
-
-    public function testGetLastChild()
-    {
-        $entity = Entity::find(9);
-        $child = $entity->getLastChild();
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Models\Entity', $child);
-        $this->assertEquals(3, $child->position);
-    }
-
-    public function testGetChildrenRange()
-    {
-        $entity = Entity::find(9);
-        $children = $entity->getChildrenRange(0, 2);
-
-        $this->assertInstanceOf('Franzose\ClosureTable\Extensions\Collection', $children);
-        $this->assertCount(3, $children);
-        $this->assertEquals(0, $children[0]->position);
-        $this->assertEquals(1, $children[1]->position);
-        $this->assertEquals(2, $children[2]->position);
-
-        $children = $entity->getChildrenRange(2);
-
-        $this->assertCount(2, $children);
-        $this->assertEquals(2, $children[0]->position);
-        $this->assertEquals(3, $children[1]->position);
-    }
-
     public function testAddChildWithPosition()
     {
         $entity = Entity::find(15);

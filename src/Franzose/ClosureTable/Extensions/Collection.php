@@ -79,7 +79,7 @@ class Collection extends EloquentCollection
             return new static();
         }
 
-        return $this->getChildAt($position)->getChildrenFromRelation();
+        return $this->getChildAt($position)->children;
     }
 
     /**
@@ -92,7 +92,7 @@ class Collection extends EloquentCollection
     {
         $item = $this->getChildAt($position);
 
-        return $item !== null && $item->childrenLoaded();
+        return $item !== null && $item->children->count() > 0;
     }
 
     /**
@@ -110,26 +110,24 @@ class Collection extends EloquentCollection
     /**
      * Performs actual tree building.
      *
-     * @param array $items
+     * @param Entity[] $items
      * @return array
      */
-    protected function makeTree(array &$items)
+    protected function makeTree(array $items)
     {
+        /** @var Entity[] $result */
         $result = [];
         $tops = [];
 
-        /**
-         * @var Entity $item
-         */
         foreach ($items as $item) {
             $result[$item->getKey()] = $item;
         }
 
         foreach ($items as $item) {
-            $parentId = $item->{$item->getParentIdColumn()};
+            $parentId = $item->parent_id;
 
             if (array_key_exists($parentId, $result)) {
-                $result[$parentId]->appendRelation($item->getChildrenRelationIndex(), $item);
+                $result[$parentId]->children->add($item);
             } else {
                 $tops[] = $item;
             }
