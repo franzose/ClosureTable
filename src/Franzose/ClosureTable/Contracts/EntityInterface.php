@@ -235,10 +235,11 @@ interface EntityInterface
      * Appends multiple children to the model.
      *
      * @param array $children
+     * @param int $from
      * @return $this
      * @throws \InvalidArgumentException
      */
-    public function addChildren(array $children);
+    public function addChildren(array $children, $from = null);
 
     /**
      * Removes a model's child with given position.

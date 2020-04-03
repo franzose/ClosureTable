@@ -73,13 +73,13 @@ class ChildManipulationTests extends BaseTestCase
         static::assertEquals(2, $child3->position);
     }
 
-    public function testInsertChildren()
+    public function testAddChildrenFromPosition()
     {
         $entity = Entity::find(9);
         $child1 = new Entity();
         $child2 = new Entity();
 
-        $entity->insertChildren(1, $child1, $child2);
+        $entity->addChildren([$child1, $child2], 1);
 
         static::assertEquals(6, $entity->countChildren());
         static::assertEquals([0, 3, 4, 5], static::getPositionsByIds([10, 13, 14, 15]));

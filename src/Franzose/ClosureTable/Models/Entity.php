@@ -694,35 +694,22 @@ class Entity extends Eloquent implements EntityInterface
      * Appends a collection of children to the model.
      *
      * @param Entity[] $children
+     * @param int $from
      *
      * @return Entity
      * @throws InvalidArgumentException
      * @throws Throwable
      */
-    public function addChildren(array $children)
-    {
-        return $this->insertChildren($this->getLastChildPosition(), ...$children);
-    }
-
-    /**
-     * Inserts children nodes starting from the specified position.
-     *
-     * @param int $position
-     * @param Entity[] $children
-     *
-     * @return Entity
-     * @throws Throwable
-     */
-    public function insertChildren($position, Entity... $children)
+    public function addChildren(array $children, $from = null)
     {
         if (!$this->exists) {
             return $this;
         }
 
-        $this->getConnection()->transaction(function () use (&$position, $children) {
+        $this->getConnection()->transaction(function () use (&$from, $children) {
             foreach ($children as $child) {
-                $this->addChild($child, $position);
-                $position++;
+                $this->addChild($child, $from);
+                $from++;
             }
         });
 
