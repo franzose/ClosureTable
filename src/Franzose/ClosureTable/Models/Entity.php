@@ -3,7 +3,6 @@ namespace Franzose\ClosureTable\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Franzose\ClosureTable\Extensions\QueryBuilder;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
@@ -26,6 +25,17 @@ use Throwable;
  * @method HasMany firstChild()
  * @method HasMany lastChild()
  * @method HasMany childrenRange(int $from, int $to = null)
+ * @method Builder sibling()
+ * @method Builder siblings()
+ * @method Builder neighbors()
+ * @method Builder siblingAt(int $position)
+ * @method Builder firstSibling()
+ * @method Builder lastSibling()
+ * @method Builder prevSibling()
+ * @method Builder prevSiblings()
+ * @method Builder nextSibling()
+ * @method Builder nextSiblings()
+ * @method Builder siblingsRange(int $from, int $to = null)
  *
  * @package Franzose\ClosureTable
  */
@@ -613,7 +623,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function scopeLastChild()
     {
-        return $this->children()->orderBy($this->getPositionColumn(), 'desc');
+        return $this->children()->orderByDesc($this->getPositionColumn());
     }
 
     /**
@@ -783,9 +793,10 @@ class Entity extends Eloquent implements EntityInterface
      * @param string|int|array $direction
      * @param int|bool $parentId
      * @param string $order
+     *
      * @return QueryBuilder
      */
-    protected function siblings($direction = '', $parentId = false, $order = 'asc')
+    protected function siblingsQuery($direction = '', $parentId = false, $order = 'asc')
     {
         $parentId = ($parentId === false ? $this->parent_id : $parentId);
 
@@ -836,6 +847,32 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Returns sibling query builder.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopeSibling(Builder $builder)
+    {
+        return $builder->where($this->getParentIdColumn(), '=', $this->parent_id);
+    }
+
+    /**
+     * Returns siblings query builder.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopeSiblings(Builder $builder)
+    {
+        return $this
+            ->scopeSibling($builder)
+            ->where($this->getPositionColumn(), '<>', $this->position);
+    }
+
+    /**
      * Retrives all siblings of a model.
      *
      * @param array $columns
@@ -844,7 +881,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getSiblings(array $columns = ['*'])
     {
-        return $this->siblings(static::QUERY_ALL)->get($columns);
+        return $this->siblings()->get($columns);
     }
 
     /**
@@ -854,7 +891,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function countSiblings()
     {
-        return $this->siblings(static::QUERY_ALL)->count();
+        return $this->siblings()->count();
     }
 
     /**
@@ -864,7 +901,23 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function hasSiblings()
     {
-        return !!$this->countSiblings();
+        return (bool) $this->countSiblings();
+    }
+
+    /**
+     * Returns neighbors query builder.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopeNeighbors(Builder $builder)
+    {
+        $position = $this->position;
+
+        return $this
+            ->scopeSibling($builder)
+            ->whereIn($this->getPositionColumn(), [$position - 1, $position + 1]);
     }
 
     /**
@@ -876,7 +929,22 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getNeighbors(array $columns = ['*'])
     {
-        return $this->siblings(static::QUERY_NEIGHBORS)->get($columns);
+        return $this->neighbors()->get($columns);
+    }
+
+    /**
+     * Returns query builder for a sibling at the given position.
+     *
+     * @param Builder $builder
+     * @param int $position
+     *
+     * @return Builder
+     */
+    public function scopeSiblingAt(Builder $builder, $position)
+    {
+        return $this
+            ->scopeSibling($builder)
+            ->where($this->getPositionColumn(), '=', $position);
     }
 
     /**
@@ -888,7 +956,17 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getSiblingAt($position, array $columns = ['*'])
     {
-        return $this->siblings($position)->first($columns);
+        return $this->siblingAt($position)->first($columns);
+    }
+
+    /**
+     * Returns query builder for the first sibling.
+     *
+     * @return Builder
+     */
+    public function scopeFirstSibling()
+    {
+        return $this->siblingAt(0);
     }
 
     /**
@@ -903,6 +981,18 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Returns query builder for the last sibling.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopeLastSibling(Builder $builder)
+    {
+        return $this->scopeSibling($builder)->orderByDesc($this->getPositionColumn());
+    }
+
+    /**
      * Retrieves the last model's sibling.
      *
      * @param array $columns
@@ -910,7 +1000,21 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getLastSibling(array $columns = ['*'])
     {
-        return $this->siblings(static::QUERY_LAST)->first($columns);
+        return $this->lastSibling()->first($columns);
+    }
+
+    /**
+     * Returns query builder for the previous sibling.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopePrevSibling(Builder $builder)
+    {
+        return $this
+            ->scopeSibling($builder)
+            ->where($this->getPositionColumn(), '=', $this->position - 1);
     }
 
     /**
@@ -921,7 +1025,21 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getPrevSibling(array $columns = ['*'])
     {
-        return $this->siblings(static::QUERY_PREV_ONE)->first($columns);
+        return $this->prevSibling()->first($columns);
+    }
+
+    /**
+     * Returns query builder for the previous siblings.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopePrevSiblings(Builder $builder)
+    {
+        return $this
+            ->scopeSibling($builder)
+            ->where($this->getPositionColumn(), '<', $this->position);
     }
 
     /**
@@ -933,7 +1051,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getPrevSiblings(array $columns = ['*'])
     {
-        return $this->siblings(static::QUERY_PREV_ALL)->get($columns);
+        return $this->prevSiblings()->get($columns);
     }
 
     /**
@@ -943,7 +1061,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function countPrevSiblings()
     {
-        return $this->siblings(static::QUERY_PREV_ALL)->count();
+        return $this->prevSiblings()->count();
     }
 
     /**
@@ -953,7 +1071,21 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function hasPrevSiblings()
     {
-        return !!$this->countPrevSiblings();
+        return (bool) $this->countPrevSiblings();
+    }
+
+    /**
+     * Returns query builder for the next sibling.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopeNextSibling(Builder $builder)
+    {
+        return $this
+            ->scopeSibling($builder)
+            ->where($this->getPositionColumn(), '=', $this->position + 1);
     }
 
     /**
@@ -964,7 +1096,21 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getNextSibling(array $columns = ['*'])
     {
-        return $this->siblings(static::QUERY_NEXT_ONE)->first($columns);
+        return $this->nextSibling()->first($columns);
+    }
+
+    /**
+     * Returns query builder for the next siblings.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopeNextSiblings(Builder $builder)
+    {
+        return $this
+            ->scopeSibling($builder)
+            ->where($this->getPositionColumn(), '>', $this->position);
     }
 
     /**
@@ -976,7 +1122,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getNextSiblings(array $columns = ['*'])
     {
-        return $this->siblings(static::QUERY_NEXT_ALL)->get($columns);
+        return $this->nextSiblings()->get($columns);
     }
 
     /**
@@ -986,7 +1132,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function countNextSiblings()
     {
-        return $this->siblings(static::QUERY_NEXT_ALL)->count();
+        return $this->nextSiblings()->count();
     }
 
     /**
@@ -996,7 +1142,31 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function hasNextSiblings()
     {
-        return !!$this->countNextSiblings();
+        return (bool) $this->countNextSiblings();
+    }
+
+    /**
+     * Returns query builder for a range of siblings.
+     *
+     * @param Builder $builder
+     * @param int $from
+     * @param int|null $to
+     *
+     * @return Builder
+     */
+    public function scopeSiblingsRange(Builder $builder, $from, $to = null)
+    {
+        $position = $this->getPositionColumn();
+
+        $query = $this
+            ->scopeSiblings($builder)
+            ->where($position, '>=', $from);
+
+        if ($to === null) {
+            return $query;
+        }
+
+        return $query->where($position, '<=', $to);
     }
 
     /**
@@ -1009,7 +1179,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getSiblingsRange($from, $to = null, array $columns = ['*'])
     {
-        return $this->siblings([$from, $to])->get($columns);
+        return $this->siblingsRange($from, $to)->get($columns);
     }
 
     /**
@@ -1146,7 +1316,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @return Collection
      */
-    public static function getTreeByQuery(EloquentBuilder $query, array $columns = ['*'])
+    public static function getTreeByQuery(Builder $query, array $columns = ['*'])
     {
         /**
          * @var Entity $instance
@@ -1251,7 +1421,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @return bool
      */
-    protected function performInsert(EloquentBuilder $query, array $options = [])
+    protected function performInsert(Builder $query, array $options = [])
     {
         if ($this->isMoved === false) {
             $this->position = $this->position !== null ? $this->position : $this->getLatestPosition();
@@ -1269,7 +1439,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @return bool
      */
-    protected function performUpdate(EloquentBuilder $query, array $options = [])
+    protected function performUpdate(Builder $query, array $options = [])
     {
         if (parent::performUpdate($query, $options)) {
             if ($this->real_depth != $this->previousRealDepth && $this->isMoved === true) {
@@ -1320,9 +1490,9 @@ class Entity extends Eloquent implements EntityInterface
         // As the method called twice (before moving and after moving),
         // first we gather "old" siblings by the old parent id value of the model.
         if ($parentIdChanged === true) {
-            $query = $this->siblings(false, $this->previousParentId);
+            $query = $this->siblingsQuery(false, $this->previousParentId);
         } else {
-            $query = $this->siblings();
+            $query = $this->siblingsQuery();
         }
 
         if ($action) {
