@@ -28,24 +28,25 @@ class Migration extends Generator
 
         $entityClass = $this->getClassName($options['entity-table']);
         $closureClass = $this->getClassName($options['closure-table']);
-        $useInnoDB = $options['use-innodb'];
-        $stubPrefix = $useInnoDB ? '-innodb' : '';
+        $innoDb = $options['use-innodb'] ? '$table->engine = \'InnoDB\';' : '';
 
         $paths[] = $path = $this->getPath($options['entity-table'], $options['migrations-path']);
-        $stub = $this->getStub('entity' . $stubPrefix, 'migrations');
+        $stub = $this->getStub('entity', 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'entity_table' => $options['entity-table'],
-            'entity_class' => $entityClass
+            'entity_class' => $entityClass,
+            'innodb' => $innoDb
         ]));
 
         $paths[] = $path = $this->getPath($options['closure-table'], $options['migrations-path']);
-        $stub = $this->getStub('closuretable' . $stubPrefix, 'migrations');
+        $stub = $this->getStub('closuretable', 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'closure_table' => $options['closure-table'],
             'closure_class' => $closureClass,
-            'entity_table' => $options['entity-table']
+            'entity_table' => $options['entity-table'],
+            'innodb' => $innoDb
         ]));
 
         return $paths;
@@ -84,9 +85,10 @@ class Migration extends Generator
     {
         $timestamp = Carbon::now();
 
-        if (in_array($timestamp, $this->usedTimestamps)) {
+        if (in_array($timestamp, $this->usedTimestamps, true)) {
             $timestamp->addSecond();
         }
+
         $this->usedTimestamps[] = $timestamp;
 
         return $path . '/' . $timestamp->format('Y_m_d_His') . '_' . $this->getName($name) . '.php';

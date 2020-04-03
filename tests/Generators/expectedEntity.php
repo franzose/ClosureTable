@@ -1,21 +1,21 @@
 <?php
-{{namespace}}
+namespace Foo;
 
 use Franzose\ClosureTable\Models\Entity;
 
-class {{entity_class}} extends Entity
+class FooBar extends Entity
 {
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = '{{entity_table}}';
+    protected $table = 'foo_bar';
 
     /**
      * ClosureTable model instance.
      *
-     * @var \{{closure_class}}
+     * @var \Foo\FooBarClosure
      */
-    protected $closure = '{{closure_class}}';
+    protected $closure = 'Foo\FooBarClosure';
 }

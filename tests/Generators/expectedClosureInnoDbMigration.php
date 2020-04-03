@@ -3,26 +3,26 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class {{closure_class}} extends Migration
+class CreateEntityTreesTable extends Migration
 {
     public function up()
     {
-        Schema::create('{{closure_table}}', function(Blueprint $table) {
+        Schema::create('entity_tree', function(Blueprint $table) {
             $table->increments('closure_id');
 
             $table->integer('ancestor', false, true);
             $table->integer('descendant', false, true);
             $table->integer('depth', false, true);
 
-            $table->foreign('ancestor')->references('id')->on('{{entity_table}}')->onDelete('cascade');
-            $table->foreign('descendant')->references('id')->on('{{entity_table}}')->onDelete('cascade');
+            $table->foreign('ancestor')->references('id')->on('entity')->onDelete('cascade');
+            $table->foreign('descendant')->references('id')->on('entity')->onDelete('cascade');
 
-            {{innodb}}
+            $table->engine = 'InnoDB';
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('{{closure_table}}');
+        Schema::dropIfExists('entity_tree');
     }
 }

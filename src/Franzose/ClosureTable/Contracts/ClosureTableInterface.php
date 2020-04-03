@@ -4,6 +4,7 @@ namespace Franzose\ClosureTable\Contracts;
 /**
  * Basic ClosureTable model interface.
  *
+ * @deprecated since 6.0
  * @package Franzose\ClosureTable
  */
 interface ClosureTableInterface
