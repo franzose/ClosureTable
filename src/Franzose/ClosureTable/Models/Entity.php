@@ -682,7 +682,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addChild(EntityInterface $child, $position = null, $returnChild = false)
     {
         if ($this->exists) {
-            $position = $position ?: $this->getLatestPosition();
+            $position = $position === null ? $this->getLatestPosition() : $position;
 
             $child->moveTo($position, $this);
         }
@@ -1180,9 +1180,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false)
     {
         if ($this->exists) {
-            if ($position === null) {
-                $position = $this->getLatestPosition();
-            }
+            $position = $position === null ? $this->getLatestPosition() : $position;
 
             $sibling->moveTo($position, $this->parent_id);
         }
