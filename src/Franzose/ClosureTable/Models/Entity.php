@@ -764,7 +764,7 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
-        $this->transactional(static function () use ($child, $forceDelete) {
+        $this->transactional(function () use ($child, $forceDelete) {
             $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
             $child->{$action}();
