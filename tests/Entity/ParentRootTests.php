@@ -44,4 +44,15 @@ class ParentRootTests extends BaseTestCase
             static::assertEquals($idx + 1, $roots->get($idx)->getKey());
         }
     }
+
+    public function testMakeRoot()
+    {
+        $child = Entity::find(13);
+
+        $child->makeRoot(4);
+
+        static::assertTrue($child->isRoot());
+        static::assertPositions([0, 1, 2], [10, 14, 15]);
+        static::assertPositions([5, 6, 7, 8, 9], [5, 6, 7, 8, 9]);
+    }
 }
