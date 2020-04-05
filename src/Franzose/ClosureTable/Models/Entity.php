@@ -717,18 +717,6 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Gets last child position.
-     *
-     * @return int
-     */
-    protected function getLastChildPosition()
-    {
-        $lastChild = $this->getLastChild([$this->getPositionColumn()]);
-
-        return $lastChild === null ? 0 : $lastChild->position;
-    }
-
-    /**
      * Removes a model's child with given position.
      *
      * @param int $position
