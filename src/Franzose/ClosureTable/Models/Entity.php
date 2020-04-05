@@ -729,7 +729,7 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
-        $this->getConnection()->transaction(function () use (&$from, $children) {
+        $this->transactional(function () use (&$from, $children) {
             foreach ($children as $child) {
                 $this->addChild($child, $from);
                 $from++;
@@ -764,7 +764,7 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
-        $this->getConnection()->transaction(static function () use ($child, $forceDelete) {
+        $this->transactional(static function () use ($child, $forceDelete) {
             $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
             $child->{$action}();
@@ -794,7 +794,7 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
-        $this->getConnection()->transaction(function () use ($from, $to, $forceDelete) {
+        $this->transactional(function () use ($from, $to, $forceDelete) {
             $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
             $this->childrenRange($from, $to)->{$action}();
@@ -1244,7 +1244,7 @@ class Entity extends Eloquent implements EntityInterface
 
         $from = $from === null ? $this->getLatestPosition() : $from;
 
-        $this->getConnection()->transaction(function () use ($siblings, &$from) {
+        $this->transactional(function () use ($siblings, &$from) {
             foreach ($siblings as $sibling) {
                 $this->addSibling($sibling, $from);
                 $from++;
@@ -1659,5 +1659,18 @@ class Entity extends Eloquent implements EntityInterface
         $grammar = $conn->getQueryGrammar();
 
         return new QueryBuilder($conn, $grammar, $conn->getPostProcessor());
+    }
+
+    /**
+     * Executes queries within a transaction.
+     *
+     * @param callable $callable
+     *
+     * @return mixed
+     * @throws Throwable
+     */
+    private function transactional(callable $callable)
+    {
+        return $this->getConnection()->transaction($callable);
     }
 }
