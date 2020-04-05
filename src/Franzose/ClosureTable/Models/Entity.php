@@ -21,10 +21,11 @@ use Throwable;
  * @property int parent_id Alias for the direct ancestor identifier attribute name
  * @property int real_depth Alias for the real depth attribute name
  * @property Collection children Child nodes loaded from the database
- * @method HasMany childAt(int $position)
- * @method HasMany firstChild()
- * @method HasMany lastChild()
- * @method HasMany childrenRange(int $from, int $to = null)
+ * @method Builder childNode()
+ * @method Builder childAt(int $position)
+ * @method Builder firstChild()
+ * @method Builder lastChild()
+ * @method Builder childrenRange(int $from, int $to = null)
  * @method Builder sibling()
  * @method Builder siblings()
  * @method Builder neighbors()
@@ -571,16 +572,34 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Returns relationship to a child at the given position.
+     * Returns query builder for child nodes.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopeChildNode(Builder $builder)
+    {
+        $parentId = $this->getParentIdColumn();
+
+        return $builder
+            ->whereNotNull($parentId)
+            ->where($parentId, '=', $this->getKey());
+    }
+
+    /**
+     * Returns query builder for a child at the given position.
      *
      * @param Builder $builder
      * @param int $position
      *
-     * @return HasMany
+     * @return Builder
      */
-    public function scopeChildAt($builder, $position)
+    public function scopeChildAt(Builder $builder, $position)
     {
-        return $this->children()->where($this->getPositionColumn(), '=', $position);
+        return $this
+            ->scopeChildNode($builder)
+            ->where($this->getPositionColumn(), '=', $position);
     }
 
     /**
@@ -596,13 +615,15 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Returns relationship to the first child node.
+     * Returns query builder for the first child node.
      *
-     * @return HasMany
+     * @param Builder $builder
+     *
+     * @return Builder
      */
-    public function scopeFirstChild()
+    public function scopeFirstChild(Builder $builder)
     {
-        return $this->childAt(0);
+        return $this->scopeChildAt($builder, 0);
     }
 
     /**
@@ -617,13 +638,15 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Returns relationship to the last child node.
+     * Returns query builder for the last child node.
      *
-     * @return HasMany
+     * @param Builder $builder
+     *
+     * @return Builder
      */
-    public function scopeLastChild()
+    public function scopeLastChild(Builder $builder)
     {
-        return $this->children()->orderByDesc($this->getPositionColumn());
+        return $this->scopeChildNode($builder)->orderByDesc($this->getPositionColumn());
     }
 
     /**
@@ -644,12 +667,12 @@ class Entity extends Eloquent implements EntityInterface
      * @param int $from
      * @param int|null $to
      *
-     * @return HasMany
+     * @return Builder
      */
-    public function scopeChildrenRange($builder, $from, $to = null)
+    public function scopeChildrenRange(Builder $builder, $from, $to = null)
     {
         $position = $this->getPositionColumn();
-        $query = $this->children()->where($position, '>=', $from);
+        $query = $this->scopeChildNode($builder)->where($position, '>=', $from);
 
         if ($to !== null) {
             $query->where($position, '<=', $to);
