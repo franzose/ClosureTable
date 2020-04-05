@@ -38,7 +38,7 @@ class ChildManipulationTests extends BaseTestCase
 
         static::assertEquals(9, $child->parent_id);
         static::assertEquals(4, $child->position);
-        static::assertEquals([0, 1, 2, 3], static::getPositionsByIds([10, 13, 14, 15]));
+        static::assertPositions([0, 1, 2, 3], [10, 13, 14, 15]);
     }
 
     public function testAddChildToPosition()
@@ -50,7 +50,7 @@ class ChildManipulationTests extends BaseTestCase
 
         static::assertEquals(9, $child->parent_id);
         static::assertEquals(2, $child->position);
-        static::assertEquals([0, 1, 3, 4], static::getPositionsByIds([10, 13, 14, 15]));
+        static::assertPositions([0, 1, 3, 4], [10, 13, 14, 15]);
     }
 
     public function testAddChildren()
@@ -113,13 +113,5 @@ class ChildManipulationTests extends BaseTestCase
 
         static::assertEquals(1, $entity->countChildren());
         static::assertEquals(10, $entity->getFirstChild()->getKey());
-    }
-
-    public static function getPositionsByIds(array $entityIds)
-    {
-        return Entity::whereIn('id', $entityIds)
-            ->get(['position'])
-            ->pluck('position')
-            ->toArray();
     }
 }

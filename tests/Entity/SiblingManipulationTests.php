@@ -68,8 +68,6 @@ final class SiblingManipulationTests extends BaseTestCase
         static::assertEquals('Two', $siblings->get(1)->title);
         static::assertEquals('Three', $siblings->get(2)->title);
         static::assertEquals('Four', $siblings->get(3)->title);
-        static::assertEquals(5, Entity::find(13)->position);
-        static::assertEquals(6, Entity::find(14)->position);
-        static::assertEquals(7, Entity::find(15)->position);
+        static::assertPositions([0, 5, 6, 7], [10, 13, 14, 15]);
     }
 }
