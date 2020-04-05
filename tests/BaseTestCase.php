@@ -72,10 +72,10 @@ abstract class BaseTestCase extends TestCase
     public static function assertPositions(array $expectedPositions, array $entityIds)
     {
         $actualPositions = Entity::whereIn('id', $entityIds)
-            ->get(['position'])
-            ->pluck('position')
+            ->get(['id', 'position'])
+            ->pluck('position', 'id')
             ->toArray();
 
-        static::assertEquals($expectedPositions, $actualPositions);
+        static::assertEquals(array_combine($entityIds, $expectedPositions), $actualPositions);
     }
 }
