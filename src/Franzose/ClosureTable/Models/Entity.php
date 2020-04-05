@@ -903,7 +903,7 @@ class Entity extends Eloquent implements EntityInterface
         $position = $this->position;
 
         return $this
-            ->scopeSibling($builder)
+            ->scopeSiblings($builder)
             ->whereIn($this->getPositionColumn(), [$position - 1, $position + 1]);
     }
 
@@ -930,7 +930,7 @@ class Entity extends Eloquent implements EntityInterface
     public function scopeSiblingAt(Builder $builder, $position)
     {
         return $this
-            ->scopeSibling($builder)
+            ->scopeSiblings($builder)
             ->where($this->getPositionColumn(), '=', $position);
     }
 
@@ -976,7 +976,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function scopeLastSibling(Builder $builder)
     {
-        return $this->scopeSibling($builder)->orderByDesc($this->getPositionColumn());
+        return $this->scopeSiblings($builder)->orderByDesc($this->getPositionColumn());
     }
 
     /**
