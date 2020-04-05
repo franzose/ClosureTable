@@ -744,7 +744,9 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @param int $position
      * @param bool $forceDelete
+     *
      * @return $this
+     * @throws Throwable
      */
     public function removeChild($position = null, $forceDelete = false)
     {
@@ -752,9 +754,23 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
-        $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+        $child = $this->getChildAt($position, [
+            $this->getKeyName(),
+            $this->getParentIdColumn(),
+            $this->getPositionColumn()
+        ]);
 
-        $this->childAt($position)->{$action}();
+        if ($child === null) {
+            return $this;
+        }
+
+        $this->getConnection()->transaction(static function () use ($child, $forceDelete) {
+            $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+
+            $child->{$action}();
+
+            $child->nextSiblings()->decrement($this->getPositionColumn());
+        });
 
         return $this;
     }
@@ -778,9 +794,17 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
-        $action = ($forceDelete === true ? 'forceDelete' : 'delete');
+        $this->getConnection()->transaction(function () use ($from, $to, $forceDelete) {
+            $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-        $this->childrenRange($from, $to)->{$action}();
+            $this->childrenRange($from, $to)->{$action}();
+
+            if ($to !== null) {
+                $this
+                    ->childrenRange($to)
+                    ->decrement($this->getPositionColumn(), $to - $from + 1);
+            }
+        });
 
         return $this;
     }

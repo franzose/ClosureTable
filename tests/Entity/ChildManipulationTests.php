@@ -95,14 +95,18 @@ class ChildManipulationTests extends BaseTestCase
 
         static::assertNull(Entity::find(10));
         static::assertEquals(3, $entity->countChildren());
+        static::assertPositions([0, 1, 2], [13, 14, 15]);
     }
 
     public function testRemoveChildren()
     {
         $entity = Entity::find(9);
+        $entity->addChild(new Entity());
+
         $entity->removeChildren(0, 2);
 
-        static::assertEquals(1, $entity->countChildren());
+        static::assertEquals(2, $entity->countChildren());
+        static::assertPositions([0, 1], [15, 16]);
     }
 
     public function testRemoveChildrenToTheEnd()
@@ -112,6 +116,9 @@ class ChildManipulationTests extends BaseTestCase
         $entity->removeChildren(1);
 
         static::assertEquals(1, $entity->countChildren());
-        static::assertEquals(10, $entity->getFirstChild()->getKey());
+
+        $firstChild = $entity->getFirstChild();
+        static::assertEquals(10, $firstChild->getKey());
+        static::assertEquals(0, $firstChild->position);
     }
 }
