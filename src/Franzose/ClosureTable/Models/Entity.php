@@ -3,10 +3,10 @@ namespace Franzose\ClosureTable\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
-use Franzose\ClosureTable\Extensions\QueryBuilder;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use InvalidArgumentException;
 use Throwable;
 
@@ -1435,19 +1435,6 @@ class Entity extends Eloquent implements EntityInterface
     public function newCollection(array $models = array())
     {
         return new Collection($models);
-    }
-
-    /**
-     * Get a new query builder instance for the connection.
-     *
-     * @return QueryBuilder
-     */
-    protected function newBaseQueryBuilder()
-    {
-        $conn = $this->getConnection();
-        $grammar = $conn->getQueryGrammar();
-
-        return new QueryBuilder($conn, $grammar, $conn->getPostProcessor());
     }
 
     /**
