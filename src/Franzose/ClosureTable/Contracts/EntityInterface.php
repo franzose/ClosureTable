@@ -408,14 +408,6 @@ interface EntityInterface
     public function makeRoot($position);
 
     /**
-     * Retrieves entire tree.
-     *
-     * @param array $columns
-     * @return \Franzose\ClosureTable\Extensions\Collection
-     */
-    public static function getTree(array $columns = ['*']);
-
-    /**
      * Saves models from the given attributes array.
      *
      * @param array $tree

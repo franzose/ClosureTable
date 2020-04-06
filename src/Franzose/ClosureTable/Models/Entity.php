@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Throwable;
 
@@ -247,10 +248,6 @@ class Entity extends Eloquent implements EntityInterface
         parent::boot();
 
         static::saving(static function (Entity $entity) {
-            if (!$entity->isDirty($entity->getPositionColumn())) {
-                return;
-            }
-
             $newPosition = max(0, min($entity->position, $entity->getLatestPosition()));
             $entity->attributes[$entity->getPositionColumn()] = $newPosition;
         });
@@ -1240,6 +1237,7 @@ class Entity extends Eloquent implements EntityInterface
      * @param array $columns
      *
      * @return Collection
+     * @deprecated since 6.0
      */
     public static function getTree(array $columns = ['*'])
     {
@@ -1248,8 +1246,12 @@ class Entity extends Eloquent implements EntityInterface
          */
         $instance = new static;
 
-        return $instance->orderBy($instance->getParentIdColumn())->orderBy($instance->getPositionColumn())
-            ->get($instance->prepareTreeQueryColumns($columns))->toTree();
+        return $instance
+            ->load('children')
+            ->orderBy($instance->getParentIdColumn())
+            ->orderBy($instance->getPositionColumn())
+            ->get($instance->prepareTreeQueryColumns($columns))
+            ->toTree();
     }
 
     /**
@@ -1261,6 +1263,7 @@ class Entity extends Eloquent implements EntityInterface
      * @param array $columns
      *
      * @return Collection
+     * @deprecated since 6.0
      */
     public static function getTreeWhere($column, $operator = null, $value = null, array $columns = ['*'])
     {
@@ -1276,10 +1279,11 @@ class Entity extends Eloquent implements EntityInterface
     /**
      * Retrieves tree with any conditions using QueryBuilder
      *
-     * @param EloquentBuilder $query
+     * @param Builder $query
      * @param array $columns
      *
      * @return Collection
+     * @deprecated since 6.0
      */
     public static function getTreeByQuery(Builder $query, array $columns = ['*'])
     {
@@ -1295,17 +1299,17 @@ class Entity extends Eloquent implements EntityInterface
      * Saves models from the given attributes array.
      *
      * @param array $tree
-     * @param \Franzose\ClosureTable\Contracts\EntityInterface $parent
+     * @param EntityInterface $parent
      *
      * @return Collection
+     * @throws Throwable
      */
     public static function createFromArray(array $tree, EntityInterface $parent = null)
     {
-        $childrenRelationIndex = (new static())->getChildrenRelationIndex();
         $entities = [];
 
         foreach ($tree as $item) {
-            $children = array_pull($item, $childrenRelationIndex);
+            $children = Arr::pull($item, 'children');
 
             /**
              * @var Entity $entity
@@ -1315,9 +1319,7 @@ class Entity extends Eloquent implements EntityInterface
             $entity->save();
 
             if ($children !== null) {
-                $children = static::createFromArray($children, $entity);
-                $entity->setRelation($childrenRelationIndex, $children);
-                $entity->addChildren($children->all());
+                $entity->addChildren(static::createFromArray($children, $entity)->all());
             }
 
             $entities[] = $entity;
@@ -1401,7 +1403,9 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @param bool $withSelf
      * @param bool $forceDelete
+     *
      * @return void
+     * @throws \Exception
      */
     public function deleteSubtree($withSelf = false, $forceDelete = false)
     {
