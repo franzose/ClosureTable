@@ -52,7 +52,15 @@ class ParentRootTests extends BaseTestCase
         $child->makeRoot(4);
 
         static::assertTrue($child->isRoot());
-        static::assertPositions([0, 1, 2], [10, 14, 15]);
-        static::assertPositions([5, 6, 7, 8, 9], [5, 6, 7, 8, 9]);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            14 => 1,
+            15 => 2,
+            5 => 5,
+            6 => 6,
+            7 => 7,
+            8 => 8,
+            9 => 9
+        ]);
     }
 }

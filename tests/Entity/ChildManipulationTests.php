@@ -19,6 +19,41 @@ class ChildManipulationTests extends BaseTestCase
         static::assertTrue($leaf->isParent());
     }
 
+    public function testAddChild2()
+    {
+        $parent = Entity::find(11);
+        $child = Entity::find(13);
+
+        $parent->addChild($child, 0);
+
+        static::assertEquals(11, $child->parent_id);
+        static::assertEquals(0, $child->position);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            14 => 1,
+            15 => 2,
+            11 => 0,
+            12 => 1
+        ]);
+    }
+
+    public function testAddChildReordersNodesOnThePreviousLevel()
+    {
+        $parent = Entity::find(13);
+        $child = Entity::find(5);
+
+        $parent->addChild($child);
+
+        static::assertModelAttribute('position', [
+            5 => 0,
+            // previous level nodes
+            6 => 4,
+            7 => 5,
+            8 => 6,
+            9 => 7,
+        ]);
+    }
+
     public function testAddChildShouldReturnChild()
     {
         $leaf = Entity::find(14);
@@ -38,7 +73,12 @@ class ChildManipulationTests extends BaseTestCase
 
         static::assertEquals(9, $child->parent_id);
         static::assertEquals(4, $child->position);
-        static::assertPositions([0, 1, 2, 3], [10, 13, 14, 15]);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            13 => 1,
+            14 => 2,
+            15 => 3
+        ]);
     }
 
     public function testAddChildToPosition()
@@ -50,7 +90,32 @@ class ChildManipulationTests extends BaseTestCase
 
         static::assertEquals(9, $child->parent_id);
         static::assertEquals(2, $child->position);
-        static::assertPositions([0, 1, 3, 4], [10, 13, 14, 15]);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            13 => 1,
+            12 => 2,
+            14 => 3,
+            15 => 4
+        ]);
+    }
+
+    public function testAddChildHavingChildren()
+    {
+        $parent = Entity::find(13);
+        $child = Entity::find(10);
+
+        $parent->addChild($child);
+
+        static::assertEquals(13, $child->parent_id);
+        static::assertEquals(0, $child->position);
+        static::assertModelAttribute('position', [
+            13 => 0,
+            14 => 1,
+            15 => 2,
+            10 => 0,
+            11 => 0,
+            12 => 0
+        ]);
     }
 
     public function testAddChildren()
@@ -82,9 +147,14 @@ class ChildManipulationTests extends BaseTestCase
         $entity->addChildren([$child1, $child2], 1);
 
         static::assertEquals(6, $entity->countChildren());
-        static::assertPositions([0, 3, 4, 5], [10, 13, 14, 15]);
         static::assertEquals(1, $child1->position);
         static::assertEquals(2, $child2->position);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            13 => 3,
+            14 => 4,
+            15 => 5
+        ]);
     }
 
     public function testRemoveChild()
@@ -95,7 +165,26 @@ class ChildManipulationTests extends BaseTestCase
 
         static::assertNull(Entity::find(10));
         static::assertEquals(3, $entity->countChildren());
-        static::assertPositions([0, 1, 2], [13, 14, 15]);
+        static::assertModelAttribute('position', [
+            13 => 0,
+            14 => 1,
+            15 => 2
+        ]);
+    }
+
+    public function testRemoveChildHavingChildren()
+    {
+        $entity = Entity::find(9);
+
+        $entity->removeChild(0, true);
+
+        static::assertNull(Entity::find(10));
+
+        $entity11 = Entity::find(11);
+        $entity12 = Entity::find(12);
+
+        static::assertTrue($entity11->isRoot());
+        static::assertFalse($entity12->isRoot());
     }
 
     public function testRemoveChildren()
@@ -105,8 +194,12 @@ class ChildManipulationTests extends BaseTestCase
 
         $entity->removeChildren(0, 2);
 
+        static::assertEmpty(Entity::whereIn('id', [10, 13, 14])->get());
         static::assertEquals(2, $entity->countChildren());
-        static::assertPositions([0, 1], [15, 16]);
+        static::assertModelAttribute('position', [
+            15 => 0,
+            16 => 1
+        ]);
     }
 
     public function testRemoveChildrenToTheEnd()
@@ -115,10 +208,27 @@ class ChildManipulationTests extends BaseTestCase
 
         $entity->removeChildren(1);
 
+        static::assertEmpty(Entity::whereIn('id', [13, 14, 15])->get());
         static::assertEquals(1, $entity->countChildren());
 
         $firstChild = $entity->getFirstChild();
         static::assertEquals(10, $firstChild->getKey());
         static::assertEquals(0, $firstChild->position);
+    }
+
+    public function testRemoveChildrenHavingChildren()
+    {
+        Entity::find(13)->addChildren([new Entity(), new Entity()]);
+
+        $parent = Entity::find(9);
+
+        $parent->removeChildren(0, 1);
+
+        static::assertEmpty(Entity::whereIn('id', [10, 13])->get());
+        static::assertEquals(2, $parent->countChildren());
+        static::assertModelAttribute('position', [
+            14 => 0,
+            15 => 1
+        ]);
     }
 }

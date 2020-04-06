@@ -27,8 +27,14 @@ final class SiblingManipulationTests extends BaseTestCase
         $entity->addSibling($sibling, 1);
 
         static::assertEquals(16, $sibling->getKey());
-        static::assertEquals(16, Entity::find(10)->getNextSibling()->getKey());
         static::assertEquals(1, $sibling->position);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            16 => 1,
+            13 => 2,
+            14 => 3,
+            15 => 4
+        ]);
     }
 
     public function testAddSiblings()
@@ -68,6 +74,11 @@ final class SiblingManipulationTests extends BaseTestCase
         static::assertEquals('Two', $siblings->get(1)->title);
         static::assertEquals('Three', $siblings->get(2)->title);
         static::assertEquals('Four', $siblings->get(3)->title);
-        static::assertPositions([0, 5, 6, 7], [10, 13, 14, 15]);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            13 => 5,
+            14 => 6,
+            15 => 7
+        ]);
     }
 }

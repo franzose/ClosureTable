@@ -56,4 +56,13 @@ class ConstructionTests extends TestCase
         static::assertEquals(0, static::readAttribute($newEntity, 'previousPosition'));
         static::assertEquals(0, static::readAttribute($newEntity, 'previousRealDepth'));
     }
+
+    public function testSetPositionAttribute()
+    {
+        $entity = new Entity();
+
+        $entity->position = -1;
+
+        static::assertEquals(0, $entity->position);
+    }
 }

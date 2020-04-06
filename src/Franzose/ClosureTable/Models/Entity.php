@@ -200,7 +200,7 @@ class Entity extends Eloquent implements EntityInterface
             return;
         }
         $this->previousPosition = $this->position;
-        $this->attributes[$this->getPositionColumn()] = (int) $value;
+        $this->attributes[$this->getPositionColumn()] = max(0, (int) $value);
     }
 
     /**
@@ -286,26 +286,65 @@ class Entity extends Eloquent implements EntityInterface
     {
         parent::boot();
 
-        // If model's parent identifier was changed,
-        // the closure table rows will update automatically.
-        static::saving(function (Entity $entity) {
-            $entity->clampPosition();
-            $entity->moveNode();
+        static::saving(static function (Entity $entity) {
+            if (!$entity->isDirty($entity->getPositionColumn())) {
+                return;
+            }
+
+            $newPosition = max(0, min($entity->position, $entity->getLatestPosition()));
+            $entity->attributes[$entity->getPositionColumn()] = $newPosition;
+        });
+
+        static::creating(static function (Entity $entity) {
+            if ($entity->isMoved) {
+                return;
+            }
+
+            $entity->position = $entity->position !== null
+                ? $entity->position
+                : $entity->getLatestPosition();
+
+            $entity->real_depth = $entity->getNewRealDepth($entity->parent_id);
         });
 
         // When entity is created, the appropriate
         // data will be put into the closure table.
-        static::created(function (Entity $entity) {
-            $entity->previousParentId = false;
-            $entity->previousPosition = $entity->position;
-            $entity->insertNode();
+        static::created(static function (Entity $entity) {
+            $entity->previousParentId = null;
+            $entity->previousPosition = null;
+            $entity->previousRealDepth = null;
+
+            $descendant = $entity->getKey();
+            $ancestor = isset($entity->parent_id) ? $entity->parent_id : $descendant;
+
+            $entity->closure->insertNode($ancestor, $descendant);
         });
 
-        // Everytime the model's position or parent
-        // is changed, its siblings reordering will happen,
-        // so they will always keep the proper order.
-        static::saved(function (Entity $entity) {
-            $entity->reorderSiblings();
+        static::saved(static function (Entity $entity) {
+            if ($entity->isDirty($entity->getRealDepthColumn())) {
+                $action = $entity->real_depth > $entity->previousRealDepth ? 'increment' : 'decrement';
+                $amount = abs($entity->real_depth - $entity->previousRealDepth);
+
+                $entity->subqueryClosureBy('descendant')
+                    ->$action($entity->getRealDepthColumn(), $amount);
+            }
+
+            $parentIdChanged = $entity->isDirty($entity->getParentIdColumn());
+
+            if ($parentIdChanged || $entity->isDirty($entity->getPositionColumn())) {
+                $entity->reorderSiblings();
+            }
+
+            if ($entity->closure->ancestor === null) {
+                $primaryKey = $entity->getKey();
+                $entity->closure->ancestor = $primaryKey;
+                $entity->closure->descendant = $primaryKey;
+                $entity->closure->depth = 0;
+            }
+
+            if ($parentIdChanged) {
+                $entity->closure->moveNodeTo($entity->parent_id);
+            }
         });
     }
 
@@ -705,12 +744,24 @@ class Entity extends Eloquent implements EntityInterface
     public function addChild(EntityInterface $child, $position = null, $returnChild = false)
     {
         if ($this->exists) {
-            $position = $position === null ? $this->getLatestPosition() : $position;
+            $position = $position !== null ? $position : $this->getLatestChildPosition();
 
             $child->moveTo($position, $this);
         }
 
         return $returnChild === true ? $child : $this;
+    }
+
+    /**
+     * Returns the latest child position.
+     *
+     * @return int
+     */
+    private function getLatestChildPosition()
+    {
+        $lastChild = $this->lastChild()->first([$this->getPositionColumn()]);
+
+        return $lastChild !== null ? $lastChild->position + 1 : 0;
     }
 
     /**
@@ -781,8 +832,10 @@ class Entity extends Eloquent implements EntityInterface
      * @param int $from
      * @param int $to
      * @param bool $forceDelete
+     *
      * @return $this
      * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function removeChildren($from, $to = null, $forceDelete = false)
     {
@@ -807,65 +860,6 @@ class Entity extends Eloquent implements EntityInterface
         });
 
         return $this;
-    }
-
-    /**
-     * Builds a part of the siblings query.
-     *
-     * @param string|int|array $direction
-     * @param int|bool $parentId
-     * @param string $order
-     *
-     * @return QueryBuilder
-     */
-    protected function siblingsQuery($direction = '', $parentId = false, $order = 'asc')
-    {
-        $parentId = ($parentId === false ? $this->parent_id : $parentId);
-
-        /**
-         * @var QueryBuilder $query
-         */
-        $query = $this->where($this->getParentIdColumn(), '=', $parentId);
-
-        $column = $this->getPositionColumn();
-
-        switch ($direction) {
-            case static::QUERY_ALL:
-                $query->where($column, '<>', $this->position)->orderBy($column, $order);
-                break;
-
-            case static::QUERY_PREV_ALL:
-                $query->where($column, '<', $this->position)->orderBy($column, $order);
-                break;
-
-            case static::QUERY_PREV_ONE:
-                $query->where($column, '=', $this->position - 1);
-                break;
-
-            case static::QUERY_NEXT_ALL:
-                $query->where($column, '>', $this->position)->orderBy($column, $order);
-                break;
-
-            case static::QUERY_NEXT_ONE:
-                $query->where($column, '=', $this->position + 1);
-                break;
-
-            case static::QUERY_NEIGHBORS:
-                $query->whereIn($column, [$this->position - 1, $this->position + 1]);
-                break;
-
-            case static::QUERY_LAST:
-                $query->orderBy($column, 'desc');
-                break;
-        }
-
-        if (is_int($direction)) {
-            $query->where($column, '=', $direction);
-        } else if (is_array($direction)) {
-            $query->buildWherePosition($this->getPositionColumn(), $direction);
-        }
-
-        return $query;
     }
 
     /**
@@ -1438,48 +1432,6 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Perform a model insert operation.
-     *
-     * @param  EloquentBuilder $query
-     * @param  array $options
-     *
-     * @return bool
-     */
-    protected function performInsert(Builder $query, array $options = [])
-    {
-        if ($this->isMoved === false) {
-            $this->position = $this->position !== null ? $this->position : $this->getLatestPosition();
-            $this->real_depth = $this->getNewRealDepth($this->parent_id);
-        }
-
-        return parent::performInsert($query, $options);
-    }
-
-    /**
-     * Perform a model update operation.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder $query
-     * @param  array $options
-     *
-     * @return bool
-     */
-    protected function performUpdate(Builder $query, array $options = [])
-    {
-        if (parent::performUpdate($query, $options)) {
-            if ($this->real_depth != $this->previousRealDepth && $this->isMoved === true) {
-                $action = ($this->real_depth > $this->previousRealDepth ? 'increment' : 'decrement');
-                $amount = abs($this->real_depth - $this->previousRealDepth);
-
-                $this->subqueryClosureBy('descendant')->$action($this->getRealDepthColumn(), $amount);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Gets the next sibling position after the last one.
      *
      * @return int
@@ -1500,109 +1452,26 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Reorders model's siblings when one is moved to another position or ancestor.
-     *
-     * @param bool $parentIdChanged
-     * @return void
-     */
-    protected function reorderSiblings($parentIdChanged = false)
-    {
-        list($range, $action) = $this->setupReordering($parentIdChanged);
-
-        $positionColumn = $this->getPositionColumn();
-
-        // As the method called twice (before moving and after moving),
-        // first we gather "old" siblings by the old parent id value of the model.
-        if ($parentIdChanged === true) {
-            $query = $this->siblingsQuery(false, $this->previousParentId);
-        } else {
-            $query = $this->siblingsQuery();
-        }
-
-        if ($action) {
-            $query->buildWherePosition($positionColumn, $range)
-                ->where($this->getKeyName(), '<>', $this->getKey())
-                ->$action($positionColumn);
-        }
-    }
-
-    /**
-     * Setups model's siblings reordering.
-     *
-     * Actually, the method determines siblings that will be reordered
-     * by creating range of theirs positions and determining the action
-     * that will be used in reordering ('increment' or 'decrement').
-     *
-     * @param bool $parentIdChanged
-     * @return array
-     */
-    protected function setupReordering($parentIdChanged)
-    {
-        $range = $action = null;
-        // If the model's parent was changed, firstly we decrement
-        // positions of the 'old' next siblings of the model.
-        if ($parentIdChanged === true) {
-            $range = $this->previousPosition;
-            $action = 'decrement';
-        } else {
-            // TODO: There's probably a bug here where if you just created an entity and you set it to be
-            // a root (parent_id = null) then it comes in here (while it should have gone in the else)
-            // Reordering within the same ancestor
-            if ($this->previousParentId !== false && $this->previousParentId == $this->parent_id) {
-                if ($this->position > $this->previousPosition) {
-                    $range = [$this->previousPosition, $this->position];
-                    $action = 'decrement';
-                } else if ($this->position < $this->previousPosition) {
-                    $range = [$this->position, $this->previousPosition];
-                    $action = 'increment';
-                }
-            } // Ancestor has changed
-            else {
-                $range = $this->position;
-                $action = 'increment';
-            }
-        }
-
-        if (!is_array($range)) {
-            $range = [$range, null];
-        }
-
-        return [$range, $action];
-    }
-
-    /**
-     * Inserts new node to closure table.
+     * Reorders node's siblings when it is moved to another position or ancestor.
      *
      * @return void
      */
-    protected function insertNode()
+    private function reorderSiblings()
     {
-        $descendant = $this->getKey();
-        $ancestor = (isset($this->parent_id) ? $this->parent_id : $descendant);
+        $position = $this->getPositionColumn();
 
-        $this->closure->insertNode($ancestor, $descendant);
-    }
-
-    /**
-     * Moves node to another ancestor.
-     *
-     * @return void
-     */
-    protected function moveNode()
-    {
-        if ($this->exists) {
-            if ($this->closure->ancestor === null) {
-                $primaryKey = $this->getKey();
-                $this->closure->ancestor = $primaryKey;
-                $this->closure->descendant = $primaryKey;
-                $this->closure->depth = 0;
-            }
-
-            if ($this->isDirty($this->getParentIdColumn())) {
-                $this->reorderSiblings(true);
-                $this->closure->moveNodeTo($this->parent_id);
-            }
+        if ($this->previousPosition !== null) {
+            $this
+                ->where($this->getParentIdColumn(), '=', $this->previousParentId)
+                ->where($position, '>', $this->previousPosition)
+                ->decrement($position);
         }
+
+        $this
+            ->sibling()
+            ->where($this->getKeyName(), '<>', $this->getKey())
+            ->where($position, '>=', $this->position)
+            ->increment($position);
     }
 
     /**
