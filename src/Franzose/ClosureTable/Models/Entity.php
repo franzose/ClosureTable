@@ -19,7 +19,6 @@ use Throwable;
  *
  * @property int position Alias for the current position attribute name
  * @property int parent_id Alias for the direct ancestor identifier attribute name
- * @property int real_depth Alias for the real depth attribute name
  * @property Collection children Child nodes loaded from the database
  * @method Builder childNode()
  * @method Builder childAt(int $position)
@@ -64,13 +63,6 @@ class Entity extends Eloquent implements EntityInterface
     private $previousPosition;
 
     /**
-     * Cached "previous" (i.e. before the model is moved) model real depth.
-     *
-     * @var int
-     */
-    private $previousRealDepth;
-
-    /**
      * Indicates if the model is being moved to another ancestor.
      *
      * @var bool
@@ -101,16 +93,11 @@ class Entity extends Eloquent implements EntityInterface
     public function __construct(array $attributes = [])
     {
         $position = $this->getPositionColumn();
-        $depth = $this->getRealDepthColumn();
 
-        $this->fillable(array_merge($this->getFillable(), [$position, $depth]));
+        $this->fillable(array_merge($this->getFillable(), [$position]));
 
         if (isset($attributes[$position]) && $attributes[$position] < 0) {
             $attributes[$position] = 0;
-        }
-
-        if (!isset($attributes[$depth]) || $attributes[$depth] < 0) {
-            $attributes[$depth] = 0;
         }
 
         $this->closure = new $this->closure;
@@ -131,7 +118,6 @@ class Entity extends Eloquent implements EntityInterface
         $instance = parent::newFromBuilder($attributes);
         $instance->previousParentId = $instance->parent_id;
         $instance->previousPosition = $instance->position;
-        $instance->previousRealDepth = $instance->real_depth;
         return $instance;
     }
 
@@ -224,30 +210,6 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Gets value of the "real depth" attribute.
-     *
-     * @return int
-     */
-    public function getRealDepthAttribute()
-    {
-        return $this->getAttributeFromArray($this->getRealDepthColumn());
-    }
-
-    /**
-     * Sets value of the "real depth" attribute.
-     *
-     * @param int $value
-     */
-    protected function setRealDepthAttribute($value)
-    {
-        if ($this->real_depth === $value) {
-            return;
-        }
-        $this->previousRealDepth = $this->real_depth;
-        $this->attributes[$this->getRealDepthColumn()] = (int) $value;
-    }
-
-    /**
      * Gets the fully qualified "real depth" column.
      *
      * @return string
@@ -261,6 +223,7 @@ class Entity extends Eloquent implements EntityInterface
      * Gets the short name of the "real depth" column.
      *
      * @return string
+     * @deprecated since 6.0
      */
     public function getRealDepthColumn()
     {
@@ -271,6 +234,7 @@ class Entity extends Eloquent implements EntityInterface
      * Gets the "children" relation index.
      *
      * @return string
+     * @deprecated since 6.0
      */
     public function getChildrenRelationIndex()
     {
@@ -303,8 +267,6 @@ class Entity extends Eloquent implements EntityInterface
             $entity->position = $entity->position !== null
                 ? $entity->position
                 : $entity->getLatestPosition();
-
-            $entity->real_depth = $entity->getNewRealDepth($entity->parent_id);
         });
 
         // When entity is created, the appropriate
@@ -312,7 +274,6 @@ class Entity extends Eloquent implements EntityInterface
         static::created(static function (Entity $entity) {
             $entity->previousParentId = null;
             $entity->previousPosition = null;
-            $entity->previousRealDepth = null;
 
             $descendant = $entity->getKey();
             $ancestor = isset($entity->parent_id) ? $entity->parent_id : $descendant;
@@ -321,14 +282,6 @@ class Entity extends Eloquent implements EntityInterface
         });
 
         static::saved(static function (Entity $entity) {
-            if ($entity->isDirty($entity->getRealDepthColumn())) {
-                $action = $entity->real_depth > $entity->previousRealDepth ? 'increment' : 'decrement';
-                $amount = abs($entity->real_depth - $entity->previousRealDepth);
-
-                $entity->subqueryClosureBy('descendant')
-                    ->$action($entity->getRealDepthColumn(), $amount);
-            }
-
             $parentIdChanged = $entity->isDirty($entity->getParentIdColumn());
 
             if ($parentIdChanged || $entity->isDirty($entity->getPositionColumn())) {
@@ -1354,7 +1307,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public static function createFromArray(array $tree, EntityInterface $parent = null)
     {
-        $childrenRelationIndex = with(new static)->getChildrenRelationIndex();
+        $childrenRelationIndex = (new static())->getChildrenRelationIndex();
         $entities = [];
 
         foreach ($tree as $item) {
@@ -1401,8 +1354,6 @@ class Entity extends Eloquent implements EntityInterface
 
         $this->parent_id = $parentId;
         $this->position = $position;
-        $this->real_depth = $this->getNewRealDepth($ancestor);
-
         $this->isMoved = true;
 
         $this->save();
@@ -1410,25 +1361,6 @@ class Entity extends Eloquent implements EntityInterface
         $this->isMoved = false;
 
         return $this;
-    }
-
-    /**
-     * Gets real depth of the new ancestor of the model.
-     *
-     * @param Entity|int|null $ancestor
-     * @return int
-     */
-    protected function getNewRealDepth($ancestor)
-    {
-        if (!$ancestor instanceof EntityInterface) {
-            if ($ancestor === null) {
-                return 0;
-            } else {
-                return static::find($ancestor)->real_depth + 1;
-            }
-        } else {
-            return $ancestor->real_depth + 1;
-        }
     }
 
     /**
@@ -1472,18 +1404,6 @@ class Entity extends Eloquent implements EntityInterface
             ->where($this->getKeyName(), '<>', $this->getKey())
             ->where($position, '>=', $this->position)
             ->increment($position);
-    }
-
-    /**
-     * Clamp the position between 0 and the last position of the current parent.
-     */
-    protected function clampPosition()
-    {
-        if (!$this->isDirty($this->getPositionColumn())) {
-            return;
-        }
-        $newPosition = max(0, min($this->position, $this->getLatestPosition()));
-        $this->attributes[$this->getPositionColumn()] = $newPosition;
     }
 
     /**

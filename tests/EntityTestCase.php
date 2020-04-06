@@ -36,7 +36,7 @@ class EntityTestCase extends BaseTestCase
         }
 
         $this->entity = new Entity;
-        $this->entity->fillable(['title', 'excerpt', 'body', 'position', 'real_depth']);
+        $this->entity->fillable(['title', 'excerpt', 'body', 'position']);
 
         $this->childrenRelationIndex = $this->entity->getChildrenRelationIndex();
     }
@@ -114,15 +114,6 @@ class EntityTestCase extends BaseTestCase
 
         $this->assertEquals(10, $entity2->position);
         $this->assertEquals(9, Entity::find($id)->position);
-    }
-
-    public function testCreateSetsRealDepth()
-    {
-        $entity = new Page(['title' => 'Item 3']);
-        $entity->parent_id = 9;
-        $entity->save();
-
-        $this->assertEquals(1, $entity->real_depth);
     }
 
     public function testSavingLoadedEntityShouldNotTriggerReordering()

@@ -24,20 +24,6 @@ interface EntityInterface
     public function getPositionColumn();
 
     /**
-     * Gets the short name of the "real depth" column.
-     *
-     * @return string
-     */
-    public function getRealDepthColumn();
-
-    /**
-     * Gets the "children" relation index.
-     *
-     * @return string
-     */
-    public function getChildrenRelationIndex();
-
-    /**
      * "Query all models" flag.
      *
      * @var string

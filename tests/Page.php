@@ -6,5 +6,5 @@ use Franzose\ClosureTable\Models\Entity;
 class Page extends Entity
 {
     protected $table = 'entities';
-    protected $fillable = ['id', 'parent_id', 'title', 'excerpt', 'body', 'position', 'real_depth'];
+    protected $fillable = ['id', 'parent_id', 'title', 'excerpt', 'body', 'position'];
 }
