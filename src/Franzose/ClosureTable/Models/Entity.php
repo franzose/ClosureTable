@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use InvalidArgumentException;
 use Throwable;
 
@@ -20,6 +19,10 @@ use Throwable;
  * @property int position Alias for the current position attribute name
  * @property int parent_id Alias for the direct ancestor identifier attribute name
  * @property Collection children Child nodes loaded from the database
+ * @method Builder ancestors(bool $withSelf = false)
+ * @method Builder ancestorsWithSelf()
+ * @method Builder descendants(bool $withSelf = false)
+ * @method Builder descendantsWithSelf()
  * @method Builder childNode()
  * @method Builder childAt(int $position)
  * @method Builder firstChild()
@@ -316,69 +319,38 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Builds closure table join based on the given column.
+     * Returns query builder for ancestors.
      *
-     * @param string $column
+     * @param Builder $builder
      * @param bool $withSelf
-     * @return QueryBuilder
+     *
+     * @return Builder
      */
-    protected function joinClosureBy($column, $withSelf = false)
+    public function scopeAncestors(Builder $builder, $withSelf = false)
     {
-        $primary = $this->getQualifiedKeyName();
-        $closure = $this->closure->getTable();
-        $ancestor = $this->closure->getQualifiedAncestorColumn();
-        $descendant = $this->closure->getQualifiedDescendantColumn();
+        $depthOperator = $withSelf ? '>=' : '>';
 
-        switch ($column) {
-            case 'ancestor':
-                $query = $this->join($closure, $ancestor, '=', $primary)
-                    ->where($descendant, '=', $this->getKey());
-                break;
-
-            case 'descendant':
-                $query = $this->join($closure, $descendant, '=', $primary)
-                    ->where($ancestor, '=', $this->getKey());
-                break;
-        }
-
-        $depthOperator = ($withSelf === true ? '>=' : '>');
-
-        $query->where($this->closure->getQualifiedDepthColumn(), $depthOperator, 0);
-
-        return $query;
+        return $builder
+            ->join(
+                $this->closure->getTable(),
+                $this->closure->getAncestorColumn(),
+                '=',
+                $this->getQualifiedKeyName()
+            )
+            ->where($this->closure->getDescendantColumn(), '=', $this->getKey())
+            ->where($this->closure->getDepthColumn(), $depthOperator, 0);
     }
 
     /**
-     * Builds closure table "where in" query on the given column.
+     * Returns query builder for ancestors including the current node.
      *
-     * @param string $column
-     * @param bool $withSelf
-     * @return QueryBuilder
+     * @param Builder $builder
+     *
+     * @return Builder
      */
-    protected function subqueryClosureBy($column, $withSelf = false)
+    public function scopeAncestorsWithSelf(Builder $builder)
     {
-        $self = $this;
-
-        return $this->whereIn($this->getQualifiedKeyName(), function ($qb) use ($self, $column, $withSelf) {
-            switch ($column) {
-                case 'ancestor':
-                    $selectedColumn = $self->closure->getAncestorColumn();
-                    $whereColumn = $self->closure->getDescendantColumn();
-                    break;
-
-                case 'descendant':
-                    $selectedColumn = $self->closure->getDescendantColumn();
-                    $whereColumn = $self->closure->getAncestorColumn();
-                    break;
-            }
-
-            $depthOperator = ($withSelf === true ? '>=' : '>');
-
-            return $qb->select($selectedColumn)
-                ->from($self->closure->getTable())
-                ->where($whereColumn, '=', $self->getKey())
-                ->where($self->closure->getDepthColumn(), $depthOperator, 0);
-        });
+        return $this->scopeAncestors($builder, true);
     }
 
     /**
@@ -389,7 +361,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getAncestors(array $columns = ['*'])
     {
-        return $this->joinClosureBy('ancestor')->get($columns);
+        return $this->ancestors()->get($columns);
     }
 
     /**
@@ -397,6 +369,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @param array $columns
      * @return Collection
+     * @deprecated since 6.0, use {@link Collection::toTree()} instead
      */
     public function getAncestorsTree(array $columns = ['*'])
     {
@@ -411,10 +384,11 @@ class Entity extends Eloquent implements EntityInterface
      * @param mixed $value
      * @param array $columns
      * @return Collection
+     * @deprecated since 6.0, use {@link Entity::ancestors()} scope instead
      */
     public function getAncestorsWhere($column, $operator = null, $value = null, array $columns = ['*'])
     {
-        return $this->joinClosureBy('ancestor')->where($column, $operator, $value)->get($columns);
+        return $this->ancestors()->where($column, $operator, $value)->get($columns);
     }
 
     /**
@@ -424,7 +398,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function countAncestors()
     {
-        return $this->joinClosureBy('ancestor')->count();
+        return $this->ancestors()->count();
     }
 
     /**
@@ -438,6 +412,41 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Returns query builder for descendants.
+     *
+     * @param Builder $builder
+     * @param bool $withSelf
+     *
+     * @return Builder
+     */
+    public function scopeDescendants(Builder $builder, $withSelf = false)
+    {
+        $depthOperator = $withSelf ? '>=' : '>';
+
+        return $builder
+            ->join(
+                $this->closure->getTable(),
+                $this->closure->getDescendantColumn(),
+                '=',
+                $this->getQualifiedKeyName()
+            )
+            ->where($this->closure->getAncestorColumn(), '=', $this->getKey())
+            ->where($this->closure->getDepthColumn(), $depthOperator, 0);
+    }
+
+    /**
+     * Returns query builder for descendants including the current node.
+     *
+     * @param Builder $builder
+     *
+     * @return Builder
+     */
+    public function scopeDescendantsWithSelf(Builder $builder)
+    {
+        return $this->scopeDescendants($builder, true);
+    }
+
+    /**
      * Retrieves all descendants of a model.
      *
      * @param array $columns
@@ -445,7 +454,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getDescendants(array $columns = ['*'])
     {
-        return $this->joinClosureBy('descendant')->get($columns);
+        return $this->descendants()->get($columns);
     }
 
     /**
@@ -453,6 +462,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @param array $columns
      * @return Collection
+     * @deprecated since 6.0, use {@link Collection::toTree()} instead
      */
     public function getDescendantsTree(array $columns = ['*'])
     {
@@ -467,10 +477,11 @@ class Entity extends Eloquent implements EntityInterface
      * @param mixed $value
      * @param array $columns
      * @return Collection
+     * @deprecated since 6.0, use {@link Entity::descendants()} scope instead
      */
     public function getDescendantsWhere($column, $operator = null, $value = null, array $columns = ['*'])
     {
-        return $this->joinClosureBy('descendant')->where($column, $operator, $value)->get($columns);
+        return $this->descendants()->where($column, $operator, $value)->get($columns);
     }
 
     /**
@@ -480,7 +491,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function countDescendants()
     {
-        return $this->joinClosureBy('descendant')->count();
+        return $this->descendants()->count();
     }
 
     /**
@@ -1396,7 +1407,7 @@ class Entity extends Eloquent implements EntityInterface
     {
         $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-        $ids = $this->joinClosureBy('descendant', $withSelf)->pluck($this->getKeyName());
+        $ids = $this->descendants($withSelf)->pluck($this->getKeyName());
 
         if ($forceDelete) {
             $this->closure->whereIn($this->closure->getDescendantColumn(), $ids)->delete();
