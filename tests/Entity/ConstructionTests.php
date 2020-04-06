@@ -52,8 +52,8 @@ class ConstructionTests extends TestCase
             'real_depth' => 0
         ]);
 
-        static::assertEquals(321, static::readAttribute($newEntity, 'old_parent_id'));
-        static::assertEquals(0, static::readAttribute($newEntity, 'old_position'));
-        static::assertEquals(0, static::readAttribute($newEntity, 'old_real_depth'));
+        static::assertEquals(321, static::readAttribute($newEntity, 'previousParentId'));
+        static::assertEquals(0, static::readAttribute($newEntity, 'previousPosition'));
+        static::assertEquals(0, static::readAttribute($newEntity, 'previousRealDepth'));
     }
 }
