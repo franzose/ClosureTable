@@ -63,13 +63,6 @@ class Entity extends Eloquent implements EntityInterface
     private $previousPosition;
 
     /**
-     * Indicates if the model is being moved to another ancestor.
-     *
-     * @var bool
-     */
-    private $isMoved = false;
-
-    /**
      * Indicates if the model should soft delete.
      *
      * @var bool
@@ -257,16 +250,6 @@ class Entity extends Eloquent implements EntityInterface
 
             $newPosition = max(0, min($entity->position, $entity->getLatestPosition()));
             $entity->attributes[$entity->getPositionColumn()] = $newPosition;
-        });
-
-        static::creating(static function (Entity $entity) {
-            if ($entity->isMoved) {
-                return;
-            }
-
-            $entity->position = $entity->position !== null
-                ? $entity->position
-                : $entity->getLatestPosition();
         });
 
         // When entity is created, the appropriate
@@ -1354,11 +1337,7 @@ class Entity extends Eloquent implements EntityInterface
 
         $this->parent_id = $parentId;
         $this->position = $position;
-        $this->isMoved = true;
-
         $this->save();
-
-        $this->isMoved = false;
 
         return $this;
     }
