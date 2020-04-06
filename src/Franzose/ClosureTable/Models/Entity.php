@@ -80,8 +80,6 @@ class Entity extends Eloquent implements EntityInterface
      */
     public $timestamps = false;
 
-    public static $debug = false;
-
     /**
      * Entity constructor.
      *
