@@ -20,10 +20,14 @@ use Throwable;
  * @property int position Alias for the current position attribute name
  * @property int parent_id Alias for the direct ancestor identifier attribute name
  * @property Collection children Child nodes loaded from the database
- * @method Builder ancestors(bool $withSelf = false)
+ * @method Builder ancestors()
+ * @method Builder ancestorsOf($id)
  * @method Builder ancestorsWithSelf()
- * @method Builder descendants(bool $withSelf = false)
+ * @method Builder ancestorsWithSelfOf($id)
+ * @method Builder descendants()
+ * @method Builder descendantsOf($id)
  * @method Builder descendantsWithSelf()
+ * @method Builder descendantsWithSelfOf($id)
  * @method Builder childNode()
  * @method Builder childAt(int $position)
  * @method Builder firstChild()
@@ -317,23 +321,25 @@ class Entity extends Eloquent implements EntityInterface
      * Returns query builder for ancestors.
      *
      * @param Builder $builder
-     * @param bool $withSelf
      *
      * @return Builder
      */
-    public function scopeAncestors(Builder $builder, $withSelf = false)
+    public function scopeAncestors(Builder $builder)
     {
-        $depthOperator = $withSelf ? '>=' : '>';
+        return $this->buildAncestorsQuery($builder, $this->getKey(), false);
+    }
 
-        return $builder
-            ->join(
-                $this->closure->getTable(),
-                $this->closure->getAncestorColumn(),
-                '=',
-                $this->getQualifiedKeyName()
-            )
-            ->where($this->closure->getDescendantColumn(), '=', $this->getKey())
-            ->where($this->closure->getDepthColumn(), $depthOperator, 0);
+    /**
+     * Returns query builder for ancestors of the node with the given ID.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     *
+     * @return Builder
+     */
+    public function scopeAncestorsOf(Builder $builder, $id)
+    {
+        return $this->buildAncestorsQuery($builder, $id, false);
     }
 
     /**
@@ -345,7 +351,44 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function scopeAncestorsWithSelf(Builder $builder)
     {
-        return $this->scopeAncestors($builder, true);
+        return $this->buildAncestorsQuery($builder, $this->getKey(), true);
+    }
+
+    /**
+     * Returns query builder for ancestors of the node with given ID including that node also.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     *
+     * @return Builder
+     */
+    public function scopeAncestorsWithSelfOf(Builder $builder, $id)
+    {
+        return $this->buildAncestorsQuery($builder, $id, true);
+    }
+
+    /**
+     * Builds base ancestors query.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     * @param bool $withSelf
+     *
+     * @return Builder
+     */
+    private function buildAncestorsQuery(Builder $builder, $id, $withSelf)
+    {
+        $depthOperator = $withSelf ? '>=' : '>';
+
+        return $builder
+            ->join(
+                $this->closure->getTable(),
+                $this->closure->getAncestorColumn(),
+                '=',
+                $this->getQualifiedKeyName()
+            )
+            ->where($this->closure->getDescendantColumn(), '=', $id)
+            ->where($this->closure->getDepthColumn(), $depthOperator, 0);
     }
 
     /**
@@ -414,19 +457,22 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @return Builder
      */
-    public function scopeDescendants(Builder $builder, $withSelf = false)
+    public function scopeDescendants(Builder $builder)
     {
-        $depthOperator = $withSelf ? '>=' : '>';
+        return $this->buildDescendantsQuery($builder, $this->getKey(), false);
+    }
 
-        return $builder
-            ->join(
-                $this->closure->getTable(),
-                $this->closure->getDescendantColumn(),
-                '=',
-                $this->getQualifiedKeyName()
-            )
-            ->where($this->closure->getAncestorColumn(), '=', $this->getKey())
-            ->where($this->closure->getDepthColumn(), $depthOperator, 0);
+    /**
+     * Returns query builder for descendants of the node with the given ID.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     *
+     * @return Builder
+     */
+    public function scopeDescendantsOf(Builder $builder, $id)
+    {
+        return $this->buildDescendantsQuery($builder, $id, false);
     }
 
     /**
@@ -438,7 +484,44 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function scopeDescendantsWithSelf(Builder $builder)
     {
-        return $this->scopeDescendants($builder, true);
+        return $this->buildDescendantsQuery($builder, $this->getKey(), true);
+    }
+
+    /**
+     * Returns query builder for descendants including the current node of the given ID.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     *
+     * @return Builder
+     */
+    public function scopeDescendantsWithSelfOf(Builder $builder, $id)
+    {
+        return $this->buildDescendantsQuery($builder, $id, true);
+    }
+
+    /**
+     * Builds base descendants query.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     * @param bool $withSelf
+     *
+     * @return Builder
+     */
+    private function buildDescendantsQuery(Builder $builder, $id, $withSelf)
+    {
+        $depthOperator = $withSelf ? '>=' : '>';
+
+        return $builder
+            ->join(
+                $this->closure->getTable(),
+                $this->closure->getDescendantColumn(),
+                '=',
+                $this->getQualifiedKeyName()
+            )
+            ->where($this->closure->getAncestorColumn(), '=', $id)
+            ->where($this->closure->getDepthColumn(), $depthOperator, 0);
     }
 
     /**
@@ -1409,7 +1492,8 @@ class Entity extends Eloquent implements EntityInterface
     {
         $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
-        $ids = $this->descendants($withSelf)->pluck($this->getKeyName());
+        $query = $withSelf ? $this->descendantsWithSelf() : $this->descendants();
+        $ids = $query->pluck($this->getKeyName());
 
         if ($forceDelete) {
             $this->closure->whereIn($this->closure->getDescendantColumn(), $ids)->delete();

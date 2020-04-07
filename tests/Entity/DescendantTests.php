@@ -14,6 +14,42 @@ class DescendantTests extends BaseTestCase
         static::assertCount(0, Entity::find(1)->getDescendants());
     }
 
+    public function testDescendantsScope()
+    {
+        $entity = Entity::find(9);
+
+        $descendants = $entity->descendants()->get();
+
+        static::assertCount(6, $descendants);
+        static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
+    }
+
+    public function testDescendantsOfScope()
+    {
+        $descendants = Entity::descendantsOf(9)->get();
+
+        static::assertCount(6, $descendants);
+        static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
+    }
+
+    public function testDescendantsWithSelfScope()
+    {
+        $entity = Entity::find(9);
+
+        $descendants = $entity->descendantsWithSelf()->get();
+
+        static::assertCount(7, $descendants);
+        static::assertEquals([9, 10, 11, 12, 13, 14, 15], $descendants->modelKeys());
+    }
+
+    public function testDescendantsWithSelfOfScope()
+    {
+        $descendants = Entity::descendantsWithSelfOf(9)->get();
+
+        static::assertCount(7, $descendants);
+        static::assertEquals([9, 10, 11, 12, 13, 14, 15], $descendants->modelKeys());
+    }
+
     public function testGetDescendants()
     {
         $entity = Entity::find(9);

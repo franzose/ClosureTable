@@ -14,6 +14,42 @@ class AncestorTests extends BaseTestCase
         static::assertCount(0, Entity::find(1)->getAncestors());
     }
 
+    public function testAncestorsScope()
+    {
+        $entity = Entity::find(12);
+
+        $ancestors = $entity->ancestors()->get();
+
+        static::assertCount(3, $ancestors);
+        static::assertEquals([11, 10, 9], $ancestors->modelKeys());
+    }
+
+    public function testAncestorsOfScope()
+    {
+        $ancestors = Entity::ancestorsOf(12)->get();
+
+        static::assertCount(3, $ancestors);
+        static::assertEquals([11, 10, 9], $ancestors->modelKeys());
+    }
+
+    public function testAncestorsWithSelfScope()
+    {
+        $entity = Entity::find(12);
+
+        $ancestors = $entity->ancestorsWithSelf()->get();
+
+        static::assertCount(4, $ancestors);
+        static::assertEquals([12, 11, 10, 9], $ancestors->modelKeys());
+    }
+
+    public function testAncestorsWithSelfOfScope()
+    {
+        $ancestors = Entity::ancestorsWithSelfOf(12)->get();
+
+        static::assertCount(4, $ancestors);
+        static::assertEquals([12, 11, 10, 9], $ancestors->modelKeys());
+    }
+
     public function testGetAncestorsShouldNotBeEmpty()
     {
         $entity = Entity::find(12);
@@ -23,7 +59,7 @@ class AncestorTests extends BaseTestCase
         static::assertInstanceOf(Collection::class, $ancestors);
         static::assertCount(3, $ancestors);
         static::assertContainsOnlyInstancesOf(Entity::class, $ancestors);
-        $this->assertArrayValuesEquals($ancestors->modelKeys(), [9, 10, 11]);
+        static::assertEquals([11, 10, 9], $ancestors->modelKeys());
     }
 
     public function testAncestorsWhere()
@@ -35,7 +71,7 @@ class AncestorTests extends BaseTestCase
         static::assertInstanceOf(Collection::class, $ancestors);
         static::assertCount(2, $ancestors);
         static::assertContainsOnlyInstancesOf(Entity::class, $ancestors);
-        $this->assertArrayValuesEquals($ancestors->modelKeys(), [10, 11]);
+        static::assertEquals([11, 10], $ancestors->modelKeys());
     }
 
     public function testCountAncestors()
