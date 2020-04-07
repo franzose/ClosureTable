@@ -2,6 +2,7 @@
 namespace Franzose\ClosureTable\Tests;
 
 use Franzose\ClosureTable\Models\ClosureTable;
+use Illuminate\Database\QueryException;
 
 class ClosureTableTestCase extends BaseTestCase
 {
@@ -25,7 +26,7 @@ class ClosureTableTestCase extends BaseTestCase
      */
     protected $depthColumn;
 
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
@@ -36,11 +37,12 @@ class ClosureTableTestCase extends BaseTestCase
     }
 
     /**
-     * @expectedException \InvalidArgumentException
      * @dataProvider insertNodeProvider
      */
     public function testInsertNodeValidatesItsArguments($ancestorId, $descendantId)
     {
+        $this->expectException(QueryException::class);
+
         $this->ctable->insertNode($ancestorId, $descendantId);
     }
 
@@ -53,11 +55,10 @@ class ClosureTableTestCase extends BaseTestCase
         ];
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testMoveNodeToValidatesItsArgument()
     {
+        $this->expectException(QueryException::class);
+
         $this->ctable->moveNodeTo('wrong');
     }
 

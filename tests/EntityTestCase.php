@@ -6,6 +6,7 @@ use Franzose\ClosureTable\Models\ClosureTable;
 use Mockery;
 use Franzose\ClosureTable\Models\Entity;
 use Franzose\ClosureTable\Tests\Models\Page;
+use InvalidArgumentException;
 
 class EntityTestCase extends BaseTestCase
 {
@@ -187,11 +188,10 @@ class EntityTestCase extends BaseTestCase
         $this->assertEquals($entity1->parent_id, $this->readAttribute($entity1, 'old_parent_id'));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testMoveToThrowsException()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $this->entity->moveTo(0, $this->entity);
     }
 
