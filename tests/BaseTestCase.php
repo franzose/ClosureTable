@@ -19,7 +19,7 @@ abstract class BaseTestCase extends TestCase
     public static $debug = false;
     public static $sqlite_in_memory = false;
 
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
@@ -32,15 +32,13 @@ abstract class BaseTestCase extends TestCase
             DB::statement('DROP TABLE IF EXISTS migrations');
         }
 
-        $artisan = $this->app->make('Illuminate\Contracts\Console\Kernel');
-        $artisan->call('migrate', [
-            '--database' => 'closuretable',
-            '--path' => '../tests/migrations'
-        ]);
+        // Load test migrations
+        $this->loadMigrationsFrom(__DIR__ . '/migrations');
 
-        $artisan->call('db:seed', [
+        // seed the database with default entities and values
+        $this->artisan('db:seed', [
             '--class' => 'Franzose\ClosureTable\Tests\Seeds\EntitiesSeeder'
-        ]);
+        ])->run();
 
         if (static::$debug) {
             Entity::$debug = true;
@@ -52,7 +50,7 @@ abstract class BaseTestCase extends TestCase
         }
     }
 
-    public function tearDown()
+    public function tearDown() : void
     {
         Mockery::close();
     }
