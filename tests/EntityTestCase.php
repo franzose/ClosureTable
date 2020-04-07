@@ -104,16 +104,16 @@ class EntityTestCase extends BaseTestCase
         $entity = new Page(['title' => 'Item 1']);
 
         $this->assertEquals(null, $entity->position);
-        $this->assertEquals(null, $this->readAttribute($entity, 'old_position'));
+        $this->assertEquals(null, $this->readPrivateProperty($entity, 'old_position'));
         $this->assertEquals(null, $entity->parent_id);
-        $this->assertEquals(null, $this->readAttribute($entity, 'old_parent_id'));
+        $this->assertEquals(null, $this->readPrivateProperty($entity, 'old_parent_id'));
 
         $entity->save();
 
         $this->assertEquals(9, $entity->position);
-        $this->assertEquals($entity->position, $this->readAttribute($entity, 'old_position'));
+        $this->assertEquals($entity->position, $this->readPrivateProperty($entity, 'old_position'));
         $this->assertEquals(null, $entity->parent_id);
-        $this->assertEquals($entity->parent_id, $this->readAttribute($entity, 'old_parent_id'));
+        $this->assertEquals($entity->parent_id, $this->readPrivateProperty($entity, 'old_parent_id'));
     }
 
     /**
@@ -177,15 +177,15 @@ class EntityTestCase extends BaseTestCase
 
         $this->assertEquals(8, Page::find(9)->position); // Sibling node that shouldn't move
 
-        $this->assertEquals($entity1->position, $this->readAttribute($entity1, 'old_position'), 'Position should be the same after a load');
-        $this->assertEquals($entity1->parent_id, $this->readAttribute($entity1, 'old_parent_id'), 'Parent should be the same after a load');
+        $this->assertEquals($entity1->position, $this->readPrivateProperty($entity1, 'old_position'), 'Position should be the same after a load');
+        $this->assertEquals($entity1->parent_id, $this->readPrivateProperty($entity1, 'old_parent_id'), 'Parent should be the same after a load');
 
         $entity1->title = 'New title';
         $entity1->save();
 
         $this->assertEquals(8, Page::find(9)->position, 'Sibling node should not have moved');
-        $this->assertEquals($entity1->position, $this->readAttribute($entity1, 'old_position'));
-        $this->assertEquals($entity1->parent_id, $this->readAttribute($entity1, 'old_parent_id'));
+        $this->assertEquals($entity1->position, $this->readPrivateProperty($entity1, 'old_position'));
+        $this->assertEquals($entity1->parent_id, $this->readPrivateProperty($entity1, 'old_parent_id'));
     }
 
     public function testMoveToThrowsException()

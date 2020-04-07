@@ -97,6 +97,23 @@ abstract class BaseTestCase extends TestCase
      */
     protected function assertArrayValuesEquals(array $actual, array $expected, $message = '', $delta = 0.0, $depth = 10)
     {
-        $this->assertEquals($actual, $expected, $message, $delta, $depth, true);
+        $this->assertEqualsCanonicalizing($actual, $expected, $message, $delta, $depth);
+    }
+
+
+    /**
+     * Get the value of a private property on an object
+     * 
+     * @param mixed $object the object reference
+     * @param string $name the property name
+     * @return mixed the property value
+     */
+    protected function readPrivateProperty(&$object, $name)
+    {
+        $reflection = new \ReflectionClass(get_class($object));
+        $property = $reflection->getProperty($name);
+        $property->setAccessible(true);
+
+        return $property->getValue($object);
     }
 }
