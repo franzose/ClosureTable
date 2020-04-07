@@ -2,6 +2,7 @@
 namespace Franzose\ClosureTable\Tests;
 
 use Franzose\ClosureTable\Models\ClosureTable;
+use Franzose\ClosureTable\Models\Entity;
 
 class ClosureTableTestCase extends BaseTestCase
 {
@@ -57,5 +58,15 @@ class ClosureTableTestCase extends BaseTestCase
             $this->ctable->getTable() . '.' . $this->depthColumn,
             $this->ctable->getQualifiedDepthColumn()
         );
+    }
+
+    public function testNewNodeShouldBeInsertedIntoClosureTable()
+    {
+        $entity = Entity::create(['title' => 'abcde']);
+        $closure = ClosureTable::whereDescendant($entity->getKey())->first();
+
+        static::assertNotNull($closure);
+        static::assertEquals($entity->getKey(), $closure->ancestor);
+        static::assertEquals(0, $closure->depth);
     }
 }
