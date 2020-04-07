@@ -4,9 +4,10 @@ namespace Franzose\ClosureTable\Tests\Entity;
 
 use Franzose\ClosureTable\Models\ClosureTable;
 use Franzose\ClosureTable\Models\Entity;
-use PHPUnit\Framework\TestCase;
+use Franzose\ClosureTable\Tests\BaseTestCase;
+use Franzose\ClosureTable\Tests\Page;
 
-class ConstructionTests extends TestCase
+class ConstructionTests extends BaseTestCase
 {
     public function testPositionMustBeFillable()
     {
@@ -48,5 +49,22 @@ class ConstructionTests extends TestCase
 
         static::assertEquals(321, static::readAttribute($newEntity, 'previousParentId'));
         static::assertEquals(0, static::readAttribute($newEntity, 'previousPosition'));
+    }
+
+    public function testCreate()
+    {
+        $entity = new Page(['title' => 'Item 1']);
+
+        static::assertEquals(null, $entity->position);
+        static::assertEquals(null, static::readAttribute($entity, 'previousPosition'));
+        static::assertEquals(null, $entity->parent_id);
+        static::assertEquals(null, static::readAttribute($entity, 'previousParentId'));
+
+        $entity->save();
+
+        static::assertEquals(9, $entity->position);
+        static::assertEquals(null, static::readAttribute($entity, 'previousPosition'));
+        static::assertEquals(null, $entity->parent_id);
+        static::assertEquals(null, static::readAttribute($entity, 'previousParentId'));
     }
 }

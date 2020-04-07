@@ -2,11 +2,71 @@
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
+use DB;
+use Franzose\ClosureTable\Models\ClosureTable;
 use Franzose\ClosureTable\Models\Entity;
 use Franzose\ClosureTable\Tests\BaseTestCase;
+use Franzose\ClosureTable\Tests\Page;
 
 final class PositioningTests extends BaseTestCase
 {
+    public function testCreate()
+    {
+        DB::statement('SET foreign_key_checks=0');
+        ClosureTable::truncate();
+        Entity::truncate();
+        DB::statement('SET foreign_key_checks=1');
+
+        $entity1 = new Entity;
+        $entity1->save();
+        static::assertEquals(0, $entity1->position);
+
+        $entity2 = new Entity;
+        $entity2->save();
+        static::assertEquals(1, $entity2->position);
+
+        static::assertModelAttribute('position', [1 => 0, 2 => 1]);
+    }
+
+    public function testSavingLoadedEntityShouldNotTriggerReordering()
+    {
+        $entity = new Page(['title' => 'Item 1']);
+        $entity->save();
+
+        $id = $entity->getKey();
+        $parentId = $entity->parent_id;
+        $position = $entity->position;
+
+        $sameEntity = Page::find($id);
+
+        // Sibling node that shouldn't move
+        static::assertEquals(8, Page::find(9)->position);
+        static::assertEquals(
+            $position,
+            $sameEntity->position,
+            'Position should be the same after a load'
+        );
+
+        static::assertEquals(
+            $parentId,
+            $sameEntity->parent_id,
+            'Parent should be the same after a load'
+        );
+
+        $sameEntity->title = 'New title';
+        $sameEntity->save();
+
+        static::assertEquals(
+            8,
+            Page::find(9)->position,
+            'Sibling node should not have been moved'
+        );
+
+        static::assertEquals($id, $sameEntity->getKey());
+        static::assertEquals($position, $sameEntity->position);
+        static::assertEquals($parentId, $sameEntity->parent_id);
+    }
+
     public function testMoveToTheFirstPosition()
     {
         $entity = Entity::find(9);

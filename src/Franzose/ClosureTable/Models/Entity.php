@@ -87,6 +87,13 @@ class Entity extends Eloquent implements EntityInterface
     private $previousPosition;
 
     /**
+     * Whether this node is being moved to another parent node.
+     *
+     * @var bool
+     */
+    private $isMoved = false;
+
+    /**
      * Indicates if the model should soft delete.
      *
      * @var bool
@@ -156,8 +163,10 @@ class Entity extends Eloquent implements EntityInterface
         if ($this->parent_id === $value) {
             return;
         }
-        $this->previousParentId = $this->parent_id;
-        $this->attributes[$this->getParentIdColumn()] = $value;
+
+        $parentId = $this->getParentIdColumn();
+        $this->previousParentId = isset($this->original[$parentId]) ? $this->original[$parentId] : null;
+        $this->attributes[$parentId] = $value;
     }
 
     /**
@@ -200,8 +209,10 @@ class Entity extends Eloquent implements EntityInterface
         if ($this->position === $value) {
             return;
         }
-        $this->previousPosition = $this->position;
-        $this->attributes[$this->getPositionColumn()] = max(0, (int) $value);
+
+        $position = $this->getPositionColumn();
+        $this->previousPosition = isset($this->original[$position]) ? $this->original[$position] : null;
+        $this->attributes[$position] = max(0, (int) $value);
     }
 
     /**
@@ -266,8 +277,17 @@ class Entity extends Eloquent implements EntityInterface
         parent::boot();
 
         static::saving(static function (Entity $entity) {
-            $newPosition = max(0, min($entity->position, $entity->getLatestPosition()));
-            $entity->attributes[$entity->getPositionColumn()] = $newPosition;
+            if ($entity->isDirty($entity->getPositionColumn())) {
+                $latest = $entity->getLatestPosition();
+
+                if (!$entity->isMoved) {
+                    $latest--;
+                }
+
+                $entity->position = max(0, min($entity->position, $latest));
+            } elseif (!$entity->exists) {
+                $entity->position = $entity->getLatestPosition();
+            }
         });
 
         // When entity is created, the appropriate
@@ -1749,7 +1769,10 @@ class Entity extends Eloquent implements EntityInterface
 
         $this->parent_id = $parentId;
         $this->position = $position;
+
+        $this->isMoved = true;
         $this->save();
+        $this->isMoved = false;
 
         return $this;
     }
@@ -1785,6 +1808,7 @@ class Entity extends Eloquent implements EntityInterface
 
         if ($this->previousPosition !== null) {
             $this
+                ->where($this->getKeyName(), '<>', $this->getKey())
                 ->where($this->getParentIdColumn(), '=', $this->previousParentId)
                 ->where($position, '>', $this->previousPosition)
                 ->decrement($position);

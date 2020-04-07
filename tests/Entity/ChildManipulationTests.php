@@ -77,7 +77,8 @@ class ChildManipulationTests extends BaseTestCase
             10 => 0,
             13 => 1,
             14 => 2,
-            15 => 3
+            15 => 3,
+            12 => 4,
         ]);
     }
 
