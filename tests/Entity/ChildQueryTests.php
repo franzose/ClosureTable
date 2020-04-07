@@ -77,4 +77,44 @@ class ChildQueryTests extends BaseTestCase
         static::assertEquals(2, $children[0]->position);
         static::assertEquals(3, $children[1]->position);
     }
+
+    public function testChildNodeOfScope()
+    {
+        $child = Entity::childNodeOf(9)->where('position', '=', 2)->first();
+
+        static::assertInstanceOf(Entity::class, $child);
+        static::assertEquals(14, $child->getKey());
+    }
+
+    public function testChildOfScope()
+    {
+        $child = Entity::childOf(9, 2)->first();
+
+        static::assertInstanceOf(Entity::class, $child);
+        static::assertEquals(14, $child->getKey());
+    }
+
+    public function testFirstChildOfScope()
+    {
+        $child = Entity::firstChildOf(9)->first();
+
+        static::assertInstanceOf(Entity::class, $child);
+        static::assertEquals(10, $child->getKey());
+    }
+
+    public function testLastChildOfScope()
+    {
+        $child = Entity::lastChildOf(9)->first();
+
+        static::assertInstanceOf(Entity::class, $child);
+        static::assertEquals(15, $child->getKey());
+    }
+
+    public function testChildrenRangeOfScope()
+    {
+        $children = Entity::childrenRangeOf(9, 0, 2)->get();
+
+        static::assertCount(3, $children);
+        static::assertEquals([10, 13, 14], $children->modelKeys());
+    }
 }

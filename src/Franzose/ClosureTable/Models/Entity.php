@@ -29,10 +29,15 @@ use Throwable;
  * @method Builder descendantsWithSelf()
  * @method Builder descendantsWithSelfOf($id)
  * @method Builder childNode()
+ * @method Builder childNodeOf($id)
  * @method Builder childAt(int $position)
+ * @method Builder childOf($id, int $position)
  * @method Builder firstChild()
+ * @method Builder firstChildOf($id)
  * @method Builder lastChild()
+ * @method Builder lastChildOf($id)
  * @method Builder childrenRange(int $from, int $to = null)
+ * @method Builder childrenRangeOf($id, int $from, int $to = null)
  * @method Builder sibling()
  * @method Builder siblings()
  * @method Builder neighbors()
@@ -644,11 +649,24 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function scopeChildNode(Builder $builder)
     {
+        return $this->scopeChildNodeOf($builder, $this->getKey());
+    }
+
+    /**
+     * Returns query builder for child nodes of the node with the given ID.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     *
+     * @return Builder
+     */
+    public function scopeChildNodeOf(Builder $builder, $id)
+    {
         $parentId = $this->getParentIdColumn();
 
         return $builder
             ->whereNotNull($parentId)
-            ->where($parentId, '=', $this->getKey());
+            ->where($parentId, '=', $id);
     }
 
     /**
@@ -663,6 +681,22 @@ class Entity extends Eloquent implements EntityInterface
     {
         return $this
             ->scopeChildNode($builder)
+            ->where($this->getPositionColumn(), '=', $position);
+    }
+
+    /**
+     * Returns query builder for a child at the given position of the node with the given ID.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     * @param int $position
+     *
+     * @return Builder
+     */
+    public function scopeChildOf(Builder $builder, $id, $position)
+    {
+        return $this
+            ->scopeChildNodeOf($builder, $id)
             ->where($this->getPositionColumn(), '=', $position);
     }
 
@@ -691,6 +725,19 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Returns query builder for the first child node of the node with the given ID.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     *
+     * @return Builder
+     */
+    public function scopeFirstChildOf(Builder $builder, $id)
+    {
+        return $this->scopeChildOf($builder, $id, 0);
+    }
+
+    /**
      * Retrieves the first child.
      *
      * @param array $columns
@@ -714,6 +761,19 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
+     * Returns query builder for the last child node of the node with the given ID.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     *
+     * @return Builder
+     */
+    public function scopeLastChildOf(Builder $builder, $id)
+    {
+        return $this->scopeChildNodeOf($builder, $id)->orderByDesc($this->getPositionColumn());
+    }
+
+    /**
      * Retrieves the last child.
      *
      * @param array $columns
@@ -725,7 +785,7 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Returns relationship to child nodes in the range of the given positions.
+     * Returns query builder to child nodes in the range of the given positions.
      *
      * @param Builder $builder
      * @param int $from
@@ -737,6 +797,28 @@ class Entity extends Eloquent implements EntityInterface
     {
         $position = $this->getPositionColumn();
         $query = $this->scopeChildNode($builder)->where($position, '>=', $from);
+
+        if ($to !== null) {
+            $query->where($position, '<=', $to);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Returns query builder to child nodes in the range of the given positions for the node of the given ID.
+     *
+     * @param Builder $builder
+     * @param mixed $id
+     * @param int $from
+     * @param int|null $to
+     *
+     * @return Builder
+     */
+    public function scopeChildrenRangeOf(Builder $builder, $id, $from, $to = null)
+    {
+        $position = $this->getPositionColumn();
+        $query = $this->scopeChildNodeOf($builder, $id)->where($position, '>=', $from);
 
         if ($to !== null) {
             $query->where($position, '<=', $to);
