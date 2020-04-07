@@ -57,7 +57,7 @@ class DescendantTests extends BaseTestCase
 
         static::assertInstanceOf(Collection::class, $descendants);
         static::assertCount(6, $descendants);
-        $this->assertArrayValuesEquals($descendants->modelKeys(), [10, 11, 12, 13, 14, 15]);
+        static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
     }
 
     public function testGetDescendantsWhere()
@@ -65,7 +65,7 @@ class DescendantTests extends BaseTestCase
         $descendants = Entity::find(9)->getDescendantsWhere('position', '=', 1);
 
         static::assertCount(1, $descendants);
-        $this->assertArrayValuesEquals($descendants->modelKeys(), [13]);
+        static::assertEquals([13], $descendants->modelKeys());
     }
 
     public function testCountDescendants()

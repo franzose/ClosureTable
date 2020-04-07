@@ -56,19 +56,6 @@ abstract class BaseTestCase extends TestCase
         ]);
     }
 
-    /**
-     * Asserts if two arrays have similar values, sorting them before the fact in order to "ignore" ordering.
-     * @param array $actual
-     * @param array $expected
-     * @param string $message
-     * @param float $delta
-     * @param int $depth
-     */
-    protected function assertArrayValuesEquals(array $actual, array $expected, $message = '', $delta = 0.0, $depth = 10)
-    {
-        $this->assertEquals($actual, $expected, $message, $delta, $depth, true);
-    }
-
     public static function assertModelAttribute($attribute, array $expected)
     {
         $actual = Entity::whereIn('id', array_keys($expected))
