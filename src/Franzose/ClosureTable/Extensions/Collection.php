@@ -68,6 +68,50 @@ class Collection extends EloquentCollection
     }
 
     /**
+     * Filters collection to return nodes on the "left"
+     * and on the "right" from the node with the given position.
+     *
+     * @param int $position
+     *
+     * @return Collection
+     */
+    public function getNeighbors($position)
+    {
+        return $this->filter(static function (Entity $entity) use ($position) {
+            return $entity->position === $position - 1 ||
+                   $entity->position === $position + 1;
+        });
+    }
+
+    /**
+     * Filters collection to return previous siblings of a node with the given position.
+     *
+     * @param int $position
+     *
+     * @return Collection
+     */
+    public function getPrevSiblings($position)
+    {
+        return $this->filter(static function (Entity $entity) use ($position) {
+            return $entity->position < $position;
+        });
+    }
+
+    /**
+     * Filters collection to return next siblings of a node with the given position.
+     *
+     * @param int $position
+     *
+     * @return Collection
+     */
+    public function getNextSiblings($position)
+    {
+        return $this->filter(static function (Entity $entity) use ($position) {
+            return $entity->position > $position;
+        });
+    }
+
+    /**
      * Retrieves children relation.
      *
      * @param $position

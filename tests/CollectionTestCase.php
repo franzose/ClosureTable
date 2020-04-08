@@ -53,6 +53,51 @@ class CollectionTestCase extends BaseTestCase
         static::assertEquals([1, 2, 3], $collection->getRange(1, 3)->pluck('position')->toArray());
     }
 
+    public function testGetNeighbors()
+    {
+        $collection = new Collection([
+            new Page(['position' => 0]),
+            new Page(['position' => 1]),
+            new Page(['position' => 2]),
+            new Page(['position' => 3]),
+        ]);
+
+        $neighbors = $collection->getNeighbors(1);
+
+        static::assertCount(2, $neighbors);
+        static::assertEquals([0, 2], $neighbors->pluck('position')->toArray());
+    }
+
+    public function testGetPrevSiblings()
+    {
+        $collection = new Collection([
+            new Page(['position' => 0]),
+            new Page(['position' => 1]),
+            new Page(['position' => 2]),
+            new Page(['position' => 3]),
+        ]);
+
+        $siblings = $collection->getPrevSiblings(3);
+
+        static::assertCount(3, $siblings);
+        static::assertEquals([0, 1, 2], $siblings->pluck('position')->toArray());
+    }
+
+    public function testGetNextSiblings()
+    {
+        $collection = new Collection([
+            new Page(['position' => 0]),
+            new Page(['position' => 1]),
+            new Page(['position' => 2]),
+            new Page(['position' => 3]),
+        ]);
+
+        $siblings = $collection->getNextSiblings(0);
+
+        static::assertCount(3, $siblings);
+        static::assertEquals([1, 2, 3], $siblings->pluck('position')->toArray());
+    }
+
     public function testGetChildrenOf()
     {
         $entity = new Page(['position' => 0]);
