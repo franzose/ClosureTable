@@ -28,7 +28,7 @@ class MigrationTests extends TestCase
         Carbon::setTestNow();
 
         $entityMigrationPath = __DIR__ . '/2020_04_03_000000_create_entities_table.php';
-        $closureMigrationPath = __DIR__ . '/2020_04_03_000000_create_entity_trees_table.php';
+        $closureMigrationPath = __DIR__ . '/2020_04_03_000001_create_entity_trees_table.php';
 
         static::assertFileExists($entityMigrationPath);
         static::assertFileExists($closureMigrationPath);

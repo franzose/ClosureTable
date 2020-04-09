@@ -2,6 +2,7 @@
 namespace Franzose\ClosureTable\Generators;
 
 use Carbon\Carbon;
+use DateTime;
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 /**
@@ -11,11 +12,6 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  */
 class Migration extends Generator
 {
-    /**
-     * @var array
-     */
-    private $usedTimestamps = [];
-
     /**
      * Creates migration files.
      *
@@ -30,7 +26,9 @@ class Migration extends Generator
         $closureClass = $this->getClassName($options['closure-table']);
         $innoDb = $options['use-innodb'] ? '$table->engine = \'InnoDB\';' : '';
 
-        $paths[] = $path = $this->getPath($options['entity-table'], $options['migrations-path']);
+        $dateTime = Carbon::now();
+
+        $paths[] = $path = $this->getPath($dateTime, $options['entity-table'], $options['migrations-path']);
         $stub = $this->getStub('entity', 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
@@ -39,7 +37,9 @@ class Migration extends Generator
             'innodb' => $innoDb
         ]));
 
-        $paths[] = $path = $this->getPath($options['closure-table'], $options['migrations-path']);
+        $dateTime->addSecond();
+
+        $paths[] = $path = $this->getPath($dateTime, $options['closure-table'], $options['migrations-path']);
         $stub = $this->getStub('closuretable', 'migrations');
 
         $this->filesystem->put($path, $this->parseStub($stub, [
@@ -77,20 +77,14 @@ class Migration extends Generator
     /**
      * Constructs path to migration file in Laravel style.
      *
-     * @param $name
-     * @param $path
+     * @param DateTime $dateTime
+     * @param string $name
+     * @param string $path
+     *
      * @return string
      */
-    protected function getPath($name, $path)
+    protected function getPath(DateTime $dateTime, $name, $path)
     {
-        $timestamp = Carbon::now();
-
-        if (in_array($timestamp, $this->usedTimestamps, true)) {
-            $timestamp->addSecond();
-        }
-
-        $this->usedTimestamps[] = $timestamp;
-
-        return $path . '/' . $timestamp->format('Y_m_d_His') . '_' . $this->getName($name) . '.php';
+        return $path . '/' . $dateTime->format('Y_m_d_His') . '_' . $this->getName($name) . '.php';
     }
 }
