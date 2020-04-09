@@ -6,7 +6,7 @@ use Franzose\ClosureTable\Generators\Model;
 use Illuminate\Filesystem\Filesystem;
 use PHPUnit\Framework\TestCase;
 
-class ModelTest extends TestCase
+class ModelTests extends TestCase
 {
     public function testGeneration()
     {
