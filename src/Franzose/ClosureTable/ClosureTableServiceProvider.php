@@ -2,7 +2,6 @@
 namespace Franzose\ClosureTable;
 
 use Illuminate\Support\ServiceProvider;
-use Franzose\ClosureTable\Console\ClosureTableCommand;
 use Franzose\ClosureTable\Console\MakeCommand;
 use Franzose\ClosureTable\Generators\Migration as Migrator;
 use Franzose\ClosureTable\Generators\Model as Modeler;
@@ -43,16 +42,11 @@ class ClosureTableServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        // Here we register commands for artisan
-        $this->app->singleton('command.closuretable', function ($app) {
-            return new ClosureTableCommand;
-        });
-
         $this->app->singleton('command.closuretable.make', function ($app) {
             return $app['Franzose\ClosureTable\Console\MakeCommand'];
         });
 
-        $this->commands('command.closuretable', 'command.closuretable.make');
+        $this->commands('command.closuretable.make');
     }
 
     /**
