@@ -1,6 +1,7 @@
 <?php
 namespace Franzose\ClosureTable\Tests;
 
+use DB;
 use Dotenv\Dotenv;
 use Franzose\ClosureTable\Contracts\ClosureTableInterface;
 use Franzose\ClosureTable\Contracts\EntityInterface;
@@ -29,6 +30,12 @@ abstract class BaseTestCase extends TestCase
             '--path' => 'tests/migrations',
             '--seeder' => EntitiesSeeder::class
         ]);
+    }
+
+    public function tearDown()
+    {
+        // this is to avoid "too many connection" errors
+        DB::disconnect(static::DATABASE_CONNECTION);
     }
 
     /**
