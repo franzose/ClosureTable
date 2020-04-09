@@ -49,10 +49,35 @@ class MovementTests extends BaseTestCase
         $descendant = Entity::create(['title' => 'abcde']);
         $descendant->moveTo(0, $ancestor);
 
-        $ancestorRows = ClosureTable::whereDescendant($ancestor->getKey())->count();
-        $descendantRows = ClosureTable::whereDescendant($descendant->getKey())->count();
-        static::assertEquals(1, $ancestorRows);
-        static::assertEquals(2, $descendantRows);
+        $ancestorId = $ancestor->getKey();
+        $descendantId = $descendant->getKey();
+        $columns = ['ancestor', 'descendant', 'depth'];
+        $ancestorRows = ClosureTable::where('descendant', '=', $ancestorId)->get($columns);
+        $descendantRows = ClosureTable::where('descendant', '=', $descendantId)->get($columns);
+
+        static::assertEquals(
+            [
+                'ancestor' => $ancestorId,
+                'descendant' => $ancestorId,
+                'depth' => 0
+            ],
+            $ancestorRows->get(0)->toArray()
+        );
+        static::assertEquals(
+            [
+                [
+                    'ancestor' => $descendantId,
+                    'descendant' => $descendantId,
+                    'depth' => 0
+                ],
+                [
+                    'ancestor' => $ancestorId,
+                    'descendant' => $descendantId,
+                    'depth' => 1
+                ],
+            ],
+            $descendantRows->toArray()
+        );
     }
 
     public function testMoveNodeToAnotherAncestor()
