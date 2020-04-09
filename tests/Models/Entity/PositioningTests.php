@@ -12,10 +12,8 @@ final class PositioningTests extends BaseTestCase
 {
     public function testCreate()
     {
-        DB::statement('SET foreign_key_checks=0');
-        ClosureTable::truncate();
-        Entity::truncate();
-        DB::statement('SET foreign_key_checks=1');
+        DB::statement('DELETE FROM entities');
+        DB::statement('DELETE FROM entities_closure');
 
         $entity1 = new Entity;
         $entity1->save();
@@ -25,7 +23,7 @@ final class PositioningTests extends BaseTestCase
         $entity2->save();
         static::assertEquals(1, $entity2->position);
 
-        static::assertModelAttribute('position', [1 => 0, 2 => 1]);
+        static::assertModelAttribute('position', [16 => 0, 17 => 1]);
     }
 
     public function testSavingLoadedEntityShouldNotTriggerReordering()
