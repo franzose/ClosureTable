@@ -3,8 +3,6 @@ namespace Franzose\ClosureTable;
 
 use Illuminate\Support\ServiceProvider;
 use Franzose\ClosureTable\Console\MakeCommand;
-use Franzose\ClosureTable\Generators\Migration as Migrator;
-use Franzose\ClosureTable\Generators\Model as Modeler;
 
 /**
  * ClosureTable service provider
@@ -13,19 +11,6 @@ use Franzose\ClosureTable\Generators\Model as Modeler;
  */
 class ClosureTableServiceProvider extends ServiceProvider
 {
-
-    /**
-     * Current library version
-     */
-    const VERSION = 4;
-
-    /**
-     * Indicates if loading of the provider is deferred.
-     *
-     * @var bool
-     */
-    protected $defer = false;
-
     /**
      * Bootstrap the application events.
      *
@@ -42,8 +27,8 @@ class ClosureTableServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('command.closuretable.make', function ($app) {
-            return $app['Franzose\ClosureTable\Console\MakeCommand'];
+        $this->app->singleton('command.closuretable.make', static function ($app) {
+            return $app[MakeCommand::class];
         });
 
         $this->commands('command.closuretable.make');
@@ -56,7 +41,7 @@ class ClosureTableServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return array();
+        return [];
     }
 
 }
