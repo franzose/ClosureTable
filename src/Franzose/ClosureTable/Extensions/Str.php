@@ -13,7 +13,7 @@ class Str
     /**
      * Makes appropriate class name from given string.
      *
-     * @param $name
+     * @param string $name
      * @return string
      */
     public static function classify($name)
@@ -24,7 +24,7 @@ class Str
     /**
      * Makes database table name from given class name.
      *
-     * @param $name
+     * @param string $name
      * @return string
      */
     public static function tableize($name)
