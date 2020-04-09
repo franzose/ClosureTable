@@ -19,8 +19,8 @@
         "orchestra/testbench": "3.4.12"
     },
     "autoload": {
-        "psr-0": {
-            "Franzose\\ClosureTable": "src/"
+        "psr-4": {
+            "Franzose\\ClosureTable\\": "src/"
         }
     },
     "autoload-dev": {
