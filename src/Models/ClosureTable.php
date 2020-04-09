@@ -45,26 +45,38 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function insertNode($ancestorId, $descendantId)
     {
+        $rows = $this->selectRowsToInsert($ancestorId, $descendantId);
+
+        if (count($rows) > 0) {
+            $this->insert($rows);
+        }
+    }
+
+    private function selectRowsToInsert($ancestorId, $descendantId)
+    {
         $table = $this->getPrefixedTable();
         $ancestor = $this->getAncestorColumn();
         $descendant = $this->getDescendantColumn();
         $depth = $this->getDepthColumn();
 
-        $query = "
-            INSERT INTO {$table} ({$ancestor}, {$descendant}, {$depth})
-            SELECT tbl.{$ancestor}, ?, tbl.{$depth}+1
+        $select = "
+            SELECT tbl.{$ancestor} AS ancestor, ? AS descendant, tbl.{$depth}+1 AS depth
             FROM {$table} AS tbl
             WHERE tbl.{$descendant} = ?
             UNION ALL
-            SELECT ?, ?, 0
+            SELECT ? AS ancestor, ? AS descendant, 0 AS depth
         ";
 
-        $this->getConnection()->statement($query, [
+        $rows = $this->getConnection()->select($select, [
             $descendantId,
             $ancestorId,
             $descendantId,
             $descendantId
         ]);
+
+        return array_map(static function ($row) {
+            return (array) $row;
+        }, $rows);
     }
 
     /**
