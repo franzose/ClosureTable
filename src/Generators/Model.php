@@ -33,9 +33,9 @@ class Model extends Generator
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'namespace' => $nsplaceholder,
-            'entity_class' => $options['entity'],
+            'entity_class' => ucfirst($options['entity']),
             'entity_table' => $options['entity-table'],
-            'closure_class' => $options['namespace'] . '\\' . $options['closure'],
+            'closure_class' => $options['namespace'] . '\\' . ucfirst($options['closure']),
         ]));
 
         // Second, we make closure classes
@@ -44,7 +44,7 @@ class Model extends Generator
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'namespace' => $nsplaceholder,
-            'closure_class' => $options['closure'],
+            'closure_class' => ucfirst($options['closure']),
             'closure_table' => $options['closure-table']
         ]));
 
