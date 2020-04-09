@@ -37,21 +37,22 @@ class MakeCommand extends Command
      *
      * @var \Franzose\ClosureTable\Generators\Migration
      */
-    protected $migrator;
+    private $migrator;
 
     /**
      * Models generator instance.
      *
      * @var \Franzose\ClosureTable\Generators\Model
      */
-    protected $modeler;
+    private $modeler;
 
     /**
      * User input arguments.
      *
      * @var array
      */
-    protected $options;
+    private $options;
+
     /**
      * @var Composer
      */
