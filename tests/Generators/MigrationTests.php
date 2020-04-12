@@ -27,29 +27,19 @@ class MigrationTests extends TestCase
 
         Carbon::setTestNow();
 
-        $entityMigrationPath = __DIR__ . '/2020_04_03_000000_create_entities_table.php';
-        $closureMigrationPath = __DIR__ . '/2020_04_03_000001_create_entity_trees_table.php';
+        $entityMigrationPath = __DIR__ . '/2020_04_03_000000_create_entities_table_migration.php';
 
         static::assertFileExists($entityMigrationPath);
-        static::assertFileExists($closureMigrationPath);
 
         $expectedEntityMigrationPath = sprintf(
-            '%s/expectedEntity%sMigration.php',
-            __DIR__,
-            $useInnoDb ? 'InnoDb' : ''
-        );
-
-        $expectedClosureMigrationPath = sprintf(
-            '%s/expectedClosure%sMigration.php',
+            '%s/expectedMigration%s.php',
             __DIR__,
             $useInnoDb ? 'InnoDb' : ''
         );
 
         static::assertFileEquals($expectedEntityMigrationPath, $entityMigrationPath);
-        static::assertFileEquals($expectedClosureMigrationPath, $closureMigrationPath);
 
         unlink($entityMigrationPath);
-        unlink($closureMigrationPath);
     }
 
     public function useInnoDbDataProvider()

@@ -2,7 +2,6 @@
 namespace Franzose\ClosureTable\Generators;
 
 use Carbon\Carbon;
-use DateTime;
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
 
 /**
@@ -20,36 +19,25 @@ class Migration extends Generator
      */
     public function create(array $options)
     {
-        $paths = [];
-
         $entityClass = $this->getClassName($options['entity-table']);
         $closureClass = $this->getClassName($options['closure-table']);
         $innoDb = $options['use-innodb'] ? '$table->engine = \'InnoDB\';' : '';
 
-        $dateTime = Carbon::now();
+        $path = $this->getPath($options['entity-table'], $options['migrations-path']);
+        $stub = $this->getStub('migration', 'migrations');
 
-        $paths[] = $path = $this->getPath($dateTime, $options['entity-table'], $options['migrations-path']);
-        $stub = $this->getStub('entity', 'migrations');
+        $this->filesystem->put(
+            $path,
+            $this->parseStub($stub, [
+                'entity_table' => $options['entity-table'],
+                'entity_class' => $entityClass,
+                'closure_table' => $options['closure-table'],
+                'closure_class' => $closureClass,
+                'innodb' => $innoDb
+            ])
+        );
 
-        $this->filesystem->put($path, $this->parseStub($stub, [
-            'entity_table' => $options['entity-table'],
-            'entity_class' => $entityClass,
-            'innodb' => $innoDb
-        ]));
-
-        $dateTime->addSecond();
-
-        $paths[] = $path = $this->getPath($dateTime, $options['closure-table'], $options['migrations-path']);
-        $stub = $this->getStub('closuretable', 'migrations');
-
-        $this->filesystem->put($path, $this->parseStub($stub, [
-            'closure_table' => $options['closure-table'],
-            'closure_class' => $closureClass,
-            'entity_table' => $options['entity-table'],
-            'innodb' => $innoDb
-        ]));
-
-        return $paths;
+        return [$path];
     }
 
     /**
@@ -77,14 +65,12 @@ class Migration extends Generator
     /**
      * Constructs path to migration file in Laravel style.
      *
-     * @param DateTime $dateTime
-     * @param string $name
-     * @param string $path
-     *
+     * @param $name
+     * @param $path
      * @return string
      */
-    protected function getPath(DateTime $dateTime, $name, $path)
+    protected function getPath($name, $path)
     {
-        return $path . '/' . $dateTime->format('Y_m_d_His') . '_' . $this->getName($name) . '.php';
+        return $path . '/' . Carbon::now()->format('Y_m_d_His') . '_' . $this->getName($name) . '_migration.php';
     }
 }

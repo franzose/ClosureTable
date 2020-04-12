@@ -1,13 +1,14 @@
 <?php
+
 namespace Franzose\ClosureTable\Console;
 
-use Illuminate\Console\DetectsApplicationNamespace;
-use Illuminate\Console\Command;
-use Illuminate\Support\Composer;
-use Symfony\Component\Console\Input\InputOption;
+use Franzose\ClosureTable\Extensions\Str as ExtStr;
 use Franzose\ClosureTable\Generators\Migration;
 use Franzose\ClosureTable\Generators\Model;
-use Franzose\ClosureTable\Extensions\Str as ExtStr;
+use Illuminate\Console\Command;
+use Illuminate\Container\Container;
+use Illuminate\Support\Composer;
+use Symfony\Component\Console\Input\InputOption;
 
 /**
  * ClosureTable scaffolding command, created migrations and models.
@@ -16,8 +17,6 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
  */
 class MakeCommand extends Command
 {
-    use DetectsApplicationNamespace;
-
     /**
      * The console command name.
      *
@@ -153,7 +152,7 @@ class MakeCommand extends Command
 
         $lastnsdelim = strrpos($input[1], '\\');
 
-        $this->options[$options[0][0]] = $input[0] ?: rtrim($this->getAppNamespace(), '\\');
+        $this->options[$options[0][0]] = $input[0] ?: rtrim(Container::getInstance()->getNamespace(), '\\');
         $this->options[$options[1][0]] = substr($input[1], $lastnsdelim);
         $this->options[$options[2][0]] = $input[2] ?: ExtStr::tableize($input[1]);
         $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]] . 'Closure';
