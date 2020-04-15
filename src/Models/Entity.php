@@ -8,7 +8,6 @@ use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
-use Throwable;
 
 /**
  * Basic entity class.
@@ -910,7 +909,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @return Entity
      * @throws InvalidArgumentException
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function addChildren(array $children, $from = null)
     {
@@ -935,7 +934,7 @@ class Entity extends Eloquent implements EntityInterface
      * @param bool $forceDelete
      *
      * @return $this
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function removeChild($position = null, $forceDelete = false)
     {
@@ -973,7 +972,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @return $this
      * @throws InvalidArgumentException
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function removeChildren($from, $to = null, $forceDelete = false)
     {
