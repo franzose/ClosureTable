@@ -28,10 +28,14 @@ matrix:
       env: LARAVEL_VERSION=5.6.*
     - php: 7.0
       env: LARAVEL_VERSION=5.6.*
+    - php: 7.4
+      env: LARAVEL_VERSION=5.6.*
     - php: 5.6
       env: LARAVEL_VERSION=5.7.*
     - php: 7.0
       env: LARAVEL_VERSION=5.7.*
+    - php: 7.4
+      env: LARAVEL_VERSION=5.7.*
     - php: 5.6
       env: LARAVEL_VERSION=5.8.*
     - php: 7.0
@@ -50,14 +54,24 @@ matrix:
       env: LARAVEL_VERSION=7.*
     - php: 7.1
       env: LARAVEL_VERSION=7.*
+    - php: 7.1
+      env: LARAVEL_VERSION=5.4.*
+    - php: 7.2
+      env: LARAVEL_VERSION=5.4.*
+    - php: 7.3
+      env: LARAVEL_VERSION=5.4.*
+    - php: 7.4
+      env: LARAVEL_VERSION=5.4.*
 
 jobs:
   fast_finish: true
 
 sudo: false
 
+# ensure that the specific Laravel version is required
 before_install:
-  # ensure that the specific Laravel version is required
+  - php -r "file_put_contents('tests/BaseTestCase.php', str_replace('public function setUp()', version_compare(phpversion(), '7.1', '<') ? 'public function setUp()' : 'public function setUp(): void',file_get_contents('tests/BaseTestCase.php')));"
+  - php -r "file_put_contents('tests/BaseTestCase.php', str_replace('public function tearDown()', version_compare(phpversion(), '7.1', '<') ? 'public function tearDown()' : 'public function tearDown(): void',file_get_contents('tests/BaseTestCase.php')));"
   - composer require "laravel/framework:${LARAVEL_VERSION}" --no-update
 
 install: travis_retry composer update --no-interaction --prefer-dist
