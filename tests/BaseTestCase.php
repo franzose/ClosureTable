@@ -15,7 +15,7 @@ abstract class BaseTestCase extends TestCase
 {
     const DATABASE_CONNECTION = 'closuretable';
 
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
@@ -32,7 +32,7 @@ abstract class BaseTestCase extends TestCase
         ]);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // this is to avoid "too many connection" errors
         DB::disconnect(static::DATABASE_CONNECTION);
