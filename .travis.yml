@@ -68,6 +68,8 @@ branches:
   only:
     - master
     - feature/laravel-5
+    - 6.x
+    - travis-ci-for-6.x
     # version tag, e.g. v1.0.0
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
     - /^\d+\.\d+?$/
