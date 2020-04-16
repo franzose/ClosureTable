@@ -22,12 +22,16 @@ matrix:
   exclude:
     - php: 5.6
       env: LARAVEL_VERSION=5.5.*
+    - php: 7.0
+      env: LARAVEL_VERSION=5.5.*
     - php: 7.2
       env: LARAVEL_VERSION=5.5.*
     - php: 7.3
       env: LARAVEL_VERSION=5.5.*
     - php: 7.4
       env: LARAVEL_VERSION=5.5.*
+    - php: 5.6
+      env: LARAVEL_VERSION=5.6.*
     - php: 7.3
       env: LARAVEL_VERSION=5.6.*
     - php: 7.4
@@ -70,7 +74,7 @@ sudo: false
 
 before_install:
   # ensure that the specific Laravel version is required
-  - composer require "illuminate/support:${LARAVEL_VERSION}" --no-update
+  - composer require "laravel/framework:${LARAVEL_VERSION}" --no-update
   - cat composer.json
   - echo ${LARAVEL_VERSION}
 
@@ -84,7 +88,6 @@ script: vendor/bin/phpunit
 branches:
   only:
     - master
-    - feature/laravel-5
     - 6.x
     - travis-ci-for-6.x
     # version tag, e.g. v1.0.0
