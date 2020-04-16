@@ -79,10 +79,8 @@ sudo: false
 before_install:
   # ensure that the specific Laravel version is required
   - composer require "laravel/framework:${LARAVEL_VERSION}" --no-update
-  - cat composer.json
-  - echo ${LARAVEL_VERSION}
 
-install: travis_retry composer install --no-interaction --prefer-dist --dry-run
+install: travis_retry composer update --no-interaction --prefer-dist
 
 before_script:
   - mysql -e 'create database closuretabletest;'
