@@ -77,7 +77,10 @@ install: composer update --no-interaction --prefer-dist
 before_script:
   - mysql -e 'create database closuretabletest;'
 
-script: vendor/bin/phpunit
+script: 
+  - php -r "file_put_contents('tests/BaseTestCase.php', str_replace('public function setUp()', version_compare(phpversion(), '7.1', '<') ? 'public function setUp()' : 'public function setUp(): void',file_get_contents('tests/BaseTestCase.php')));"
+  - php -r "file_put_contents('tests/BaseTestCase.php', str_replace('public function tearDown()', version_compare(phpversion(), '7.1', '<') ? 'public function tearDown()' : 'public function tearDown(): void',file_get_contents('tests/BaseTestCase.php')));"
+  - vendor/bin/phpunit
 
 branches:
   only:
