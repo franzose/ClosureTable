@@ -70,8 +70,6 @@ sudo: false
 
 # ensure that the specific Laravel version is required
 before_install:
-  - php -r "file_put_contents('tests/BaseTestCase.php', str_replace('public function setUp()', version_compare(phpversion(), '7.1', '<') ? 'public function setUp()' : 'public function setUp(): void',file_get_contents('tests/BaseTestCase.php')));"
-  - php -r "file_put_contents('tests/BaseTestCase.php', str_replace('public function tearDown()', version_compare(phpversion(), '7.1', '<') ? 'public function tearDown()' : 'public function tearDown(): void',file_get_contents('tests/BaseTestCase.php')));"
   - composer require "laravel/framework:${LARAVEL_VERSION}" --no-update
 
 install: travis_retry composer update --no-interaction --prefer-dist
