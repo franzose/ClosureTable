@@ -15,7 +15,7 @@ abstract class BaseTestCase extends TestCase
 {
     const DATABASE_CONNECTION = 'closuretable';
 
-    public function setUp(): void
+    public function setUp()
     {
         parent::setUp();
 

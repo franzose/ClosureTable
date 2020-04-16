@@ -72,7 +72,7 @@ sudo: false
 before_install:
   - composer require "laravel/framework:${LARAVEL_VERSION}" --no-update
 
-install: travis_retry composer update --no-interaction --prefer-dist
+install: composer update --no-interaction --prefer-dist
 
 before_script:
   - mysql -e 'create database closuretabletest;'
