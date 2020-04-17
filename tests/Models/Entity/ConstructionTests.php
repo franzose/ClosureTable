@@ -35,36 +35,16 @@ class ConstructionTests extends BaseTestCase
         static::assertEquals($entity->getTable() . '_closure', $closure->getTable());
     }
 
-    public function testNewFromBuilder()
-    {
-        $entity = new Entity([
-            'parent_id' => 123,
-            'position' => 5
-        ]);
-
-        $newEntity = $entity->newFromBuilder([
-            'parent_id' => 321,
-            'position' => 0
-        ]);
-
-        static::assertEquals(321, static::readAttribute($newEntity, 'previousParentId'));
-        static::assertEquals(0, static::readAttribute($newEntity, 'previousPosition'));
-    }
-
     public function testCreate()
     {
         $entity = new Page(['title' => 'Item 1']);
 
         static::assertEquals(null, $entity->position);
-        static::assertEquals(null, static::readAttribute($entity, 'previousPosition'));
         static::assertEquals(null, $entity->parent_id);
-        static::assertEquals(null, static::readAttribute($entity, 'previousParentId'));
 
         $entity->save();
 
         static::assertEquals(9, $entity->position);
-        static::assertEquals(null, static::readAttribute($entity, 'previousPosition'));
         static::assertEquals(null, $entity->parent_id);
-        static::assertEquals(null, static::readAttribute($entity, 'previousParentId'));
     }
 }
