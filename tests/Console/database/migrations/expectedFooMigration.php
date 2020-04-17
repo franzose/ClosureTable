@@ -3,11 +3,11 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class {{entity_class}}Migration extends Migration
+class CreateFoosTableMigration extends Migration
 {
     public function up()
     {
-        Schema::create('{{entity_table}}', function (Blueprint $table) {
+        Schema::create('foo', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('parent_id')->unsigned()->nullable();
             $table->integer('position', false, true);
@@ -15,12 +15,13 @@ class {{entity_class}}Migration extends Migration
 
             $table->foreign('parent_id')
                 ->references('id')
-                ->on('{{entity_table}}')
+                ->on('foo')
                 ->onDelete('set null');
-{{innodb}}
+
+            $table->engine = 'InnoDB';
         });
 
-        Schema::create('{{closure_table}}', function (Blueprint $table) {
+        Schema::create('foo_tree', function (Blueprint $table) {
             $table->increments('closure_id');
 
             $table->integer('ancestor', false, true);
@@ -29,20 +30,21 @@ class {{entity_class}}Migration extends Migration
 
             $table->foreign('ancestor')
                 ->references('id')
-                ->on('{{entity_table}}')
+                ->on('foo')
                 ->onDelete('cascade');
 
             $table->foreign('descendant')
                 ->references('id')
-                ->on('{{entity_table}}')
+                ->on('foo')
                 ->onDelete('cascade');
-{{innodb}}
+
+            $table->engine = 'InnoDB';
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('{{closure_table}}');
-        Schema::dropIfExists('{{entity_table}}');
+        Schema::dropIfExists('foo_tree');
+        Schema::dropIfExists('foo');
     }
 }

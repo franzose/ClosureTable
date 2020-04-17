@@ -21,7 +21,7 @@ class Migration extends Generator
     {
         $entityClass = $this->getClassName($options['entity-table']);
         $closureClass = $this->getClassName($options['closure-table']);
-        $innoDb = $options['use-innodb'] ? '$table->engine = \'InnoDB\';' : '';
+        $innoDb = $options['use-innodb'] ? "\n" . '            $table->engine = \'InnoDB\';' : '';
 
         $path = $this->getPath($options['entity-table'], $options['migrations-path']);
         $stub = $this->getStub('migration', 'migrations');

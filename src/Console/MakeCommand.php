@@ -6,8 +6,8 @@ use Franzose\ClosureTable\Extensions\Str as ExtStr;
 use Franzose\ClosureTable\Generators\Migration;
 use Franzose\ClosureTable\Generators\Model;
 use Illuminate\Console\Command;
-use Illuminate\Container\Container;
 use Illuminate\Support\Composer;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
@@ -117,6 +117,13 @@ class MakeCommand extends Command
         }
     }
 
+    protected function getArguments()
+    {
+        return [
+            ['entity', InputArgument::REQUIRED, 'Class name of the entity model']
+        ];
+    }
+
     /**
      * Gets the console command options.
      *
@@ -126,7 +133,6 @@ class MakeCommand extends Command
     {
         return [
             ['namespace', 'ns', InputOption::VALUE_OPTIONAL, 'Namespace for entity and closure classes'],
-            ['entity', 'e', InputOption::VALUE_REQUIRED, 'Class name of the entity model'],
             ['entity-table', 'et', InputOption::VALUE_OPTIONAL, 'Entity table name'],
             ['closure', 'c', InputOption::VALUE_OPTIONAL, 'Class name of the closure (relationships) model'],
             ['closure-table', 'ct', InputOption::VALUE_OPTIONAL, 'Closure (relationships) table name'],
@@ -143,22 +149,35 @@ class MakeCommand extends Command
      */
     protected function prepareOptions()
     {
+        $entity = $this->argument('entity');
         $options = $this->getOptions();
-        $input = [];
+        $input = array_map(function (array $option) {
+            return $this->option($option[0]);
+        }, $this->getOptions());
 
-        foreach ($options as $option) {
-            $input[] = $this->option($option[0]);
+        $this->options[$options[0][0]] = $input[0]
+            ?: substr($entity, 0, strrpos($entity, '\\'))
+            ?: rtrim(app()->getNamespace(), '\\');
+        $this->options['entity'] = $this->getEntityModelName($entity);
+        $this->options[$options[1][0]] = $input[1] ?: ExtStr::tableize($this->options['entity']);
+        $this->options[$options[2][0]] = $input[2]
+            ? $this->getEntityModelName($input[2])
+            : $this->options['entity'] . 'Closure';
+
+        $this->options[$options[3][0]] = $input[3] ?: ExtStr::snake($this->options[$options[2][0]]);
+        $this->options[$options[4][0]] = $input[4] ?: app_path();
+        $this->options[$options[5][0]] = $input[5] ?: app()->databasePath('migrations');
+        $this->options[$options[6][0]] = $input[6] ?: false;
+    }
+
+    private function getEntityModelName($original)
+    {
+        $delimpos = strrpos($original, '\\');
+
+        if ($delimpos === false) {
+            return $original;
         }
 
-        $lastnsdelim = strrpos($input[1], '\\');
-
-        $this->options[$options[0][0]] = $input[0] ?: rtrim(Container::getInstance()->getNamespace(), '\\');
-        $this->options[$options[1][0]] = substr($input[1], $lastnsdelim);
-        $this->options[$options[2][0]] = $input[2] ?: ExtStr::tableize($input[1]);
-        $this->options[$options[3][0]] = $input[3] ?: $this->options[$options[1][0]] . 'Closure';
-        $this->options[$options[4][0]] = $input[4] ?: ExtStr::tableize($input[1] . 'Closure');
-        $this->options[$options[5][0]] = $input[5] ?: './app';
-        $this->options[$options[6][0]] = $input[6] ?: './database/migrations';
-        $this->options[$options[7][0]] = $input[7] ?: false;
+        return substr($original, $delimpos + 1);
     }
 }

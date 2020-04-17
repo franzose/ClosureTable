@@ -2,6 +2,7 @@
 namespace Franzose\ClosureTable\Generators;
 
 use Franzose\ClosureTable\Extensions\Str as ExtStr;
+use Illuminate\Support\Str;
 
 /**
  * ClosureTable specific models generator class.
@@ -30,12 +31,16 @@ class Model extends Generator
         // First, we make entity classes
         $paths[] = $path = $this->getPath($qualifiedEntityName, $options['models-path']);
         $stub = $this->getStub('entity', 'models');
+        $closureClass = ucfirst($options['closure']);
+        $namespaceWithDelimiter = $options['namespace'] . '\\';
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'namespace' => $nsplaceholder,
             'entity_class' => ucfirst($options['entity']),
             'entity_table' => $options['entity-table'],
-            'closure_class' => $options['namespace'] . '\\' . ucfirst($options['closure']),
+            'closure_class' => Str::startsWith($closureClass, $namespaceWithDelimiter)
+                ? $closureClass
+                : $namespaceWithDelimiter . $closureClass,
         ]));
 
         // Second, we make closure classes
@@ -44,7 +49,7 @@ class Model extends Generator
 
         $this->filesystem->put($path, $this->parseStub($stub, [
             'namespace' => $nsplaceholder,
-            'closure_class' => ucfirst($options['closure']),
+            'closure_class' => $closureClass,
             'closure_table' => $options['closure-table']
         ]));
 
@@ -60,6 +65,11 @@ class Model extends Generator
      */
     protected function getPath($name, $path)
     {
-        return $path . '/' . ExtStr::classify($name) . '.php';
+        $delimpos = strrpos($name, '\\');
+        $filename = $delimpos === false
+            ? ExtStr::classify($name)
+            : substr(ExtStr::classify($name), $delimpos + 1);
+
+        return $path . '/' . $filename . '.php';
     }
 }
