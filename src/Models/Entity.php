@@ -1756,7 +1756,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function moveTo($position, $ancestor = null)
     {
-        $parentId = (!$ancestor instanceof EntityInterface ? $ancestor : $ancestor->getKey());
+        $parentId = $ancestor instanceof self ? $ancestor->getKey() : $ancestor;
 
         if ($this->parent_id === $parentId && $this->parent_id !== null) {
             return $this;
