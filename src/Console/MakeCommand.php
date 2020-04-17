@@ -125,14 +125,14 @@ class MakeCommand extends Command
     protected function getOptions()
     {
         return [
-            ['namespace', 'ns', InputOption::VALUE_OPTIONAL, 'Namespace for entity and its closure.'],
-            ['entity', 'e', InputOption::VALUE_REQUIRED, 'Entity class name.'],
-            ['entity-table', 'et', InputOption::VALUE_OPTIONAL, 'Entity table name.'],
-            ['closure', 'c', InputOption::VALUE_OPTIONAL, 'Closure class name'],
-            ['closure-table', 'ct', InputOption::VALUE_OPTIONAL, 'Closure table name.'],
-            ['models-path', 'mdl', InputOption::VALUE_OPTIONAL, 'Models path.'],
-            ['migrations-path', 'mgr', InputOption::VALUE_OPTIONAL, 'Migrations path.'],
-            ['use-innodb', 'i', InputOption::VALUE_OPTIONAL, 'Use InnoDB tables.'],
+            ['namespace', 'ns', InputOption::VALUE_OPTIONAL, 'Namespace for entity and closure classes'],
+            ['entity', 'e', InputOption::VALUE_REQUIRED, 'Class name of the entity model'],
+            ['entity-table', 'et', InputOption::VALUE_OPTIONAL, 'Entity table name'],
+            ['closure', 'c', InputOption::VALUE_OPTIONAL, 'Class name of the closure (relationships) model'],
+            ['closure-table', 'ct', InputOption::VALUE_OPTIONAL, 'Closure (relationships) table name'],
+            ['models-path', 'mdl', InputOption::VALUE_OPTIONAL, 'Directory in which to put generated models'],
+            ['migrations-path', 'mgr', InputOption::VALUE_OPTIONAL, 'Directory in which to put generated migrations'],
+            ['use-innodb', 'i', InputOption::VALUE_OPTIONAL, 'Use InnoDB engine (MySQL only)'],
         ];
     }
 
