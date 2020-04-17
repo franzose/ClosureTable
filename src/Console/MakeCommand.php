@@ -155,9 +155,7 @@ class MakeCommand extends Command
             return $this->option($option[0]);
         }, $this->getOptions());
 
-        $this->options[$options[0][0]] = $input[0]
-            ?: substr($entity, 0, strrpos($entity, '\\'))
-            ?: rtrim(app()->getNamespace(), '\\');
+        $this->options[$options[0][0]] = $this->getNamespace($entity, $input[0]);
         $this->options['entity'] = $this->getEntityModelName($entity);
         $this->options[$options[1][0]] = $input[1] ?: ExtStr::tableize($this->options['entity']);
         $this->options[$options[2][0]] = $input[2]
@@ -168,6 +166,21 @@ class MakeCommand extends Command
         $this->options[$options[4][0]] = $input[4] ?: app_path();
         $this->options[$options[5][0]] = $input[5] ?: app()->databasePath('migrations');
         $this->options[$options[6][0]] = $input[6] ?: false;
+    }
+
+    private function getNamespace($entity, $original)
+    {
+        if (!empty($original)) {
+            return $original;
+        }
+
+        $namespace = substr($entity, 0, strrpos($entity, '\\'));
+
+        if (!empty($namespace)) {
+            return $namespace;
+        }
+
+        return rtrim(app()->getNamespace(), '\\');
     }
 
     private function getEntityModelName($original)
