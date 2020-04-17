@@ -132,10 +132,10 @@ class MakeCommand extends Command
     protected function getOptions()
     {
         return [
-            ['namespace', 'ns', InputOption::VALUE_OPTIONAL, 'Namespace for entity and closure classes'],
-            ['entity-table', 'et', InputOption::VALUE_OPTIONAL, 'Entity table name'],
+            ['namespace', 'ns', InputOption::VALUE_OPTIONAL, 'Namespace for entity and closure classes. Once given, it will override namespaces of the models of entity and closure'],
+            ['entity-table', 'et', InputOption::VALUE_OPTIONAL, 'Database table name for entity'],
             ['closure', 'c', InputOption::VALUE_OPTIONAL, 'Class name of the closure (relationships) model'],
-            ['closure-table', 'ct', InputOption::VALUE_OPTIONAL, 'Closure (relationships) table name'],
+            ['closure-table', 'ct', InputOption::VALUE_OPTIONAL, 'Database table name for closure (relationships)'],
             ['models-path', 'mdl', InputOption::VALUE_OPTIONAL, 'Directory in which to put generated models'],
             ['migrations-path', 'mgr', InputOption::VALUE_OPTIONAL, 'Directory in which to put generated migrations'],
             ['use-innodb', 'i', InputOption::VALUE_OPTIONAL, 'Use InnoDB engine (MySQL only)'],
