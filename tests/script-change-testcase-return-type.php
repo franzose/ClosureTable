@@ -9,12 +9,19 @@ if (PHP_VERSION_ID < 70100) {
     exit(0);
 }
 
-$filesToPatch = [
-    'tests/BaseTestCase.php',
-    'tests/Console/MakeCommandTests.php'
-];
+require_once './vendor/autoload.php';
 
-foreach ($filesToPatch as $path) {
+use Symfony\Component\Finder\Finder;
+
+$finder = new Finder();
+$finder->files()
+    ->ignoreVCS(false)
+    ->in(__DIR__)
+    ->name('*.php')
+    ->notName('script-change-testcase-return-type.php')->contains('use Orchestra\Testbench\TestCase;');
+
+foreach ($finder as $file) {
+    $absoluteFilePath = $file->getRealPath();
     $contents = file_get_contents($path);
     $contents = str_replace(
         ['public function setUp()', 'public function tearDown()'],
