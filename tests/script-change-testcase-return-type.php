@@ -18,10 +18,11 @@ $finder->files()
     ->ignoreVCS(false)
     ->in(__DIR__)
     ->name('*.php')
-    ->notName('script-change-testcase-return-type.php')->contains('use Orchestra\Testbench\TestCase;');
+    ->notName('script-change-testcase-return-type.php')
+    ->contains('use Orchestra\Testbench\TestCase;');
 
 foreach ($finder as $file) {
-    $absoluteFilePath = $file->getRealPath();
+    $path = $file->getRealPath();
     $contents = file_get_contents($path);
     $contents = str_replace(
         ['public function setUp()', 'public function tearDown()'],
