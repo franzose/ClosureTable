@@ -277,7 +277,7 @@ class Entity extends Eloquent implements EntityInterface
 
         static::saving(static function (Entity $entity) {
             if ($entity->isDirty($entity->getPositionColumn())) {
-                $latest = $entity->getLatestPosition();
+                $latest = static::getLatestPosition($entity);
 
                 if (!$entity->isMoved) {
                     $latest--;
@@ -285,7 +285,7 @@ class Entity extends Eloquent implements EntityInterface
 
                 $entity->position = max(0, min($entity->position, $latest));
             } elseif (!$entity->exists) {
-                $entity->position = $entity->getLatestPosition();
+                $entity->position = static::getLatestPosition($entity);
             }
         });
 
@@ -1571,7 +1571,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false)
     {
         if ($this->exists) {
-            $position = $position === null ? $this->getLatestPosition() : $position;
+            $position = $position === null ? static::getLatestPosition($this) : $position;
 
             $sibling->moveTo($position, $this->parent_id);
 
@@ -1598,7 +1598,7 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
-        $from = $from === null ? $this->getLatestPosition() : $from;
+        $from = $from === null ? static::getLatestPosition($this) : $from;
 
         $this->transactional(function () use ($siblings, &$from) {
             foreach ($siblings as $sibling) {
@@ -1779,19 +1779,21 @@ class Entity extends Eloquent implements EntityInterface
     /**
      * Gets the next sibling position after the last one.
      *
+     * @param Entity $entity
+     *
      * @return int
      */
-    private function getLatestPosition()
+    public static function getLatestPosition(Entity $entity)
     {
-        $positionColumn = $this->getPositionColumn();
-        $parentIdColumn = $this->getParentIdColumn();
+        $positionColumn = $entity->getPositionColumn();
+        $parentIdColumn = $entity->getParentIdColumn();
 
-        $entity = $this->select($positionColumn)
-            ->where($parentIdColumn, '=', $this->parent_id)
+        $latest = $entity->select($positionColumn)
+            ->where($parentIdColumn, '=', $entity->parent_id)
             ->latest($positionColumn)
             ->first();
 
-        $position = $entity !== null ? $entity->position : -1;
+        $position = $latest !== null ? $latest->position : -1;
 
         return $position + 1;
     }
