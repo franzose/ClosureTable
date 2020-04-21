@@ -301,7 +301,7 @@ class Entity extends Eloquent implements EntityInterface
             $entity->closure->insertNode($ancestor, $descendant);
         });
 
-        static::saved(static function (Entity $entity) {
+        static::saved(function (Entity $entity) {
             $parentIdChanged = $entity->isDirty($entity->getParentIdColumn());
 
             if ($parentIdChanged || $entity->isDirty($entity->getPositionColumn())) {
