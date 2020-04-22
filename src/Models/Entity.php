@@ -1801,14 +1801,9 @@ class Entity extends Eloquent implements EntityInterface
     /**
      * Reorders node's siblings when it is moved to another position or ancestor.
      *
-     * This method must not be invoked directly, it's been made public
-     * to overcome visibility issue on the older PHP versions
-     * and is the subject to become private again in a future release.
-     *
      * @return void
-     * @internal
      */
-    public function reorderSiblings()
+    private function reorderSiblings()
     {
         $position = $this->getPositionColumn();
 
