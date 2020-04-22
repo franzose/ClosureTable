@@ -301,7 +301,7 @@ class Entity extends Eloquent implements EntityInterface
             $entity->closure->insertNode($ancestor, $descendant);
         });
 
-        static::saved(function (Entity $entity) {
+        static::saved(static function (Entity $entity) {
             $parentIdChanged = $entity->isDirty($entity->getParentIdColumn());
 
             if ($parentIdChanged || $entity->isDirty($entity->getPositionColumn())) {
@@ -1801,9 +1801,14 @@ class Entity extends Eloquent implements EntityInterface
     /**
      * Reorders node's siblings when it is moved to another position or ancestor.
      *
+     * This method must not be invoked directly, it's been made public
+     * to overcome visibility issue on the older PHP versions
+     * and is the subject to become private again in a future release.
+     *
      * @return void
+     * @internal
      */
-    private function reorderSiblings()
+    public function reorderSiblings()
     {
         $position = $this->getPositionColumn();
 
