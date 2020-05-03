@@ -3,219 +3,470 @@
 [![Latest Stable Version](https://poser.pugx.org/franzose/closure-table/v/stable.png)](https://packagist.org/packages/franzose/closure-table)
 [![Total Downloads](https://poser.pugx.org/franzose/closure-table/downloads.png)](https://packagist.org/packages/franzose/closure-table)
 
-## Branches
-1. <strong>L4</strong> supports Laravel 4
-2. <strong>L5.1</strong> supports Laravel < 5.2
-3. <strong>L5.3</strong> supports Laravel 5.2-5.3
-4. <strong>L5.4</strong> supports Laravel 5.4
-5. <strong>master</strong> is for any actual Laravel version, so be careful
-
-Hi, this is a database package for Laravel. It's intended to use when you need to operate hierarchical data in database. The package is an implementation of a well-known database design pattern called Closure Table. The package includes generators for models and migrations.
+This is a database manipulation package for the Laravel 5.4+ framework. You may want to use it when you need to store and operate hierarchical data in your database. The package is an implementation of a well-known design pattern called [closure table](https://www.slideshare.net/billkarwin/models-for-hierarchical-data). However, in order to simplify and optimize SQL `SELECT` queries, it uses adjacency lists to query direct parent/child relationships.
 
 ## Installation
-To install the package, put the following in your composer.json:
-
-```json
-"require": {
-	"franzose/closure-table": "4.*"
-}
-```
-
-And to `app/config/app.php`:
-```php
-'providers' => array(
-        // ...
-        'Franzose\ClosureTable\ClosureTableServiceProvider',
-    ),
-```
-
-## Setup your ClosureTable
-### Create models and migrations
-For example, let's assume you're working on pages. You can just use an `artisan` command to create models and migrations automatically without preparing all the stuff by hand. Open terminal and put the following:
-
+It's strongly recommended to use [Composer](https://getcomposer.org) to install the package:
 ```bash
-php artisan closuretable:make --entity=page
+$ composer require franzose/closure-table
 ```
 
-All options of the command:<br>
-1. `--namespace`, `-ns` _[optional]_: namespace for classes, set by `--entity` and `--closure` options, helps to avoid namespace duplication in those options<br>
-2. `--entity`, `-e`: entity class name; if namespaced name is used, then the default closure class name will be prepended with that namespace<br>
-3. `--entity-table`, `-et` _[optional]_: entity table name<br>
-4. `--closure`, `-c` _[optional]_: closure class name<br>
-5. `--closure-table` _[optional]_, `-ct`: closure table name<br>
-6. `--models-path`, `-mdl` _[optional]_: custom models path<br>
-7. `--migrations-path`, `-mgr` _[optional]_: custom migrations path<br>
-8.  `--use-innodb` and `-i` _[optional]_: InnoDB migrations have been made optional as well with new paramaters. Setting this will enable the InnoDB engine.
+If you use Laravel 5.5+, the package's service provider is automatically registered for you thanks to the [package auto-discovery](https://laravel.com/docs/7.x/packages#package-discovery) feature. Otherwise, you have to manually add it to your `config/app.php`:
+```php
+<?php
 
-That's almost all, folks! The ‘dummy’ stuff has just been created for you. You will need to add some fields to your entity migration because the created ‘dummy’ includes just **required** `id`, `parent_id`, `position`, and `real depth` columns:<br>
+return [
+    'providers' => [
+        Franzose\ClosureTable\ClosureTableServiceProvider::class
+    ]
+];
+```
 
-1. **`id`** is a regular autoincremented column<br>
-2. **`parent_id`** column is used to simplify immediate ancestor querying and, for example, to simplify building the whole tree<br>
-3. **`position`** column is used widely by the package to make entities sortable<br>
-4. **`real depth`** column is also used to simplify queries and reduce their number
+## Setup
+In a basic scenario, you can simply run the following command:
+```bash
+$ php artisan closuretable:make Node
+```
+Where `Node` is the name of the entity model. This is what you get from running the above:<br>
+1. Two models in the `app` directory: `App\Node` and `App\NodeClosure`<br>
+2. A new migration in the `database/migrations` directory
 
-By default, entity’s closure table includes the following columns:<br>
-1. **Autoincremented identifier**<br>
-2. **Ancestor column** points on a parent node<br>
-3. **Descendant column** points on a child node<br>
-4. **Depth column** shows a node depth in the tree
+As you can see, the command requires a single argument, name of the entity model. However, it accepts several options in order to provide some sort of customization:
+ Option          | Alias | Meaning 
+ ----------------| ------| -------
+ namespace       | ns    | Custom namespace for generated models. Keep in mind that the given namespace will override  model namespaces: `php artisan closuretable:make Foo\\Node --namespace=Qux --closure=Bar\\NodeTree` will generate `Qux\Node` and `Qux\NodeTree` models.
+ entity-table    | et    | Database table name for the entity model       
+ closure         | c     | Class name for the closure model
+ closure-table   | ct    | Database table name for the closure model
+ models-path     | mdl   | Directory in which to put generated models
+ migrations-path | mgr   | Directory in which to put generated migrations
+ use-innodb      | i     | This flag will tell the generator to set database engine to InnoDB. Useful only if you use MySQL
 
-It is by closure table pattern design, so remember that you must not delete these four columns.
+## Requirements
+You have to keep in mind that, by design of this package, the models/tables have a required minimum of attributes/columns:
+<table>
+<tr>
+<th colspan="2" valign="center">Entity</th>
+</tr>
+<tr>
+<th>Attribute/Column</th>
+<th>Customized by</th>
+<th>Meaning</th>
+</tr>
+<tr>
+<td>parent_id</td>
+<td>Entity::getParentIdColumn()</td>
+<td>ID of the node's immediate parent, simplifies queries for immediate parent/child nodes.</td>
+</tr>
+<tr>
+<td>position</td>
+<td>Entity::getPositionColumn()</td>
+<td>Node position, allows to order nodes of the same depth level</td>
+</tr>
+<tr>
+<th colspan="2" valign="center">ClosureTable</th>
+</tr>
+<tr>
+<th>Attribute/Column</th>
+<th>Customized by</th>
+<th>Meaning</th>
+</tr>
+<tr>
+<td>id</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>ancestor</td>
+<td>ClosureTable::getAncestorColumn()</td>
+<td>Parent (self, immediate, distant) node ID</td>
+</tr>
+<tr>
+<td>descendant</td>
+<td>ClosureTable::getDescendantColumn()</td>
+<td>Child (self, immediate, distant) node ID</td>
+</tr>
+<tr>
+<td>depth</td>
+<td>ClosureTable::getDepthColumn()</td>
+<td>Current nesting level, 0+</td>
+</tr>
+</table>
 
-Remember that many things are made customizable, so see ‘<a href="#customization">Customization</a>’ for more information.
+## Examples
+Okay, let's see what you can do by using ClosureTable.
 
-## Time of coding
-Once your models and their database tables are created, at last, you can start actually coding. Here I will show you ClosureTable's specific approaches.
-
-### Direct ancestor (parent)
+### Scopes
+Since ClosureTable 6, a lot of query scopes have become available in the Entity model:
 
 ```php
-$parent = Page::find(15)->getParent();
+ancestors()
+ancestorsOf($id)
+ancestorsWithSelf()
+ancestorsWithSelfOf($id)
+descendants()
+descendantsOf($id)
+descendantsWithSelf()
+descendantsWithSelfOf($id)
+childNode()
+childNodeOf($id)
+childAt(int $position)
+childOf($id, int $position)
+firstChild()
+firstChildOf($id)
+lastChild()
+lastChildOf($id)
+childrenRange(int $from, int $to = null)
+childrenRangeOf($id, int $from, int $to = null)
+sibling()
+siblingOf($id)
+siblings()
+siblingsOf($id)
+neighbors()
+neighborsOf($id)
+siblingAt(int $position)
+siblingOfAt($id, int $position)
+firstSibling()
+firstSiblingOf($id)
+lastSibling()
+lastSiblingOf($id)
+prevSibling()
+prevSiblingOf($id)
+prevSiblings()
+prevSiblingsOf($id)
+nextSibling()
+nextSiblingOf($id)
+nextSiblings()
+nextSiblingsOf($id)
+siblingsRange(int $from, int $to = null)
+siblingsRangeOf($id, int $from, int $to = null)
 ```
 
-### Ancestors
+You can learn how to use query scopes from the [Laravel documentation](https://laravel.com/docs/7.x/eloquent#query-scopes).
 
+### Examples
+In the examples, let's assume that we've set up a `Node` model which extends the `Franzose\ClosureTable\Models\Entity` model.
+
+**Parent/Root**
 ```php
-$page = Page::find(15);
-$ancestors = $page->getAncestors();
-$ancestors = $page->getAncestorsTree(); // Tree structure
-$ancestors = $page->getAncestorsWhere('position', '=', 1);
-$hasAncestors = $page->hasAncestors();
-$ancestorsNumber = $page->countAncestors();
+<?php
+$nodes = [
+    new Node(['id' => 1]),
+    new Node(['id' => 2]),
+    new Node(['id' => 3]),
+    new Node(['id' => 4, 'parent_id' => 1])
+];
+
+foreach ($nodes as $node) {
+    $node->save();
+}
+
+Node::getRoots()->pluck('id')->toArray(); // [1, 2, 3]
+Node::find(1)->isRoot(); // true
+Node::find(1)->isParent(); // true
+Node::find(4)->isRoot(); // false
+Node::find(4)->isParent(); // false
+
+// make node 4 a root at the fourth position (1 => 0, 2 => 1, 3 => 2, 4 => 3)
+$node = Node::find(4)->makeRoot(3);
+$node->isRoot(); // true
+$node->position; // 3
+
+Node::find(4)->moveTo(0, Node::find(2)); // same as Node::find(4)->moveTo(0, 2);
+Node::find(2)->getChildren()->pluck('id')->toArray(); // [4]
 ```
 
-### Direct descendants (children)
-
+**Ancestors**
 ```php
-$page = Page::find(15);
-$children = $page->getChildren();
-$hasChildren = $page->hasChildren();
-$childrenNumber = $page->countChildren();
+<?php
+$nodes = [
+    new Node(['id' => 1]),
+    new Node(['id' => 2, 'parent_id' => 1]),
+    new Node(['id' => 3, 'parent_id' => 2]),
+    new Node(['id' => 4, 'parent_id' => 3])
+];
 
-$newChild = new Page(array(
-	'title' => 'The title',
-	'excerpt' => 'The excerpt',
-	'content' => 'The content of a child'
-));
+foreach ($nodes as $node) {
+    $node->save();
+}
 
-$newChild2 = new Page(array(
-	'title' => 'The title',
-	'excerpt' => 'The excerpt',
-	'content' => 'The content of a child'
-));
-
-$page->addChild($newChild);
-
-//you can set child position
-$page->addChild($newChild, 5);
-
-//you can get the child
-$child = $page->addChild($newChild, null, true);
-
-$page->addChildren([$newChild, $newChild2]);
-
-$page->getChildAt(5);
-$page->getFirstChild();
-$page->getLastChild();
-$page->getChildrenRange(0, 2);
-
-$page->removeChild(0);
-$page->removeChild(0, true); //force delete
-$page->removeChildren(0, 3);
-$page->removeChildren(0, 3, true); //force delete
+Node::find(4)->getAncestors()->pluck('id')->toArray(); // [1, 2, 3]
+Node::find(4)->countAncestors(); // 3
+Node::find(4)->hasAncestors(); // true
+Node::find(4)->ancestors()->where('id', '>', 1)->get()->pluck('id')->toArray(); // [2, 3];
+Node::find(4)->ancestorsWithSelf()->where('id', '>', 1)->get()->pluck('id')->toArray(); // [2, 3, 4];
+Node::ancestorsOf(4)->where('id', '>', 1)->get()->pluck('id')->toArray(); // [2, 3];
+Node::ancestorsWithSelfOf(4)->where('id', '>', 1)->get()->pluck('id')->toArray(); // [2, 3, 4];
 ```
 
-### Descendants
+There are several methods that have been deprecated since ClosureTable 6:
 
+<table>
+<tr>
+<th>Deprecated</th>
+<th>Recommended</th>
+</tr>
+<tr>
+<td>
 ```php
-$page = Page::find(15);
-$descendants = $page->getDescendants();
-$descendants = $page->getDescendantsWhere('position', '=', 1);
-$descendantsTree = $page->getDescendantsTree();
-$hasDescendants = $page->hasDescendants();
-$descendantsNumber = $page->countDescendants();
+Node::find(4)->getAncestorsTree();
 ```
-
-### Siblings
-
+</td>
+<td>
 ```php
-$page  = Page::find(15);
-$first = $page->getFirstSibling(); //or $page->getSiblingAt(0);
-$last  = $page->getLastSibling();
-$atpos = $page->getSiblingAt(5);
-
-$prevOne = $page->getPrevSibling();
-$prevAll = $page->getPrevSiblings();
-$hasPrevs = $page->hasPrevSiblings();
-$prevsNumber = $page->countPrevSiblings();
-
-$nextOne = $page->getNextSibling();
-$nextAll = $page->getNextSiblings();
-$hasNext = $page->hasNextSiblings();
-$nextNumber = $page->countNextSiblings();
-
-//in both directions
-$hasSiblings = $page->hasSiblings();
-$siblingsNumber = $page->countSiblings();
-
-$sibligns = $page->getSiblingsRange(0, 2);
-
-$page->addSibling(new Page);
-$page->addSibling(new Page, 3); //third position
-
-//add and get the sibling
-$sibling = $page->addSibling(new Page, null, true);
-
-$page->addSiblings([new Page, new Page]);
-$page->addSiblings([new Page, new Page], 5); //insert from fifth position
+// use custom collection directly
+Node::find(4)->getAncestors()->toTree();
 ```
-
-### Roots (entities that have no ancestors)
-
+</td>
+</tr>
+<tr>
+<td>
 ```php
-$roots = Page::getRoots();
-$isRoot = Page::find(23)->isRoot();
-Page::find(11)->makeRoot(0); //at the moment we always have to set a position when making node a root
+Node::find(4)->getAncestorsWhere('id', '>', 1);
 ```
-
-### Entire tree
-
+</td>
+<td>
 ```php
-$tree = Page::getTree();
-$treeByCondition = Page::getTreeWhere('position', '>=', 1);
+// use dedicated query scope
+Node::find(4)->ancestors()->where('id', '>', 1)->get();
 ```
+</td>
+</tr>
+</table>
 
-You deal with the collection, thus you can control its items as you usually do. Descendants? They are already loaded.
-
+**Descendants**
 ```php
-$tree = Page::getTree();
-$page = $tree->find(15);
-$children = $page->getChildren();
-$child = $page->getChildAt(3);
-$grandchildren = $page->getChildAt(3)->getChildren(); //and so on
+<?php
+$nodes = [
+    new Node(['id' => 1]),
+    new Node(['id' => 2, 'parent_id' => 1]),
+    new Node(['id' => 3, 'parent_id' => 2]),
+    new Node(['id' => 4, 'parent_id' => 3])
+];
+
+foreach ($nodes as $node) {
+    $node->save();
+}
+
+Node::find(1)->getDescendants()->pluck('id')->toArray(); // [2, 3, 4]
+Node::find(1)->countDescendants(); // 3
+Node::find(1)->hasDescendants(); // true
+Node::find(1)->descendants()->where('id', '<', 4)->get()->pluck('id')->toArray(); // [2, 3];
+Node::find(1)->descendantsWithSelf()->where('id', '<', 4)->get()->pluck('id')->toArray(); // [1, 2, 3];
+Node::descendantsOf(1)->where('id', '<', 4)->get()->pluck('id')->toArray(); // [2, 3];
+Node::descendantsWithSelfOf(1)->where('id', '<', 4)->get()->pluck('id')->toArray(); // [1, 2, 3];
 ```
 
-### Moving
+There are several methods that have been deprecated since ClosureTable 6:
 
+<table>
+<tr>
+<th>Deprecated</th>
+<th>Recommended</th>
+</tr>
+<tr>
+<td>
 ```php
-$page = Page::find(25);
-$page->moveTo(0, Page::find(14));
-$page->moveTo(0, 14);
+Node::find(4)->getDescendantsTree();
 ```
-
-### Deleting subtree
-If you don't use foreign keys for some reason, you can delete subtree manually. This will delete the page and all its descendants:
-
+</td>
+<td>
 ```php
-$page = Page::find(34);
-$page->deleteSubtree();
-$page->deleteSubtree(true); //with subtree ancestor
-$page->deleteSubtree(false, true); //without subtree ancestor and force delete
+// use custom collection directly
+Node::find(4)->getDescendants()->toTree();
+```
+</td>
+</tr>
+<tr>
+<td>
+```php
+Node::find(4)->getDescendantsWhere('foo', '=', 'bar');
+```
+</td>
+<td>
+```php
+// use dedicated query scope
+Node::find(4)->descendants()->where('foo', '=', 'bar')->get();
+```
+</td>
+</tr>
+</table>
+
+**Children**
+```php
+<?php
+$nodes = [
+    new Node(['id' => 1]),
+    new Node(['id' => 2, 'parent_id' => 1]),
+    new Node(['id' => 3, 'parent_id' => 1]),
+    new Node(['id' => 4, 'parent_id' => 1]),
+    new Node(['id' => 5, 'parent_id' => 1]),
+    new Node(['id' => 6, 'parent_id' => 2]),
+    new Node(['id' => 7, 'parent_id' => 3])
+];
+
+foreach ($nodes as $node) {
+    $node->save();
+}
+
+Node::find(1)->getChildren()->pluck('id')->toArray(); // [2, 3, 4, 5]
+Node::find(1)->countChildren(); // 3
+Node::find(1)->hasChildren(); // true
+
+// get child at the second position (positions start from zero)
+Node::find(1)->getChildAt(1)->id; // 3
+
+Node::find(1)->getChildrenRange(1)->pluck('id')->toArray(); // [3, 4, 5]
+Node::find(1)->getChildrenRange(0, 2)->pluck('id')->toArray(); // [2, 3, 4]
+
+Node::find(1)->getFirstChild()->id; // 2
+Node::find(1)->getLastChild()->id; // 5
+
+Node::find(6)->countChildren(); // 0
+Node::find(6)->hasChildren(); // false
+
+Node::find(6)->addChild(new Node(['id' => 7]));
+
+Node::find(1)->addChildren([new Node(['id' => 8]), new Node(['id' => 9])], 2);
+Node::find(1)->getChildren()->pluck('position', 'id')->toArray(); // [2 => 0, 3 => 1, 8 => 2, 9 => 3, 4 => 4, 5 => 5]
+
+// remove child by its position
+Node::find(1)->removeChild(2);
+Node::find(1)->getChildren()->pluck('position', 'id')->toArray(); // [2 => 0, 3 => 1, 9 => 2, 4 => 3, 5 => 4]
+
+Node::find(1)->removeChildren(2, 4);
+Node::find(1)->getChildren()->pluck('position', 'id')->toArray(); // [2 => 0, 3 => 1]
 ```
 
-## Customization
-You can customize default things in your own classes created by the ClosureTable `artisan` command:<br>
-1. **Entity table name**: change `protected $table` property<br>
-2. **Closure table name**: do the same in your `ClosureTable` (e.g. `PageClosure`)<br>
-3. **Entity's `parent_id`, `position`, and `real depth` column names**: change return values of `getParentIdColumn()`, `getPositionColumn()`, and `getRealDepthColumn()` respectively<br>
-4. **Closure table's `ancestor`, `descendant`, and `depth` columns names**: change return values of `getAncestorColumn()`, `getDescendantColumn()`, and `getDepthColumn()` respectively.
+**Siblings**
+```php
+<?php
+$nodes = [
+    new Node(['id' => 1]),
+    new Node(['id' => 2, 'parent_id' => 1]),
+    new Node(['id' => 3, 'parent_id' => 1]),
+    new Node(['id' => 4, 'parent_id' => 1]),
+    new Node(['id' => 5, 'parent_id' => 1]),
+    new Node(['id' => 6, 'parent_id' => 1]),
+    new Node(['id' => 7, 'parent_id' => 1])
+];
+
+foreach ($nodes as $node) {
+    $node->save();
+}
+
+Node::find(7)->getFirstSibling()->id; // 2
+Node::find(7)->getSiblingAt(0); // 2
+Node::find(2)->getLastSibling(); // 7
+Node::find(7)->getPrevSibling()->id; // 6
+Node::find(7)->getPrevSiblings()->pluck('id')->toArray(); // [2, 3, 4, 5, 6]
+Node::find(7)->countPrevSiblings(); // 5
+Node::find(7)->hasPrevSiblings(); // true
+
+Node::find(2)->getNextSibling()->id; // 3
+Node::find(2)->getNextSiblings()->pluck('id')->toArray(); // [3, 4, 5, 6, 7]
+Node::find(2)->countNextSiblings(); // 5
+Node::find(2)->hasNextSiblings(); // true
+
+Node::find(3)->getSiblings()->pluck('id')->toArray(); // [2, 4, 5, 6, 7]
+Node::find(3)->getNeighbors()->pluck('id')->toArray(); // [2, 4]
+Node::find(3)->countSiblings(); // 5
+Node::find(3)->hasSiblings(); // true
+
+Node::find(2)->getSiblingsRange(2)->pluck('id')->toArray(); // [4, 5, 6, 7]
+Node::find(2)->getSiblingsRange(2, 4)->pluck('id')->toArray(); // [4, 5, 6]
+
+Node::find(4)->addSibling(new Node(['id' => 8]));
+Node::find(4)->getNextSiblings()->pluck('id')->toArray(); // [5, 6, 7, 8]
+
+Node::find(4)->addSibling(new Node(['id' => 9]), 1);
+Node::find(1)->getChildren()->pluck('position', 'id')->toArray();
+// [2 => 0, 9 => 1, 3 => 2, 4 => 3, 5 => 4, 6 => 5, 7 => 6, 8 => 7]
+
+Node::find(8)->addSiblings([new Node(['id' => 10]), new Node(['id' => 11])]);
+Node::find(1)->getChildren()->pluck('position', 'id')->toArray();
+// [2 => 0, 9 => 1, 3 => 2, 4 => 3, 5 => 4, 6 => 5, 7 => 6, 8 => 7, 10 => 8, 11 => 9]
+
+Node::find(2)->addSiblings([new Node(['id' => 12]), new Node(['id' => 13])], 3);
+Node::find(1)->getChildren()->pluck('position', 'id')->toArray();
+// [2 => 0, 9 => 1, 3 => 2, 12 => 3, 13 => 4, 4 => 5, 5 => 6, 6 => 7, 7 => 8, 8 => 9, 10 => 10, 11 => 11]
+```
+
+**Tree**
+```php
+<?php
+Node::createFromArray([
+    'id' => 1,
+    'children' => [
+        [
+            'id' => 2,
+            'children' => [
+                [
+                    'id' => 3,
+                    'children' => [
+                        [
+                            'id' => 4,
+                            'children' => [
+                                [
+                                    'id' => 5,
+                                    'children' => [
+                                        [
+                                            'id' => 6,
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ]
+]);
+
+Node::find(4)->deleteSubtree();
+Node::find(1)->getDescendants()->pluck('id')->toArray(); // [2, 3, 4]
+
+Node::find(4)->deleteSubtree(true);
+Node::find(1)->getDescendants()->pluck('id')->toArray(); // [2, 3]
+```
+
+There are several methods that have been deprecated since ClosureTable 6:
+<table>
+<tr>
+<th>Deprecated</th>
+<th>Recommended</th>
+</tr>
+<tr>
+<td>
+```php
+Node::getTree();
+```
+</td>
+<td>
+No alternative provided
+</td>
+</tr>
+<tr>
+<td>
+```php
+Node::getTreeByQuery(...);
+```
+</td>
+<td>
+No alternative provided
+</td>
+</tr>
+<tr>
+<td>
+```php
+Node::getTreeWhere('foo', '=', 'bar');
+```
+</td>
+<td>
+```php
+Node::where('foo', '=', 'bar')->get()->toTree();
+```
+</td>
+</tr>
+</table>
