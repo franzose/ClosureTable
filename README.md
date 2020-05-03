@@ -46,7 +46,7 @@ As you can see, the command requires a single argument, name of the entity model
 You have to keep in mind that, by design of this package, the models/tables have a required minimum of attributes/columns:
 <table>
 <tr>
-<th colspan="2" valign="center">Entity</th>
+<th colspan="3">Entity</th>
 </tr>
 <tr>
 <th>Attribute/Column</th>
@@ -55,16 +55,16 @@ You have to keep in mind that, by design of this package, the models/tables have
 </tr>
 <tr>
 <td>parent_id</td>
-<td>Entity::getParentIdColumn()</td>
+<td><code>Entity::getParentIdColumn()</code></td>
 <td>ID of the node's immediate parent, simplifies queries for immediate parent/child nodes.</td>
 </tr>
 <tr>
 <td>position</td>
-<td>Entity::getPositionColumn()</td>
+<td><code>Entity::getPositionColumn()</code></td>
 <td>Node position, allows to order nodes of the same depth level</td>
 </tr>
 <tr>
-<th colspan="2" valign="center">ClosureTable</th>
+<th colspan="3">ClosureTable</th>
 </tr>
 <tr>
 <th>Attribute/Column</th>
@@ -78,17 +78,17 @@ You have to keep in mind that, by design of this package, the models/tables have
 </tr>
 <tr>
 <td>ancestor</td>
-<td>ClosureTable::getAncestorColumn()</td>
+<td><code>ClosureTable::getAncestorColumn()</code></td>
 <td>Parent (self, immediate, distant) node ID</td>
 </tr>
 <tr>
 <td>descendant</td>
-<td>ClosureTable::getDescendantColumn()</td>
+<td><code>ClosureTable::getDescendantColumn()</code></td>
 <td>Child (self, immediate, distant) node ID</td>
 </tr>
 <tr>
 <td>depth</td>
-<td>ClosureTable::getDepthColumn()</td>
+<td><code>ClosureTable::getDepthColumn()</code></td>
 <td>Current nesting level, 0+</td>
 </tr>
 </table>
@@ -201,38 +201,13 @@ Node::ancestorsWithSelfOf(4)->where('id', '>', 1)->get()->pluck('id')->toArray()
 
 There are several methods that have been deprecated since ClosureTable 6:
 
-<table>
-<tr>
-<th>Deprecated</th>
-<th>Recommended</th>
-</tr>
-<tr>
-<td>
-```php
-Node::find(4)->getAncestorsTree();
+```diff
+-Node::find(4)->getAncestorsTree();
++Node::find(4)->getAncestors()->toTree();
+
+-Node::find(4)->getAncestorsWhere('id', '>', 1);
++Node::find(4)->ancestors()->where('id', '>', 1)->get();
 ```
-</td>
-<td>
-```php
-// use custom collection directly
-Node::find(4)->getAncestors()->toTree();
-```
-</td>
-</tr>
-<tr>
-<td>
-```php
-Node::find(4)->getAncestorsWhere('id', '>', 1);
-```
-</td>
-<td>
-```php
-// use dedicated query scope
-Node::find(4)->ancestors()->where('id', '>', 1)->get();
-```
-</td>
-</tr>
-</table>
 
 **Descendants**
 ```php
@@ -259,38 +234,13 @@ Node::descendantsWithSelfOf(1)->where('id', '<', 4)->get()->pluck('id')->toArray
 
 There are several methods that have been deprecated since ClosureTable 6:
 
-<table>
-<tr>
-<th>Deprecated</th>
-<th>Recommended</th>
-</tr>
-<tr>
-<td>
-```php
-Node::find(4)->getDescendantsTree();
+```diff
+-Node::find(4)->getDescendantsTree();
++Node::find(4)->getDescendants()->toTree();
+
+-Node::find(4)->getDescendantsWhere('foo', '=', 'bar');
++Node::find(4)->descendants()->where('foo', '=', 'bar')->get();
 ```
-</td>
-<td>
-```php
-// use custom collection directly
-Node::find(4)->getDescendants()->toTree();
-```
-</td>
-</tr>
-<tr>
-<td>
-```php
-Node::find(4)->getDescendantsWhere('foo', '=', 'bar');
-```
-</td>
-<td>
-```php
-// use dedicated query scope
-Node::find(4)->descendants()->where('foo', '=', 'bar')->get();
-```
-</td>
-</tr>
-</table>
 
 **Children**
 ```php
@@ -432,41 +382,10 @@ Node::find(1)->getDescendants()->pluck('id')->toArray(); // [2, 3]
 ```
 
 There are several methods that have been deprecated since ClosureTable 6:
-<table>
-<tr>
-<th>Deprecated</th>
-<th>Recommended</th>
-</tr>
-<tr>
-<td>
-```php
-Node::getTree();
+
+```diff
+-Node::getTree();
+-Node::getTreeByQuery(...);
+-Node::getTreeWhere('foo', '=', 'bar');
++Node::where('foo', '=', 'bar')->get()->toTree();
 ```
-</td>
-<td>
-No alternative provided
-</td>
-</tr>
-<tr>
-<td>
-```php
-Node::getTreeByQuery(...);
-```
-</td>
-<td>
-No alternative provided
-</td>
-</tr>
-<tr>
-<td>
-```php
-Node::getTreeWhere('foo', '=', 'bar');
-```
-</td>
-<td>
-```php
-Node::where('foo', '=', 'bar')->get()->toTree();
-```
-</td>
-</tr>
-</table>
