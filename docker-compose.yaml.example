@@ -1,0 +1,30 @@
+version: '3'
+services:
+  mysql:
+    image: mariadb:10.3
+    volumes:
+      - ./docker/mysql:/var/lib/mysql
+    ports:
+      - 5506:3306
+    environment:
+      MYSQL_DATABASE: closuretabletest
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpass
+      MYSQL_ROOT_PASSWORD: root
+
+  postgresql:
+    image: postgres:latest
+    volumes:
+      - ./docker/postgresql:/var/lib/postgresql/data
+    ports:
+      - 5507:5432
+    environment:
+      POSTGRES_DB: closuretabletest
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: userpass
+  php:
+    image: php:5.6-cli
+    tty: true
+    command: /bin/sh
+    volumes:
+      - ./:/usr/src/myapp
