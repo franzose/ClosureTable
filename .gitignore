@@ -1,4 +1,8 @@
+/.idea/
+/docker
 /vendor
+/.env.testing
+/docker-compose.yaml
+/_ide_helper.php
 composer.phar
-composer.lock
 .DS_Store

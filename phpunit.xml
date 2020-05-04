@@ -8,11 +8,13 @@
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="true"
-         syntaxCheck="true"
 >
     <testsuites>
         <testsuite name="Package Test Suite">
-            <directory suffix=".php">./tests/</directory>
+            <directory suffix="Tests.php">./tests/Console</directory>
+            <directory suffix="Tests.php">./tests/Extensions</directory>
+            <directory suffix="Tests.php">./tests/Generators</directory>
+            <directory suffix="Tests.php">./tests/Models</directory>
         </testsuite>
     </testsuites>
 </phpunit>

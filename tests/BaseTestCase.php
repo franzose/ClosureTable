@@ -2,103 +2,74 @@
 namespace Franzose\ClosureTable\Tests;
 
 use DB;
-use Event;
+use Dotenv\Dotenv;
+use Franzose\ClosureTable\Contracts\ClosureTableInterface;
+use Franzose\ClosureTable\Contracts\EntityInterface;
+use Franzose\ClosureTable\Models\ClosureTable;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase;
-use Mockery;
 use Franzose\ClosureTable\Models\Entity;
-use Way\Tests\ModelHelpers;
 
-/**
- * Class BaseTestCase
- * @package Franzose\ClosureTable\Tests
- */
 abstract class BaseTestCase extends TestCase
 {
-    use ModelHelpers;
-
-    public static $debug = false;
-    public static $sqlite_in_memory = false;
+    const DATABASE_CONNECTION = 'closuretable';
 
     public function setUp()
     {
         parent::setUp();
 
-        $this->app->bind('Franzose\ClosureTable\Contracts\EntityInterface', 'Franzose\ClosureTable\Models\Entity');
-        $this->app->bind('Franzose\ClosureTable\Contracts\ClosureTableInterface', 'Franzose\ClosureTable\Models\ClosureTable');
+        $this->app->setBasePath(__DIR__ . '/../');
+        $this->app->bind(EntityInterface::class, Entity::class);
+        $this->app->bind(ClosureTableInterface::class, ClosureTable::class);
 
-        if (!static::$sqlite_in_memory) {
-            DB::statement('DROP TABLE IF EXISTS entities_closure');
-            DB::statement('DROP TABLE IF EXISTS entities;');
-            DB::statement('DROP TABLE IF EXISTS migrations');
-        }
+        $artisan = $this->app->make(Kernel::class);
 
-        $artisan = $this->app->make('Illuminate\Contracts\Console\Kernel');
-        $artisan->call('migrate', [
-            '--database' => 'closuretable',
-            '--path' => '../tests/migrations'
+        $artisan->call('migrate:refresh', [
+            '--database' => static::DATABASE_CONNECTION,
+            '--path' => 'tests/migrations',
+            '--seeder' => EntitiesSeeder::class
         ]);
-
-        $artisan->call('db:seed', [
-            '--class' => 'Franzose\ClosureTable\Tests\Seeds\EntitiesSeeder'
-        ]);
-
-        if (static::$debug) {
-            Entity::$debug = true;
-            Event::listen('illuminate.query', function ($sql, $bindings, $time) {
-                $sql = str_replace(array('%', '?'), array('%%', '%s'), $sql);
-                $full_sql = vsprintf($sql, $bindings);
-                echo PHP_EOL . '- BEGIN QUERY -' . PHP_EOL . $full_sql . PHP_EOL . '- END QUERY -' . PHP_EOL;
-            });
-        }
     }
 
     public function tearDown()
     {
-        Mockery::close();
+        // this is to avoid "too many connection" errors
+        DB::disconnect(static::DATABASE_CONNECTION);
     }
 
     /**
-     * @param \Illuminate\Foundation\Application $app
+     * @param Application $app
      */
     protected function getEnvironmentSetUp($app)
     {
-        // reset base path to point to our package's src directory
-        $app['path.base'] = __DIR__ . '/../src';
+        $envFilePath = __DIR__ . '/..';
 
-        $app['config']->set('database.default', 'closuretable');
-
-        if (static::$sqlite_in_memory) {
-            $options = [
-                'driver' => 'sqlite',
-                'database' => ':memory:',
-                'prefix' => '',
-            ];
-        } else {
-            $options = [
-                'driver' => 'mysql',
-                'host' => 'localhost',
-                'database' => 'closuretabletest',
-                'username' => 'root',
-                'password' => '',
-                'prefix' => '',
-                'charset' => 'utf8',
-                'collation' => 'utf8_unicode_ci',
-            ];
+        if (file_exists($envFilePath . '/.env.testing')) {
+            (new Dotenv($envFilePath, '.env.testing'))->load();
         }
 
-        $app['config']->set('database.connections.closuretable', $options);
+        $app['config']->set('database.default', static::DATABASE_CONNECTION);
+        $app['config']->set('database.connections.' . static::DATABASE_CONNECTION, [
+            'driver' => env('DB_DRIVER', 'mysql'),
+            'host' => env('DB_HOST', 'localhost'),
+            'port' => env('DB_PORT'),
+            'database' => env('DB_NAME', static::DATABASE_CONNECTION . 'test'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD'),
+            'prefix' => '',
+            'charset' => 'utf8',
+            'collation' => env('DB_COLLATION', 'utf8_unicode_ci'),
+        ]);
     }
 
-    /**
-     * Asserts if two arrays have similar values, sorting them before the fact in order to "ignore" ordering.
-     * @param array $actual
-     * @param array $expected
-     * @param string $message
-     * @param float $delta
-     * @param int $depth
-     */
-    protected function assertArrayValuesEquals(array $actual, array $expected, $message = '', $delta = 0.0, $depth = 10)
+    public static function assertModelAttribute($attribute, array $expected)
     {
-        $this->assertEquals($actual, $expected, $message, $delta, $depth, true);
+        $actual = Entity::whereIn('id', array_keys($expected))
+            ->get(['id', $attribute])
+            ->pluck($attribute, 'id')
+            ->toArray();
+
+        static::assertEquals($expected, $actual);
     }
 }

@@ -12,26 +12,26 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0"
+        "php": ">=7.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "dev-master",
-        "way/phpunit-wrappers": "dev-master",
-        "way/laravel-test-helpers": "dev-master",
-        "mockery/mockery": "dev-master",
-        "orchestra/testbench": "dev-master",
-        "doctrine/dbal": "dev-master"
+        "phpunit/phpunit": "^6.0|^7.0|^8.0",
+        "orchestra/testbench": "^3.4|^4.0|^5.0"
     },
     "autoload": {
-        "classmap": ["tests"],
-        "psr-0": {
-            "Franzose\\ClosureTable": "src/"
+        "psr-4": {
+            "Franzose\\ClosureTable\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Franzose\\ClosureTable\\Tests\\": "tests/"
         }
     },
     "config": {
         "preferred-install": "dist"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "extra": {
         "laravel": {
             "providers": [

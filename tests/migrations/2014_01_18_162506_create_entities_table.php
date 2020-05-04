@@ -16,10 +16,9 @@ class CreateEntitiesTable extends Migration
             $table->increments('id');
             $table->unsignedInteger('parent_id')->nullable();
             $table->string('title')->default('The Title');
-            $table->text('excerpt');
-            $table->longText('body');
+            $table->string('excerpt')->default('');
+            $table->string('body')->default('');
             $table->integer('position', false, true);
-            $table->integer('real_depth', false, true);
             $table->softDeletes();
 
             $table->foreign('parent_id')->references('id')->on('entities')->onDelete('set null');

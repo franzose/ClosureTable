@@ -1,21 +1,115 @@
 language: php
 
+services:
+  - mysql
+  - postgresql
+
+cache:
+  directories:
+  - .composer
+
 php:
-  - 5.4
-  - 5.5
-  - 5.6
-  - hhvm
+  - 7.0
+  - 7.1
+  - 7.2
+  - 7.3
+  - 7.4
 
-sudo: false
+env:
+  - LARAVEL_VERSION=5.4.*
+  - LARAVEL_VERSION=5.4.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+  - LARAVEL_VERSION=5.5.*
+  - LARAVEL_VERSION=5.5.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+  - LARAVEL_VERSION=5.6.*
+  - LARAVEL_VERSION=5.6.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+  - LARAVEL_VERSION=5.7.*
+  - LARAVEL_VERSION=5.7.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+  - LARAVEL_VERSION=5.8.*
+  - LARAVEL_VERSION=5.8.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+  - LARAVEL_VERSION=6.*
+  - LARAVEL_VERSION=6.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+  - LARAVEL_VERSION=7.*
+  - LARAVEL_VERSION=7.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
 
-install: travis_retry composer install --no-interaction --prefer-source
+matrix:
+  exclude:
+    - php: 7.0
+      env: LARAVEL_VERSION=5.6.*
+    - php: 7.4
+      env: LARAVEL_VERSION=5.6.*
+    - php: 7.0
+      env: LARAVEL_VERSION=5.6.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.4
+      env: LARAVEL_VERSION=5.6.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.0
+      env: LARAVEL_VERSION=5.7.*
+    - php: 7.4
+      env: LARAVEL_VERSION=5.7.*
+    - php: 7.0
+      env: LARAVEL_VERSION=5.7.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.4
+      env: LARAVEL_VERSION=5.7.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.0
+      env: LARAVEL_VERSION=5.8.*
+    - php: 7.1
+      env: LARAVEL_VERSION=5.8.*
+    - php: 7.0
+      env: LARAVEL_VERSION=5.8.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.1
+      env: LARAVEL_VERSION=5.8.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.0
+      env: LARAVEL_VERSION=6.*
+    - php: 7.1
+      env: LARAVEL_VERSION=6.*
+    - php: 7.0
+      env: LARAVEL_VERSION=6.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.1
+      env: LARAVEL_VERSION=6.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.0
+      env: LARAVEL_VERSION=7.*
+    - php: 7.1
+      env: LARAVEL_VERSION=7.*
+    - php: 7.0
+      env: LARAVEL_VERSION=7.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.1
+      env: LARAVEL_VERSION=7.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.1
+      env: LARAVEL_VERSION=5.4.*
+    - php: 7.2
+      env: LARAVEL_VERSION=5.4.*
+    - php: 7.3
+      env: LARAVEL_VERSION=5.4.*
+    - php: 7.4
+      env: LARAVEL_VERSION=5.4.*
+    - php: 7.1
+      env: LARAVEL_VERSION=5.4.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.2
+      env: LARAVEL_VERSION=5.4.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.3
+      env: LARAVEL_VERSION=5.4.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.4
+      env: LARAVEL_VERSION=5.4.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+
+# ensure that the specific Laravel version is required
+before_install:
+  - export COMPOSER_CACHE_DIR=`pwd`/.composer
+  - composer require "laravel/framework:${LARAVEL_VERSION}" --no-update
+
+install: composer update --no-interaction --prefer-dist
 
 before_script:
   - mysql -e 'create database closuretabletest;'
+  - php ./tests/script-change-testcase-return-type.php
 
-script: vendor/bin/phpunit
+script: 
+  - vendor/bin/phpunit
 
 branches:
   only:
     - master
-    - feature/laravel-5
+    - 6.x
+    - improve-travis
+    - postgres-testing
+    # version tag, e.g. v1.0.0
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+    - /^\d+\.\d+?$/
