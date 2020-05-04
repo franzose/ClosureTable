@@ -5,6 +5,19 @@
 
 This is a database manipulation package for the Laravel 5.4+ framework. You may want to use it when you need to store and operate hierarchical data in your database. The package is an implementation of a well-known design pattern called [closure table](https://www.slideshare.net/billkarwin/models-for-hierarchical-data). However, in order to simplify and optimize SQL `SELECT` queries, it uses adjacency lists to query direct parent/child relationships.
 
+Contents:
+- [Installation](#installation)
+- [Setup](#setup)
+- [Requirements](#requirements)
+- Examples → [List of Scopes](#scopes)
+- Examples → [Parent/Root](#parentroot)
+- Examples → [Ancestors](#ancestors)
+- Examples → [Descendants](#descendants)
+- Examples → [Children](#children)
+- Examples → [Siblings](#siblings)
+- Examples → [Tree](#tree)
+
+
 ## Installation
 It's strongly recommended to use [Composer](https://getcomposer.org) to install the package:
 ```bash
@@ -94,7 +107,7 @@ You have to keep in mind that, by design of this package, the models/tables have
 </table>
 
 ## Examples
-Okay, let's see what you can do by using ClosureTable.
+In the examples, let's assume that we've set up a `Node` model which extends the `Franzose\ClosureTable\Models\Entity` model.
 
 ### Scopes
 Since ClosureTable 6, a lot of query scopes have become available in the Entity model:
@@ -144,10 +157,7 @@ siblingsRangeOf($id, int $from, int $to = null)
 
 You can learn how to use query scopes from the [Laravel documentation](https://laravel.com/docs/7.x/eloquent#query-scopes).
 
-### Examples
-In the examples, let's assume that we've set up a `Node` model which extends the `Franzose\ClosureTable\Models\Entity` model.
-
-**Parent/Root**
+### Parent/Root
 ```php
 <?php
 $nodes = [
@@ -176,7 +186,7 @@ Node::find(4)->moveTo(0, Node::find(2)); // same as Node::find(4)->moveTo(0, 2);
 Node::find(2)->getChildren()->pluck('id')->toArray(); // [4]
 ```
 
-**Ancestors**
+### Ancestors
 ```php
 <?php
 $nodes = [
@@ -209,7 +219,7 @@ There are several methods that have been deprecated since ClosureTable 6:
 +Node::find(4)->ancestors()->where('id', '>', 1)->get();
 ```
 
-**Descendants**
+### Descendants
 ```php
 <?php
 $nodes = [
@@ -242,7 +252,7 @@ There are several methods that have been deprecated since ClosureTable 6:
 +Node::find(4)->descendants()->where('foo', '=', 'bar')->get();
 ```
 
-**Children**
+### Children
 ```php
 <?php
 $nodes = [
@@ -288,7 +298,7 @@ Node::find(1)->removeChildren(2, 4);
 Node::find(1)->getChildren()->pluck('position', 'id')->toArray(); // [2 => 0, 3 => 1]
 ```
 
-**Siblings**
+### Siblings
 ```php
 <?php
 $nodes = [
@@ -342,7 +352,7 @@ Node::find(1)->getChildren()->pluck('position', 'id')->toArray();
 // [2 => 0, 9 => 1, 3 => 2, 12 => 3, 13 => 4, 4 => 5, 5 => 6, 6 => 7, 7 => 8, 8 => 9, 10 => 10, 11 => 11]
 ```
 
-**Tree**
+### Tree
 ```php
 <?php
 Node::createFromArray([
