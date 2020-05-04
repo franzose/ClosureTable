@@ -1,6 +1,6 @@
 # ClosureTable
 [![Build Status](https://travis-ci.org/franzose/ClosureTable.png)](https://travis-ci.org/franzose/ClosureTable)
-[![Latest Stable Version](https://poser.pugx.org/franzose/closure-table/v/stable.png)](https://packagist.org/packages/franzose/closure-table)
+[![Latest Release](https://img.shields.io/github/v/release/franzose/ClosureTable)](https://packagist.org/packages/franzose/closure-table)
 [![Total Downloads](https://poser.pugx.org/franzose/closure-table/downloads.png)](https://packagist.org/packages/franzose/closure-table)
 
 This is a database manipulation package for the Laravel 5.4+ framework. You may want to use it when you need to store and operate hierarchical data in your database. The package is an implementation of a well-known design pattern called [closure table](https://www.slideshare.net/billkarwin/models-for-hierarchical-data). However, in order to simplify and optimize SQL `SELECT` queries, it uses adjacency lists to query direct parent/child relationships.
