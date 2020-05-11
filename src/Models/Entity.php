@@ -64,6 +64,8 @@ use InvalidArgumentException;
  */
 class Entity extends Eloquent implements EntityInterface
 {
+    const CHILDREN_RELATION_NAME = 'children';
+
     /**
      * ClosureTable model instance.
      *
@@ -263,7 +265,7 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function getChildrenRelationIndex()
     {
-        return 'children';
+        return static::CHILDREN_RELATION_NAME;
     }
 
     /**
@@ -925,6 +927,29 @@ class Entity extends Eloquent implements EntityInterface
         });
 
         return $this;
+    }
+
+    /**
+     * Appends the given entity to the children relation.
+     *
+     * @param Entity $entity
+     * @internal
+     */
+    public function appendChild(Entity $entity)
+    {
+        $this->getChildrenRelation()->add($entity);
+    }
+
+    /**
+     * @return Collection
+     */
+    private function getChildrenRelation()
+    {
+        if (!$this->relationLoaded(static::CHILDREN_RELATION_NAME)) {
+            $this->setRelation(static::CHILDREN_RELATION_NAME, new Collection());
+        }
+
+        return $this->getRelation(static::CHILDREN_RELATION_NAME);
     }
 
     /**
@@ -1665,7 +1690,7 @@ class Entity extends Eloquent implements EntityInterface
         $instance = new static;
 
         return $instance
-            ->load('children')
+            ->load(static::CHILDREN_RELATION_NAME)
             ->orderBy($instance->getParentIdColumn())
             ->orderBy($instance->getPositionColumn())
             ->get($instance->prepareTreeQueryColumns($columns))
@@ -1727,7 +1752,7 @@ class Entity extends Eloquent implements EntityInterface
         $entities = [];
 
         foreach ($tree as $item) {
-            $children = Arr::pull($item, 'children');
+            $children = Arr::pull($item, static::CHILDREN_RELATION_NAME);
 
             /**
              * @var Entity $entity

@@ -1,6 +1,7 @@
 <?php
 namespace Franzose\ClosureTable\Tests;
 
+use DB;
 use Franzose\ClosureTable\Extensions\Collection;
 use Franzose\ClosureTable\Models\Entity;
 
@@ -150,12 +151,19 @@ class CollectionTestCase extends BaseTestCase
 
     public function testToTree()
     {
+        $queries = 0;
+
+        DB::listen(static function () use (&$queries) {
+            $queries++;
+        });
+
         $root = new Page(['id' => 1]);
         $child = new Page(['id' => 2, 'parent_id' => 1]);
         $grandChild = new Page(['id' => 3, 'parent_id' => 2]);
 
         $tree = (new Collection([$root, $child, $grandChild]))->toTree();
 
+        static::assertEquals(0, $queries);
         static::assertCount(1, $tree);
 
         $children = $tree->get(0)->children;
