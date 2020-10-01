@@ -30,6 +30,8 @@ env:
   - LARAVEL_VERSION=6.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
   - LARAVEL_VERSION=7.*
   - LARAVEL_VERSION=7.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+  - LARAVEL_VERSION=8.*
+  - LARAVEL_VERSION=8.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
 
 matrix:
   exclude:
@@ -89,6 +91,18 @@ matrix:
       env: LARAVEL_VERSION=5.4.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
     - php: 7.4
       env: LARAVEL_VERSION=5.4.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.0
+      env: LARAVEL_VERSION=8.*
+    - php: 7.1
+      env: LARAVEL_VERSION=8.*
+    - php: 7.2
+      env: LARAVEL_VERSION=8.*
+    - php: 7.0
+      env: LARAVEL_VERSION=8.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.1
+      env: LARAVEL_VERSION=8.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
+    - php: 7.2
+      env: LARAVEL_VERSION=8.* DB_DRIVER=pgsql DB_PORT=5432 DB_USERNAME=travis DB_NAME=travis
 
 # ensure that the specific Laravel version is required
 before_install:
