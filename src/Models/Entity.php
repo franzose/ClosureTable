@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
@@ -166,7 +167,7 @@ class Entity extends Eloquent implements EntityInterface
         }
 
         $parentId = $this->getParentIdColumn();
-        $this->previousParentId = isset($this->original[$parentId]) ? $this->original[$parentId] : null;
+        $this->previousParentId = $this->original[$parentId] ?? null;
         $this->attributes[$parentId] = $value;
     }
 
@@ -212,7 +213,7 @@ class Entity extends Eloquent implements EntityInterface
         }
 
         $position = $this->getPositionColumn();
-        $this->previousPosition = isset($this->original[$position]) ? $this->original[$position] : null;
+        $this->previousPosition = $this->original[$position] ?? null;
         $this->attributes[$position] = max(0, (int) $value);
     }
 
@@ -298,7 +299,7 @@ class Entity extends Eloquent implements EntityInterface
             $entity->previousPosition = null;
 
             $descendant = $entity->getKey();
-            $ancestor = isset($entity->parent_id) ? $entity->parent_id : $descendant;
+            $ancestor = $entity->parent_id ?? $descendant;
 
             $entity->closure->insertNode($ancestor, $descendant);
         });
@@ -352,6 +353,16 @@ class Entity extends Eloquent implements EntityInterface
     public function getParent(array $columns = ['*'])
     {
         return $this->exists ? $this->find($this->parent_id, $columns) : null;
+    }
+
+    /**
+     * Returns many-to-one relationship to the direct ancestor.
+     *
+     * @return BelongsTo
+     */
+    public function parent()
+    {
+        return $this->belongsTo(get_class($this), $this->getParentIdColumn());
     }
 
     /**
@@ -883,7 +894,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addChild(EntityInterface $child, $position = null, $returnChild = false)
     {
         if ($this->exists) {
-            $position = $position !== null ? $position : $this->getLatestChildPosition();
+            $position = $position ?? $this->getLatestChildPosition();
 
             $child->moveTo($position, $this);
         }
@@ -1596,7 +1607,7 @@ class Entity extends Eloquent implements EntityInterface
     public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false)
     {
         if ($this->exists) {
-            $position = $position === null ? static::getLatestPosition($this) : $position;
+            $position = $position ?? static::getLatestPosition($this);
 
             $sibling->moveTo($position, $this->parent_id);
 
@@ -1623,7 +1634,7 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
-        $from = $from === null ? static::getLatestPosition($this) : $from;
+        $from = $from ?? static::getLatestPosition($this);
 
         $this->transactional(function () use ($siblings, &$from) {
             foreach ($siblings as $sibling) {
@@ -1876,7 +1887,7 @@ class Entity extends Eloquent implements EntityInterface
      * @param  array $models
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function newCollection(array $models = array())
+    public function newCollection(array $models = [])
     {
         return new Collection($models);
     }

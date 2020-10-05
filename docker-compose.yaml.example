@@ -23,7 +23,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: userpass
   php:
-    image: php:5.6-cli
+    image: php:7.0-cli
     tty: true
     command: /bin/sh
     volumes:
