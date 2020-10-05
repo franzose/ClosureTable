@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
@@ -352,6 +353,16 @@ class Entity extends Eloquent implements EntityInterface
     public function getParent(array $columns = ['*'])
     {
         return $this->exists ? $this->find($this->parent_id, $columns) : null;
+    }
+
+    /**
+     * Returns many-to-one relationship to the direct ancestor.
+     *
+     * @return BelongsTo
+     */
+    public function parent()
+    {
+        return $this->belongsTo(get_class($this), $this->getParentIdColumn());
     }
 
     /**
