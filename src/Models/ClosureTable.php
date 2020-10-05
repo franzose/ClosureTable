@@ -60,11 +60,11 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
         $depth = $this->getDepthColumn();
 
         $select = "
-            SELECT tbl.{$ancestor} AS ancestor, ? AS descendant, tbl.{$depth}+1 AS depth
+            SELECT tbl.{$ancestor} AS {$ancestor}, ? AS {$descendant}, tbl.{$depth}+1 AS {$depth}
             FROM {$table} AS tbl
             WHERE tbl.{$descendant} = ?
             UNION ALL
-            SELECT ? AS ancestor, ? AS descendant, 0 AS depth
+            SELECT ? AS {$ancestor}, ? AS {$descendant}, 0 AS {$depth}
         ";
 
         $rows = $this->getConnection()->select($select, [
