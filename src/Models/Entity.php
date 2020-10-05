@@ -7,7 +7,6 @@ use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Arr;
 use InvalidArgumentException;
 
 /**
@@ -1763,7 +1762,7 @@ class Entity extends Eloquent implements EntityInterface
         $entities = [];
 
         foreach ($tree as $item) {
-            $children = Arr::pull($item, static::CHILDREN_RELATION_NAME);
+            $children = $item[static::CHILDREN_RELATION_NAME] ?? [];
 
             /**
              * @var Entity $entity
