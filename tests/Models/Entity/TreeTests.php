@@ -2,6 +2,7 @@
 
 namespace Franzose\ClosureTable\Tests\Models\Entity;
 
+use Franzose\ClosureTable\Extensions\Collection;
 use Franzose\ClosureTable\Models\ClosureTable;
 use Franzose\ClosureTable\Models\Entity;
 use Franzose\ClosureTable\Tests\BaseTestCase;
@@ -161,5 +162,48 @@ class TreeTests extends BaseTestCase
         static::assertEquals('child 2', $child2->title);
         static::assertEquals(0, $child2->countChildren());
         static::assertEquals(19, $child2->getKey());
+    }
+
+    /**
+     * @link https://github.com/franzose/ClosureTable/issues/239
+     */
+    public function testCreateFromArrayIssue239()
+    {
+        Page::createFromArray([
+            [
+                'id' => 100,
+                'children' => [
+                    ['id' => 200],
+                    ['id' => 300],
+                    ['id' => 400],
+                    ['id' => 500],
+                    [
+                        'id' => 600,
+                        'children' => [
+                            ['id' => 700],
+                            ['id' => 800],
+                        ]
+                    ],
+                ]
+            ]
+        ]);
+
+        /** @var Page $page */
+        $page = Page::find(100);
+
+        /** @var Collection|Page[] $children */
+        $children = $page->getChildren();
+
+        static::assertCount(5, $children);
+        static::assertEquals(200, $children->get(0)->id);
+        static::assertEquals(300, $children->get(1)->id);
+        static::assertEquals(400, $children->get(2)->id);
+        static::assertEquals(500, $children->get(3)->id);
+        static::assertEquals(600, $children->get(4)->id);
+
+        $childrenOf600 = $children->get(4)->getChildren();
+        static::assertCount(2, $childrenOf600);
+        static::assertEquals(700, $childrenOf600->get(0)->id);
+        static::assertEquals(800, $childrenOf600->get(1)->id);
     }
 }
