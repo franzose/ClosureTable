@@ -1,8 +1,9 @@
 <?php
 namespace Franzose\ClosureTable\Models;
 
-use Illuminate\Database\Eloquent\Model as Eloquent;
 use Franzose\ClosureTable\Contracts\ClosureTableInterface;
+use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Basic ClosureTable model. Performs actions on the relationships table.
@@ -47,36 +48,28 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
     {
         $rows = $this->selectRowsToInsert($ancestorId, $descendantId);
 
-        if (count($rows) > 0) {
-            $this->insert($rows);
+        if (!$rows->isEmpty()) {
+            $this->insert($rows->toArray());
         }
     }
 
     private function selectRowsToInsert($ancestorId, $descendantId)
     {
-        $table = $this->getPrefixedTable();
         $ancestor = $this->getAncestorColumn();
         $descendant = $this->getDescendantColumn();
         $depth = $this->getDepthColumn();
 
-        $select = "
-            SELECT tbl.{$ancestor} AS {$ancestor}, ? AS {$descendant}, tbl.{$depth}+1 AS {$depth}
-            FROM {$table} AS tbl
-            WHERE tbl.{$descendant} = ?
-            UNION ALL
-            SELECT ? AS {$ancestor}, ? AS {$descendant}, 0 AS {$depth}
-        ";
-
-        $rows = $this->getConnection()->select($select, [
-            $descendantId,
-            $ancestorId,
-            $descendantId,
-            $descendantId
-        ]);
-
-        return array_map(static function ($row) {
-            return (array) $row;
-        }, $rows);
+        return static::select([
+            DB::raw(sprintf('%s as %s', $this->qualifyColumn($ancestor), $ancestor)),
+            DB::raw(sprintf('%s as %s', $descendantId, $descendant)),
+            DB::raw(sprintf('%s+1 as %s', $this->qualifyColumn($depth), $depth)),
+        ])
+            ->where($this->qualifyColumn($descendant), $ancestorId)
+            ->unionAll(DB::table(null)->select([
+                DB::raw(sprintf('%s as %s', $descendantId, $ancestor)),
+                DB::raw(sprintf('%s as %s', $descendantId, $descendant)),
+                DB::raw(sprintf('0 as %s', $depth)),
+            ]))->get();
     }
 
     /**
@@ -87,7 +80,6 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     public function moveNodeTo($ancestorId = null)
     {
-        $table = $this->getPrefixedTable();
         $ancestor = $this->getAncestorColumn();
         $descendant = $this->getDescendantColumn();
         $depth = $this->getDepthColumn();
@@ -106,19 +98,14 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
             return;
         }
 
-        $query = "
-            INSERT INTO {$table} ({$ancestor}, {$descendant}, {$depth})
-            SELECT supertbl.{$ancestor}, subtbl.{$descendant}, supertbl.{$depth}+subtbl.{$depth}+1
-            FROM {$table} as supertbl
-            CROSS JOIN {$table} as subtbl
-            WHERE supertbl.{$descendant} = ?
-            AND subtbl.{$ancestor} = ?
-        ";
-
-        $this->getConnection()->statement($query, [
-            $ancestorId,
-            $this->descendant
-        ]);
+        static::insertUsing([$ancestor, $descendant, $depth], static::select([
+            $this->qualifyColumn($ancestor),
+            "subtbl.{$descendant}",
+            DB::raw(sprintf('%s+%s+1', $this->qualifyColumn($depth), "subtbl.{$depth}")),
+        ])
+            ->crossJoin(sprintf('%s as subtbl', $this->getTable()))
+            ->where($this->qualifyColumn($descendant), $ancestorId)
+            ->where("subtbl.{$ancestor}", $this->descendant));
     }
 
     /**
@@ -128,32 +115,10 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      */
     protected function unbindRelationships()
     {
-        $table = $this->getPrefixedTable();
         $ancestorColumn = $this->getAncestorColumn();
         $descendantColumn = $this->getDescendantColumn();
 
-        $query = "
-            DELETE FROM {$table}
-            WHERE {$descendantColumn} IN (
-              SELECT d FROM (
-                SELECT {$descendantColumn} AS d FROM {$table}
-                WHERE {$ancestorColumn} = ?
-              ) AS dct
-            )
-            AND {$ancestorColumn} IN (
-              SELECT a FROM (
-                SELECT {$ancestorColumn} AS a FROM {$table}
-                WHERE {$descendantColumn} = ?
-                AND {$ancestorColumn} <> ?
-              ) AS ct
-            )
-        ";
-
-        $this->getConnection()->delete($query, [
-            $this->descendant,
-            $this->descendant,
-            $this->descendant
-        ]);
+        static::whereIn($descendantColumn, static::select([$descendantColumn])->where($ancestorColumn, $this->descendant)->get())->whereIn($ancestorColumn, static::select([$ancestorColumn])->where($descendantColumn, $this->descendant)->where($ancestorColumn, '<>', $this->descendant)->get())->delete();
     }
 
     /**
