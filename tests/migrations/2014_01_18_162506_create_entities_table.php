@@ -21,6 +21,11 @@ class CreateEntitiesTable extends Migration
             $table->integer('position', false, true);
             $table->softDeletes();
 
+            // Ensures there are no ambiguous column names in queries involving the closure table
+            $table->integer('ancestor')->nullable();
+            $table->integer('descendant')->nullable();
+            $table->integer('depth')->nullable();
+
             $table->foreign('parent_id')->references('id')->on('entities')->onDelete('set null');
 
             $table->engine = 'InnoDB';
