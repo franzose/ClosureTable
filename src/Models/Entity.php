@@ -318,7 +318,7 @@ class Entity extends Eloquent implements EntityInterface
             }
 
             if ($parentIdChanged) {
-                $entity->closure->moveNodeTo($entity->parent_id);
+                $entity->closure->moveNodeTo($entity->parent_id, $entity->wasRecentlyCreated);
             }
         });
     }
