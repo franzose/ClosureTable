@@ -313,7 +313,7 @@ class Entity extends Eloquent implements EntityInterface
         });
 
         static::saved(static function (Entity $entity) {
-            $parentIdChanged = $entity->isDirty($entity->getParentIdColumn());
+            $parentIdChanged = !$created && $entity->isDirty($entity->getParentIdColumn());
 
             if ($parentIdChanged || $entity->isDirty($entity->getPositionColumn())) {
                 $entity->reorderSiblings();
@@ -327,7 +327,7 @@ class Entity extends Eloquent implements EntityInterface
             }
 
             if ($parentIdChanged) {
-                $entity->closure->moveNodeTo($entity->parent_id, $entity->created);
+                $entity->closure->moveNodeTo($entity->parent_id);
             }
         });
     }

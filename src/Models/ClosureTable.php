@@ -85,7 +85,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
      * @param mixed $ancestorId
      * @return void
      */
-    public function moveNodeTo($ancestorId = null, $created = false)
+    public function moveNodeTo($ancestorId = null)
     {
         $table = $this->getPrefixedTable();
         $ancestor = $this->getAncestorColumn();
@@ -97,9 +97,7 @@ class ClosureTable extends Eloquent implements ClosureTableInterface
             return;
         }
 
-        if (! $created) {
-            $this->unbindRelationships();
-        }
+        $this->unbindRelationships();
 
         // Since we have already unbound the node relationships,
         // given null ancestor id, we have nothing else to do,
