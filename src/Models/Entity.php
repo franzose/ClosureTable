@@ -313,7 +313,7 @@ class Entity extends Eloquent implements EntityInterface
         });
 
         static::saved(static function (Entity $entity) {
-            $parentIdChanged = !$created && $entity->isDirty($entity->getParentIdColumn());
+            $parentIdChanged = !$entity->created && $entity->isDirty($entity->getParentIdColumn());
 
             if ($parentIdChanged || $entity->isDirty($entity->getPositionColumn())) {
                 $entity->reorderSiblings();
