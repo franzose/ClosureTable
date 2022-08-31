@@ -95,6 +95,13 @@ class Entity extends Eloquent implements EntityInterface
     private $isMoved = false;
 
     /**
+     * Whether this node is newly created.
+     *
+     * @var bool
+     */
+    private $created = false;
+
+    /**
      * Indicates if the model should soft delete.
      *
      * @var bool
@@ -289,6 +296,7 @@ class Entity extends Eloquent implements EntityInterface
             } elseif (!$entity->exists) {
                 $entity->position = static::getLatestPosition($entity);
             }
+            $entity->created = false;
         });
 
         // When entity is created, the appropriate
@@ -301,10 +309,11 @@ class Entity extends Eloquent implements EntityInterface
             $ancestor = $entity->parent_id ?? $descendant;
 
             $entity->closure->insertNode($ancestor, $descendant);
+            $entity->created = true;
         });
 
         static::saved(static function (Entity $entity) {
-            $parentIdChanged = $entity->isDirty($entity->getParentIdColumn());
+            $parentIdChanged = !$entity->created && $entity->isDirty($entity->getParentIdColumn());
 
             if ($parentIdChanged || $entity->isDirty($entity->getPositionColumn())) {
                 $entity->reorderSiblings();
