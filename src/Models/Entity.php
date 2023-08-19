@@ -115,9 +115,10 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function __construct(array $attributes = [])
     {
-        $position = $this->getPositionColumn();
+        $position   = $this->getPositionColumn();
+        $parent_id  = $this->getParentIdColumn();
 
-        $this->fillable(array_merge($this->getFillable(), [$position]));
+        $this->fillable(array_merge($this->getFillable(), [$position, $parent_id]));
 
         if (isset($attributes[$position]) && $attributes[$position] < 0) {
             $attributes[$position] = 0;
