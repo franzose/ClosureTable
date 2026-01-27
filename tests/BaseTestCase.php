@@ -3,9 +3,6 @@ namespace Franzose\ClosureTable\Tests;
 
 use DB;
 use Dotenv\Dotenv;
-use Franzose\ClosureTable\Contracts\ClosureTableInterface;
-use Franzose\ClosureTable\Contracts\EntityInterface;
-use Franzose\ClosureTable\Models\ClosureTable;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase;
@@ -20,8 +17,6 @@ abstract class BaseTestCase extends TestCase
         parent::setUp();
 
         $this->app->setBasePath(__DIR__ . '/../');
-        $this->app->bind(EntityInterface::class, Entity::class);
-        $this->app->bind(ClosureTableInterface::class, ClosureTable::class);
 
         $artisan = $this->app->make(Kernel::class);
 

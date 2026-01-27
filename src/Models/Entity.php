@@ -4,7 +4,6 @@ namespace Franzose\ClosureTable\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -63,7 +62,7 @@ use InvalidArgumentException;
  *
  * @package Franzose\ClosureTable
  */
-class Entity extends Eloquent implements EntityInterface
+class Entity extends Eloquent
 {
     use SoftDeletes;
 
@@ -881,12 +880,12 @@ class Entity extends Eloquent implements EntityInterface
     /**
      * Appends a child to the model.
      *
-     * @param EntityInterface $child
+     * @param Entity $child
      * @param int $position
      * @param bool $returnChild
-     * @return EntityInterface
+     * @return Entity
      */
-    public function addChild(EntityInterface $child, $position = null, $returnChild = false)
+    public function addChild(Entity $child, $position = null, $returnChild = false)
     {
         if ($this->exists) {
             $position = $position ?? $this->getLatestChildPosition();
@@ -1604,12 +1603,12 @@ class Entity extends Eloquent implements EntityInterface
     /**
      * Appends a sibling within the current depth.
      *
-     * @param EntityInterface $sibling
+     * @param Entity $sibling
      * @param int|null $position
      * @param bool $returnSibling
-     * @return EntityInterface
+     * @return Entity
      */
-    public function addSibling(EntityInterface $sibling, $position = null, $returnSibling = false)
+    public function addSibling(Entity $sibling, $position = null, $returnSibling = false)
     {
         if ($this->exists) {
             $position = $position ?? static::getLatestPosition($this);
@@ -1758,12 +1757,12 @@ class Entity extends Eloquent implements EntityInterface
      * Saves models from the given attributes array.
      *
      * @param array $tree
-     * @param EntityInterface $parent
+     * @param Entity $parent
      *
      * @return Collection
      * @throws Throwable
      */
-    public static function createFromArray(array $tree, EntityInterface $parent = null)
+    public static function createFromArray(array $tree, Entity $parent = null)
     {
         $entities = [];
 
@@ -1791,7 +1790,7 @@ class Entity extends Eloquent implements EntityInterface
      * Makes the model a child or a root with given position.
      *
      * @param int $position
-     * @param EntityInterface|int $ancestor
+     * @param Entity|int $ancestor
      * @return Entity
      * @throws InvalidArgumentException
      */
