@@ -1,9 +1,9 @@
 <?php
 
-namespace Franzose\ClosureTable\Tests\Models\Entity;
+namespace Franzose\ClosureTable\Tests\Entity;
 
 use DB;
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
 use Franzose\ClosureTable\Tests\BaseTestCase;
 use Franzose\ClosureTable\Tests\Page;
 

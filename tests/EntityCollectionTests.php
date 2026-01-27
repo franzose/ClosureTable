@@ -2,14 +2,14 @@
 namespace Franzose\ClosureTable\Tests;
 
 use DB;
-use Franzose\ClosureTable\Extensions\Collection;
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
+use Franzose\ClosureTable\EntityCollection;
 
 class CollectionTestCase extends BaseTestCase
 {
     public function testGetChildAt()
     {
-        $collection = new Collection([
+        $collection = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
             new Page(['position' => 2]),
@@ -21,29 +21,29 @@ class CollectionTestCase extends BaseTestCase
 
     public function testGetFirstChild()
     {
-        $collection = new Collection([
+        $collection = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
         ]);
 
         static::assertEquals(0, $collection->getFirstChild()->position);
-        static::assertNull((new Collection())->getFirstChild());
+        static::assertNull((new EntityCollection())->getFirstChild());
     }
 
     public function testGetLastChild()
     {
-        $collection = new Collection([
+        $collection = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
         ]);
 
         static::assertEquals(1, $collection->getLastChild()->position);
-        static::assertNull((new Collection())->getLastChild());
+        static::assertNull((new EntityCollection())->getLastChild());
     }
 
     public function testGetRange()
     {
-        $collection = new Collection([
+        $collection = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
             new Page(['position' => 2]),
@@ -56,7 +56,7 @@ class CollectionTestCase extends BaseTestCase
 
     public function testGetNeighbors()
     {
-        $collection = new Collection([
+        $collection = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
             new Page(['position' => 2]),
@@ -71,7 +71,7 @@ class CollectionTestCase extends BaseTestCase
 
     public function testGetPrevSiblings()
     {
-        $collection = new Collection([
+        $collection = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
             new Page(['position' => 2]),
@@ -86,7 +86,7 @@ class CollectionTestCase extends BaseTestCase
 
     public function testGetNextSiblings()
     {
-        $collection = new Collection([
+        $collection = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
             new Page(['position' => 2]),
@@ -104,13 +104,13 @@ class CollectionTestCase extends BaseTestCase
         $entity = new Page(['position' => 0]);
         $childrenRelationIndex = $entity->getChildrenRelationIndex();
 
-        $collection = new Collection([
+        $collection = new EntityCollection([
             $entity,
             new Page(['position' => 1]),
             new Page(['position' => 2])
         ]);
 
-        $expected = new Collection([
+        $expected = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
             new Page(['position' => 2])
@@ -130,13 +130,13 @@ class CollectionTestCase extends BaseTestCase
         $entity = new Page(['position' => 0]);
         $childrenRelationIndex = $entity->getChildrenRelationIndex();
 
-        $collection = new Collection([
+        $collection = new EntityCollection([
             $entity,
             new Page(['position' => 1]),
             new Page(['position' => 2])
         ]);
 
-        $children = new Collection([
+        $children = new EntityCollection([
             new Page(['position' => 0]),
             new Page(['position' => 1]),
             new Page(['position' => 2])
@@ -161,7 +161,7 @@ class CollectionTestCase extends BaseTestCase
         $child = new Page(['id' => 2, 'parent_id' => 1]);
         $grandChild = new Page(['id' => 3, 'parent_id' => 2]);
 
-        $tree = (new Collection([$root, $child, $grandChild]))->toTree();
+        $tree = (new EntityCollection([$root, $child, $grandChild]))->toTree();
 
         static::assertEquals(0, $queries);
         static::assertCount(1, $tree);

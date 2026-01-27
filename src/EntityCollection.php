@@ -1,8 +1,7 @@
 <?php
-namespace Franzose\ClosureTable\Extensions;
+namespace Franzose\ClosureTable;
 
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Franzose\ClosureTable\Models\Entity;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Extended Collection class. Provides some useful methods.
@@ -10,7 +9,7 @@ use Franzose\ClosureTable\Models\Entity;
  * @method Entity|null get($key, $default = null)
  * @package Franzose\ClosureTable\Extensions
  */
-class Collection extends EloquentCollection
+class EntityCollection extends Collection
 {
     /**
      * Returns a child node at the given position.
@@ -54,7 +53,7 @@ class Collection extends EloquentCollection
      * @param int $from
      * @param int|null $to
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getRange($from, $to = null)
     {
@@ -73,7 +72,7 @@ class Collection extends EloquentCollection
      *
      * @param int $position
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getNeighbors($position)
     {
@@ -88,7 +87,7 @@ class Collection extends EloquentCollection
      *
      * @param int $position
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getPrevSiblings($position)
     {
@@ -102,7 +101,7 @@ class Collection extends EloquentCollection
      *
      * @param int $position
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getNextSiblings($position)
     {
@@ -115,7 +114,7 @@ class Collection extends EloquentCollection
      * Retrieves children relation.
      *
      * @param $position
-     * @return Collection
+     * @return EntityCollection
      */
     public function getChildrenOf($position)
     {
@@ -142,7 +141,7 @@ class Collection extends EloquentCollection
     /**
      * Makes tree-like collection.
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function toTree()
     {

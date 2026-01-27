@@ -1,9 +1,9 @@
 <?php
 
-namespace Franzose\ClosureTable\Tests\Models\Entity;
+namespace Franzose\ClosureTable\Tests\Entity;
 
-use Franzose\ClosureTable\Extensions\Collection;
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
+use Franzose\ClosureTable\EntityCollection;
 use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class AncestorTests extends BaseTestCase
@@ -56,7 +56,7 @@ class AncestorTests extends BaseTestCase
 
         $ancestors = $entity->getAncestors();
 
-        static::assertInstanceOf(Collection::class, $ancestors);
+        static::assertInstanceOf(EntityCollection::class, $ancestors);
         static::assertCount(3, $ancestors);
         static::assertContainsOnlyInstancesOf(Entity::class, $ancestors);
         static::assertEquals([11, 10, 9], $ancestors->modelKeys());
@@ -68,7 +68,7 @@ class AncestorTests extends BaseTestCase
 
         $ancestors = $entity->getAncestorsWhere('position', '<', 2);
 
-        static::assertInstanceOf(Collection::class, $ancestors);
+        static::assertInstanceOf(EntityCollection::class, $ancestors);
         static::assertCount(2, $ancestors);
         static::assertContainsOnlyInstancesOf(Entity::class, $ancestors);
         static::assertEquals([11, 10], $ancestors->modelKeys());

@@ -1,9 +1,9 @@
 <?php
 
-namespace Franzose\ClosureTable\Tests\Models\Entity;
+namespace Franzose\ClosureTable\Tests\Entity;
 
-use Franzose\ClosureTable\Extensions\Collection;
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
+use Franzose\ClosureTable\EntityCollection;
 use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class DescendantTests extends BaseTestCase
@@ -55,7 +55,7 @@ class DescendantTests extends BaseTestCase
         $entity = Entity::find(9);
         $descendants = $entity->getDescendants();
 
-        static::assertInstanceOf(Collection::class, $descendants);
+        static::assertInstanceOf(EntityCollection::class, $descendants);
         static::assertCount(6, $descendants);
         static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
     }

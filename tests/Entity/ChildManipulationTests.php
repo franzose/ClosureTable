@@ -1,8 +1,8 @@
 <?php
 
-namespace Franzose\ClosureTable\Tests\Models\Entity;
+namespace Franzose\ClosureTable\Tests\Entity;
 
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
 use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class ChildManipulationTests extends BaseTestCase

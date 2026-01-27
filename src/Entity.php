@@ -1,12 +1,12 @@
 <?php
-namespace Franzose\ClosureTable\Models;
+namespace Franzose\ClosureTable;
 
+use Franzose\ClosureTable\Models\Throwable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 
 /**
@@ -18,7 +18,7 @@ use InvalidArgumentException;
  *
  * @property int position Alias for the current position attribute name
  * @property int parent_id Alias for the direct ancestor identifier attribute name
- * @property Collection children Child nodes loaded from the database
+ * @property EntityCollection children Child nodes loaded from the database
  * @method Builder ancestors()
  * @method Builder ancestorsOf($id)
  * @method Builder ancestorsWithSelf()
@@ -437,7 +437,7 @@ class Entity extends Eloquent
      * Retrieves all ancestors of a model.
      *
      * @param array $columns
-     * @return Collection
+     * @return EntityCollection
      */
     public function getAncestors(array $columns = ['*'])
     {
@@ -448,8 +448,8 @@ class Entity extends Eloquent
      * Retrieves tree structured ancestors of a model.
      *
      * @param array $columns
-     * @return Collection
-     * @deprecated since 6.0, use {@link Collection::toTree()} instead
+     * @return EntityCollection
+     * @deprecated since 6.0, use {@link EntityCollection::toTree()} instead
      */
     public function getAncestorsTree(array $columns = ['*'])
     {
@@ -463,7 +463,7 @@ class Entity extends Eloquent
      * @param mixed $operator
      * @param mixed $value
      * @param array $columns
-     * @return Collection
+     * @return EntityCollection
      * @deprecated since 6.0, use {@link Entity::ancestors()} scope instead
      */
     public function getAncestorsWhere($column, $operator = null, $value = null, array $columns = ['*'])
@@ -570,7 +570,7 @@ class Entity extends Eloquent
      * Retrieves all descendants of a model.
      *
      * @param array $columns
-     * @return Collection
+     * @return EntityCollection
      */
     public function getDescendants(array $columns = ['*'])
     {
@@ -581,8 +581,8 @@ class Entity extends Eloquent
      * Retrieves tree structured descendants of a model.
      *
      * @param array $columns
-     * @return Collection
-     * @deprecated since 6.0, use {@link Collection::toTree()} instead
+     * @return EntityCollection
+     * @deprecated since 6.0, use {@link EntityCollection::toTree()} instead
      */
     public function getDescendantsTree(array $columns = ['*'])
     {
@@ -596,7 +596,7 @@ class Entity extends Eloquent
      * @param mixed $operator
      * @param mixed $value
      * @param array $columns
-     * @return Collection
+     * @return EntityCollection
      * @deprecated since 6.0, use {@link Entity::descendants()} scope instead
      */
     public function getDescendantsWhere($column, $operator = null, $value = null, array $columns = ['*'])
@@ -639,7 +639,7 @@ class Entity extends Eloquent
      *
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getChildren(array $columns = ['*'])
     {
@@ -870,7 +870,7 @@ class Entity extends Eloquent
      * @param int $from
      * @param int $to
      * @param array $columns
-     * @return Collection
+     * @return EntityCollection
      */
     public function getChildrenRange($from, $to = null, array $columns = ['*'])
     {
@@ -950,12 +950,12 @@ class Entity extends Eloquent
     }
 
     /**
-     * @return Collection
+     * @return EntityCollection
      */
     private function getChildrenRelation()
     {
         if (!$this->relationLoaded(static::CHILDREN_RELATION_NAME)) {
-            $this->setRelation(static::CHILDREN_RELATION_NAME, new Collection());
+            $this->setRelation(static::CHILDREN_RELATION_NAME, new EntityCollection());
         }
 
         return $this->getRelation(static::CHILDREN_RELATION_NAME);
@@ -1100,7 +1100,7 @@ class Entity extends Eloquent
      *
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getSiblings(array $columns = ['*'])
     {
@@ -1165,7 +1165,7 @@ class Entity extends Eloquent
      *
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getNeighbors(array $columns = ['*'])
     {
@@ -1368,7 +1368,7 @@ class Entity extends Eloquent
      *
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getPrevSiblings(array $columns = ['*'])
     {
@@ -1473,7 +1473,7 @@ class Entity extends Eloquent
      *
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public function getNextSiblings(array $columns = ['*'])
     {
@@ -1555,7 +1555,7 @@ class Entity extends Eloquent
      * @param int $from
      * @param int $to
      * @param array $columns
-     * @return Collection
+     * @return EntityCollection
      */
     public function getSiblingsRange($from, $to = null, array $columns = ['*'])
     {
@@ -1655,7 +1655,7 @@ class Entity extends Eloquent
      *
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      */
     public static function getRoots(array $columns = ['*'])
     {
@@ -1694,7 +1694,7 @@ class Entity extends Eloquent
      *
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      * @deprecated since 6.0
      */
     public static function getTree(array $columns = ['*'])
@@ -1720,7 +1720,7 @@ class Entity extends Eloquent
      * @param mixed $value
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      * @deprecated since 6.0
      */
     public static function getTreeWhere($column, $operator = null, $value = null, array $columns = ['*'])
@@ -1740,7 +1740,7 @@ class Entity extends Eloquent
      * @param Builder $query
      * @param array $columns
      *
-     * @return Collection
+     * @return EntityCollection
      * @deprecated since 6.0
      */
     public static function getTreeByQuery(Builder $query, array $columns = ['*'])
@@ -1759,7 +1759,7 @@ class Entity extends Eloquent
      * @param array $tree
      * @param Entity $parent
      *
-     * @return Collection
+     * @return EntityCollection
      * @throws Throwable
      */
     public static function createFromArray(array $tree, Entity $parent = null)
@@ -1783,7 +1783,7 @@ class Entity extends Eloquent
             $entities[] = $entity;
         }
 
-        return new Collection($entities);
+        return new EntityCollection($entities);
     }
 
     /**
@@ -1913,7 +1913,7 @@ class Entity extends Eloquent
      */
     public function newCollection(array $models = [])
     {
-        return new Collection($models);
+        return new EntityCollection($models);
     }
 
     /**

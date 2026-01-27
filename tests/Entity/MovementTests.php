@@ -1,9 +1,9 @@
 <?php
 
-namespace Franzose\ClosureTable\Tests\Models\Entity;
+namespace Franzose\ClosureTable\Tests\Entity;
 
-use Franzose\ClosureTable\Models\ClosureTable;
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\ClosureTable;
+use Franzose\ClosureTable\Entity;
 use Franzose\ClosureTable\Tests\BaseTestCase;
 use InvalidArgumentException;
 

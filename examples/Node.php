@@ -2,7 +2,7 @@
 
 namespace App;
 
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
 
 class Node extends Entity
 {

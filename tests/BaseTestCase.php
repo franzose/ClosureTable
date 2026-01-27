@@ -3,10 +3,10 @@ namespace Franzose\ClosureTable\Tests;
 
 use DB;
 use Dotenv\Dotenv;
+use Franzose\ClosureTable\Entity;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase;
-use Franzose\ClosureTable\Models\Entity;
 
 abstract class BaseTestCase extends TestCase
 {
