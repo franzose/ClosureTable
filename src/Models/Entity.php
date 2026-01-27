@@ -138,7 +138,7 @@ class Entity extends Eloquent implements EntityInterface
 
     public function newFromBuilder($attributes = [], $connection = null)
     {
-        $instance = parent::newFromBuilder($attributes);
+        $instance = parent::newFromBuilder($attributes, $connection);
         $instance->previousParentId = $instance->parent_id;
         $instance->previousPosition = $instance->position;
         return $instance;

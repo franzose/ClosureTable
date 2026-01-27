@@ -35,6 +35,13 @@ class ConstructionTests extends BaseTestCase
         static::assertEquals($entity->getTable() . '_closure', $closure->getTable());
     }
 
+    public function testNewFromBuilderUsesProvidedConnection()
+    {
+        $entity = (new Entity())->newFromBuilder(['id' => 1], 'sqlite');
+
+        static::assertEquals('sqlite', $entity->getConnectionName());
+    }
+
     public function testCreate()
     {
         $entity = new Page(['title' => 'Item 1']);
