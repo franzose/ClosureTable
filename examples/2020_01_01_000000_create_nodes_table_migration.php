@@ -1,13 +1,14 @@
 <?php
 
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-class CreateEntitiesTableMigration extends Migration
+class CreateNodesTableMigration extends Migration
 {
     public function up()
     {
-        Schema::create('entity', function (Blueprint $table) {
+        Schema::create('nodes', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('parent_id')->unsigned()->nullable();
             $table->integer('position', false, true);
@@ -15,11 +16,11 @@ class CreateEntitiesTableMigration extends Migration
 
             $table->foreign('parent_id')
                 ->references('id')
-                ->on('entity')
+                ->on('nodes')
                 ->onDelete('set null');
         });
 
-        Schema::create('entity_tree', function (Blueprint $table) {
+        Schema::create('nodes_closure', function (Blueprint $table) {
             $table->increments('closure_id');
 
             $table->integer('ancestor', false, true);
@@ -28,19 +29,19 @@ class CreateEntitiesTableMigration extends Migration
 
             $table->foreign('ancestor')
                 ->references('id')
-                ->on('entity')
+                ->on('nodes')
                 ->onDelete('cascade');
 
             $table->foreign('descendant')
                 ->references('id')
-                ->on('entity')
+                ->on('nodes')
                 ->onDelete('cascade');
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('entity_tree');
-        Schema::dropIfExists('entity');
+        Schema::dropIfExists('nodes_closure');
+        Schema::dropIfExists('nodes');
     }
 }
