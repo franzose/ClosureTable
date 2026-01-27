@@ -2,7 +2,6 @@
 namespace Franzose\ClosureTable\Models;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
-use Franzose\ClosureTable\Contracts\ClosureTableInterface;
 
 /**
  * Basic ClosureTable model. Performs actions on the relationships table.
@@ -13,7 +12,7 @@ use Franzose\ClosureTable\Contracts\ClosureTableInterface;
  *
  * @package Franzose\ClosureTable
  */
-class ClosureTable extends Eloquent implements ClosureTableInterface
+class ClosureTable extends Eloquent
 {
     /**
      * The table associated with the model.
