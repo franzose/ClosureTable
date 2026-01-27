@@ -83,7 +83,7 @@ You have to keep in mind that, by design of this package, the models/tables have
 </table>
 
 ## Examples
-In the examples, let's assume that we've set up a `Node` model which extends the `Franzose\ClosureTable\Models\Entity` model.
+In the examples, let's assume that we've set up a `Node` model which extends the `Franzose\ClosureTable\Entity` model.
 
 ### Scopes
 Since ClosureTable 6, a lot of query scopes have become available in the Entity model:
@@ -401,7 +401,7 @@ Node::createFromArray([
     ]
 ]);
 
-/** @var Franzose\ClosureTable\Extensions\Collection $children */
+/** @var Franzose\ClosureTable\EntityCollection $children */
 $children = Node::find(1)->getChildren();
 $children->getChildAt(1)->id; // 3
 $children->getFirstChild()->id; // 2
