@@ -18,6 +18,15 @@ class MovementTests extends BaseTestCase
         $entity->moveTo(0, $entity);
     }
 
+    public function testMoveToDescendantThrowsException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $entity = Entity::find(9);
+
+        $entity->moveTo(0, 12);
+    }
+
     public function testMoveTo()
     {
         $parent = Entity::find(1);

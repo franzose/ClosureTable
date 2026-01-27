@@ -1811,6 +1811,17 @@ class Entity extends Eloquent implements EntityInterface
             throw new InvalidArgumentException('Target entity is equal to the sender.');
         }
 
+        if ($this->exists && $parentId !== null) {
+            $isDescendant = $this
+                ->descendantsOf($this->getKey())
+                ->where($this->getKeyName(), '=', $parentId)
+                ->exists();
+
+            if ($isDescendant) {
+                throw new InvalidArgumentException('Target entity is a descendant of the sender.');
+            }
+        }
+
         $this->parent_id = $parentId;
         $this->position = $position;
 
