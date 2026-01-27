@@ -3,6 +3,7 @@ namespace Franzose\ClosureTable\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -64,6 +65,8 @@ use InvalidArgumentException;
  */
 class Entity extends Eloquent implements EntityInterface
 {
+    use SoftDeletes;
+
     const CHILDREN_RELATION_NAME = 'children';
 
     /**
@@ -93,13 +96,6 @@ class Entity extends Eloquent implements EntityInterface
      * @var bool
      */
     private $isMoved = false;
-
-    /**
-     * Indicates if the model should soft delete.
-     *
-     * @var bool
-     */
-    protected $softDelete = true;
 
     /**
      * Indicates if the model should be timestamped.

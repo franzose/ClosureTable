@@ -54,4 +54,14 @@ class ConstructionTests extends BaseTestCase
         static::assertEquals(9, $entity->position);
         static::assertEquals(null, $entity->parent_id);
     }
+
+    public function testDeleteUsesSoftDeletes()
+    {
+        $entity = Entity::create(['title' => 'Item 1']);
+
+        $entity->delete();
+
+        static::assertNull(Entity::find($entity->getKey()));
+        static::assertNotNull(Entity::withTrashed()->find($entity->getKey())->deleted_at);
+    }
 }
