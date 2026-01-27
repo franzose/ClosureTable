@@ -25,17 +25,6 @@ It's strongly recommended to use [Composer](https://getcomposer.org) to install 
 $ composer require franzose/closure-table
 ```
 
-If you use Laravel 5.5+, the package's service provider is automatically registered for you thanks to the [package auto-discovery](https://laravel.com/docs/7.x/packages#package-discovery) feature. Otherwise, you have to manually add it to your `config/app.php`:
-```php
-<?php
-
-return [
-    'providers' => [
-        Franzose\ClosureTable\ClosureTableServiceProvider::class
-    ]
-];
-```
-
 ## Setup
 Create the entity model, closure table model, and their migration manually. You can use the examples in `examples/` as a starting point:
 - `examples/Node.php`
