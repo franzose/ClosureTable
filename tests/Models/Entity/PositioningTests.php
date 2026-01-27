@@ -123,4 +123,12 @@ final class PositioningTests extends BaseTestCase
             9 => 7,
         ]);
     }
+
+    public function testCreateRootAppendsAfterExistingRoots()
+    {
+        $entity = new Entity;
+        $entity->save();
+
+        static::assertEquals(9, $entity->position);
+    }
 }

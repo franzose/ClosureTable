@@ -21,6 +21,16 @@ class SiblingQueryTests extends BaseTestCase
         static::assertEquals(15, $siblings->get(2)->getKey());
     }
 
+    public function testGetSiblingsForRoot()
+    {
+        $entity = Entity::find(1);
+
+        $siblings = $entity->getSiblings();
+
+        static::assertCount(8, $siblings);
+        static::assertEquals([2, 3, 4, 5, 6, 7, 8, 9], $siblings->modelKeys());
+    }
+
     public function testsCountSiblings()
     {
         static::assertEquals(3, Entity::find(13)->countSiblings());
