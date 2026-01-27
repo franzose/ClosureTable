@@ -35,6 +35,13 @@ class ConstructionTests extends BaseTestCase
         static::assertEquals($entity->getTable() . '_closure', $closure->getTable());
     }
 
+    public function testNewFromBuilderUsesProvidedConnection()
+    {
+        $entity = (new Entity())->newFromBuilder(['id' => 1], 'sqlite');
+
+        static::assertEquals('sqlite', $entity->getConnectionName());
+    }
+
     public function testCreate()
     {
         $entity = new Page(['title' => 'Item 1']);
@@ -46,5 +53,15 @@ class ConstructionTests extends BaseTestCase
 
         static::assertEquals(9, $entity->position);
         static::assertEquals(null, $entity->parent_id);
+    }
+
+    public function testDeleteUsesSoftDeletes()
+    {
+        $entity = Entity::create(['title' => 'Item 1']);
+
+        $entity->delete();
+
+        static::assertNull(Entity::find($entity->getKey()));
+        static::assertNotNull(Entity::withTrashed()->find($entity->getKey())->deleted_at);
     }
 }

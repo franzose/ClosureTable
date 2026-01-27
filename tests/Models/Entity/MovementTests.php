@@ -18,6 +18,15 @@ class MovementTests extends BaseTestCase
         $entity->moveTo(0, $entity);
     }
 
+    public function testMoveToDescendantThrowsException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $entity = Entity::find(9);
+
+        $entity->moveTo(0, 12);
+    }
+
     public function testMoveTo()
     {
         $parent = Entity::find(1);
@@ -28,6 +37,21 @@ class MovementTests extends BaseTestCase
         static::assertEquals(0, $result->position);
         static::assertEquals(1, $result->parent_id);
         static::assertEquals($parent->getKey(), $result->getParent()->getKey());
+    }
+
+    public function testMoveToSameParentReordersSiblings()
+    {
+        $entity = Entity::find(15);
+
+        $entity->moveTo(1, 9);
+
+        static::assertEquals(1, $entity->position);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            15 => 1,
+            13 => 2,
+            14 => 3
+        ]);
     }
 
     public function testInsertedNodeDepth()

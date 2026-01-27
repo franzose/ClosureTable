@@ -185,6 +185,9 @@ $node->position; // 3
 
 Node::find(4)->moveTo(0, Node::find(2)); // same as Node::find(4)->moveTo(0, 2);
 Node::find(2)->getChildren()->pluck('id')->toArray(); // [4]
+
+// move a node within the same parent to reorder siblings
+Node::find(15)->moveTo(1, 9);
 ```
 
 ### Ancestors

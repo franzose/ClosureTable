@@ -3,6 +3,7 @@ namespace Franzose\ClosureTable\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Franzose\ClosureTable\Contracts\EntityInterface;
 use Franzose\ClosureTable\Extensions\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -64,6 +65,8 @@ use InvalidArgumentException;
  */
 class Entity extends Eloquent implements EntityInterface
 {
+    use SoftDeletes;
+
     const CHILDREN_RELATION_NAME = 'children';
 
     /**
@@ -92,14 +95,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @var bool
      */
-    private $isMoved = false;
-
-    /**
-     * Indicates if the model should soft delete.
-     *
-     * @var bool
-     */
-    protected $softDelete = true;
+    private $isReparenting = false;
 
     /**
      * Indicates if the model should be timestamped.
@@ -138,7 +134,7 @@ class Entity extends Eloquent implements EntityInterface
 
     public function newFromBuilder($attributes = [], $connection = null)
     {
-        $instance = parent::newFromBuilder($attributes);
+        $instance = parent::newFromBuilder($attributes, $connection);
         $instance->previousParentId = $instance->parent_id;
         $instance->previousPosition = $instance->position;
         return $instance;
@@ -281,7 +277,7 @@ class Entity extends Eloquent implements EntityInterface
             if ($entity->isDirty($entity->getPositionColumn())) {
                 $latest = static::getLatestPosition($entity);
 
-                if (!$entity->isMoved) {
+                if (!$entity->isReparenting) {
                     $latest--;
                 }
 
@@ -1792,7 +1788,7 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Makes the model a child or a root with given position. Do not use moveTo to move a node within the same ancestor (call position = value and save instead).
+     * Makes the model a child or a root with given position.
      *
      * @param int $position
      * @param EntityInterface|int $ancestor
@@ -1803,20 +1799,29 @@ class Entity extends Eloquent implements EntityInterface
     {
         $parentId = $ancestor instanceof self ? $ancestor->getKey() : $ancestor;
 
-        if ($this->parent_id === $parentId && $this->parent_id !== null) {
-            return $this;
-        }
-
         if ($this->getKey() === $parentId) {
             throw new InvalidArgumentException('Target entity is equal to the sender.');
         }
 
+        if ($this->exists && $parentId !== null) {
+            $isDescendant = $this
+                ->descendantsOf($this->getKey())
+                ->where($this->getKeyName(), '=', $parentId)
+                ->exists();
+
+            if ($isDescendant) {
+                throw new InvalidArgumentException('Target entity is a descendant of the sender.');
+            }
+        }
+
+        $isReparenting = $this->parent_id !== $parentId;
+
         $this->parent_id = $parentId;
         $this->position = $position;
 
-        $this->isMoved = true;
+        $this->isReparenting = $isReparenting;
         $this->save();
-        $this->isMoved = false;
+        $this->isReparenting = false;
 
         return $this;
     }
