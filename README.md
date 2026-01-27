@@ -37,24 +37,10 @@ return [
 ```
 
 ## Setup
-In a basic scenario, you can simply run the following command:
-```bash
-$ php artisan closuretable:make Node
-```
-Where `Node` is the name of the entity model. This is what you get from running the above:<br>
-1. Two models in the `app` directory: `App\Node` and `App\NodeClosure`<br>
-2. A new migration in the `database/migrations` directory
-
-As you can see, the command requires a single argument, name of the entity model. However, it accepts several options in order to provide some sort of customization:
- Option          | Alias | Meaning 
- ----------------| ------| -------
- namespace       | ns    | Custom namespace for generated models. Keep in mind that the given namespace will override  model namespaces: `php artisan closuretable:make Foo\\Node --namespace=Qux --closure=Bar\\NodeTree` will generate `Qux\Node` and `Qux\NodeTree` models.
- entity-table    | et    | Database table name for the entity model       
- closure         | c     | Class name for the closure model
- closure-table   | ct    | Database table name for the closure model
- models-path     | mdl   | Directory in which to put generated models
- migrations-path | mgr   | Directory in which to put generated migrations
- use-innodb      | i     | This flag will tell the generator to set database engine to InnoDB. Useful only if you use MySQL
+Create the entity model, closure table model, and their migration manually. You can use the examples in `examples/` as a starting point:
+- `examples/Node.php`
+- `examples/NodeClosure.php`
+- `examples/2020_01_01_000000_create_nodes_table_migration.php`
 
 ## Requirements
 You have to keep in mind that, by design of this package, the models/tables have a required minimum of attributes/columns:

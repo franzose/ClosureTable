@@ -1,21 +1,22 @@
 <?php
-namespace Foo;
+
+namespace App;
 
 use Franzose\ClosureTable\Models\Entity;
 
-class Foo extends Entity
+class Node extends Entity
 {
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'foo';
+    protected $table = 'nodes';
 
     /**
      * ClosureTable model instance.
      *
-     * @var \Foo\FooTree
+     * @var string
      */
-    protected $closure = 'Foo\FooTree';
+    protected $closure = NodeClosure::class;
 }
