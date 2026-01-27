@@ -1,12 +1,12 @@
 <?php
 namespace Franzose\ClosureTable;
 
-use Franzose\ClosureTable\Models\Throwable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Throwable;
 use InvalidArgumentException;
 
 /**
@@ -1909,7 +1909,7 @@ class Entity extends Eloquent
      * Create a new Eloquent Collection instance.
      *
      * @param  array $models
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return EntityCollection
      */
     public function newCollection(array $models = [])
     {
