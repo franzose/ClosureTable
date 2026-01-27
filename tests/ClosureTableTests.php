@@ -1,11 +1,10 @@
 <?php
-namespace Franzose\ClosureTable\Tests\Models;
+namespace Franzose\ClosureTable\Tests;
 
-use Franzose\ClosureTable\Models\ClosureTable;
-use Franzose\ClosureTable\Models\Entity;
-use Franzose\ClosureTable\Tests\BaseTestCase;
+use Franzose\ClosureTable\ClosureTable;
+use Franzose\ClosureTable\Entity;
 
-class ClosureTableTestCase extends BaseTestCase
+class ClosureTableTests extends BaseTestCase
 {
     /**
      * @var ClosureTable;

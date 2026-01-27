@@ -1,9 +1,9 @@
 <?php
 
-namespace Franzose\ClosureTable\Tests\Models\Entity;
+namespace Franzose\ClosureTable\Tests\Entity;
 
-use Franzose\ClosureTable\Extensions\Collection;
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
+use Franzose\ClosureTable\EntityCollection;
 use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class ChildQueryTests extends BaseTestCase
@@ -65,7 +65,7 @@ class ChildQueryTests extends BaseTestCase
         $entity = Entity::find(9);
         $children = $entity->getChildrenRange(0, 2);
 
-        static::assertInstanceOf(Collection::class, $children);
+        static::assertInstanceOf(EntityCollection::class, $children);
         static::assertCount(3, $children);
         static::assertEquals(0, $children[0]->position);
         static::assertEquals(1, $children[1]->position);

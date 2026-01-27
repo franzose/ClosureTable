@@ -1,7 +1,7 @@
 <?php
 namespace Franzose\ClosureTable\Tests;
 
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
 
 class Page extends Entity
 {

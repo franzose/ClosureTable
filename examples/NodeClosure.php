@@ -2,7 +2,7 @@
 
 namespace App;
 
-use Franzose\ClosureTable\Models\ClosureTable;
+use Franzose\ClosureTable\ClosureTable;
 
 class NodeClosure extends ClosureTable
 {

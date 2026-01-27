@@ -1,5 +1,5 @@
 <?php
-namespace Franzose\ClosureTable\Models;
+namespace Franzose\ClosureTable;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
 

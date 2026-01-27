@@ -1,10 +1,10 @@
 <?php
 
-namespace Franzose\ClosureTable\Tests\Models\Entity;
+namespace Franzose\ClosureTable\Tests\Entity;
 
-use Franzose\ClosureTable\Extensions\Collection;
-use Franzose\ClosureTable\Models\ClosureTable;
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\ClosureTable;
+use Franzose\ClosureTable\Entity;
+use Franzose\ClosureTable\EntityCollection;
 use Franzose\ClosureTable\Tests\BaseTestCase;
 use Franzose\ClosureTable\Tests\Page;
 
@@ -191,7 +191,7 @@ class TreeTests extends BaseTestCase
         /** @var Page $page */
         $page = Page::find(100);
 
-        /** @var Collection|Page[] $children */
+        /** @var EntityCollection|Page[] $children */
         $children = $page->getChildren();
 
         static::assertCount(5, $children);

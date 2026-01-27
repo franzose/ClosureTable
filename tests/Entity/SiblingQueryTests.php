@@ -1,9 +1,9 @@
 <?php
 
-namespace Franzose\ClosureTable\Tests\Models\Entity;
+namespace Franzose\ClosureTable\Tests\Entity;
 
-use Franzose\ClosureTable\Extensions\Collection;
-use Franzose\ClosureTable\Models\Entity;
+use Franzose\ClosureTable\Entity;
+use Franzose\ClosureTable\EntityCollection;
 use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class SiblingQueryTests extends BaseTestCase
@@ -14,7 +14,7 @@ class SiblingQueryTests extends BaseTestCase
 
         $siblings = $entity->getSiblings();
 
-        static::assertInstanceOf(Collection::class, $siblings);
+        static::assertInstanceOf(EntityCollection::class, $siblings);
         static::assertCount(3, $siblings);
         static::assertEquals(10, $siblings->get(0)->getKey());
         static::assertEquals(14, $siblings->get(1)->getKey());
