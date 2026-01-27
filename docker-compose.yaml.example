@@ -11,7 +11,6 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: userpass
       MYSQL_ROOT_PASSWORD: root
-
   postgresql:
     image: postgres:latest
     volumes:
@@ -23,7 +22,9 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: userpass
   php:
-    image: php:7.0-cli
+    build:
+      context: .
+      dockerfile: Dockerfile.example
     tty: true
     command: /bin/sh
     volumes:

@@ -929,6 +929,10 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
+        if ($from === null) {
+            $from = $this->getLatestChildPosition();
+        }
+
         $this->transactional(function () use (&$from, $children) {
             foreach ($children as $child) {
                 $this->addChild($child, $from);
@@ -1043,7 +1047,13 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function scopeSibling(Builder $builder)
     {
-        return $builder->where($this->getParentIdColumn(), '=', $this->parent_id);
+        $parentIdColumn = $this->getParentIdColumn();
+
+        if ($this->parent_id === null) {
+            return $builder->whereNull($parentIdColumn);
+        }
+
+        return $builder->where($parentIdColumn, '=', $this->parent_id);
     }
 
     /**
@@ -1824,7 +1834,11 @@ class Entity extends Eloquent implements EntityInterface
         $parentIdColumn = $entity->getParentIdColumn();
 
         $latest = $entity->select($positionColumn)
-            ->where($parentIdColumn, '=', $entity->parent_id)
+            ->when($entity->parent_id === null, function (Builder $builder) use ($parentIdColumn) {
+                $builder->whereNull($parentIdColumn);
+            }, function (Builder $builder) use ($parentIdColumn, $entity) {
+                $builder->where($parentIdColumn, '=', $entity->parent_id);
+            })
             ->latest($positionColumn)
             ->first();
 
@@ -1841,13 +1855,20 @@ class Entity extends Eloquent implements EntityInterface
     private function reorderSiblings()
     {
         $position = $this->getPositionColumn();
+        $parentIdColumn = $this->getParentIdColumn();
 
         if ($this->previousPosition !== null) {
-            $this
+            $query = $this
                 ->where($this->getKeyName(), '<>', $this->getKey())
-                ->where($this->getParentIdColumn(), '=', $this->previousParentId)
-                ->where($position, '>', $this->previousPosition)
-                ->decrement($position);
+                ->where($position, '>', $this->previousPosition);
+
+            if ($this->previousParentId === null) {
+                $query->whereNull($parentIdColumn);
+            } else {
+                $query->where($parentIdColumn, '=', $this->previousParentId);
+            }
+
+            $query->decrement($position);
         }
 
         $this
