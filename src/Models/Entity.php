@@ -929,6 +929,10 @@ class Entity extends Eloquent implements EntityInterface
             return $this;
         }
 
+        if ($from === null) {
+            $from = $this->getLatestChildPosition();
+        }
+
         $this->transactional(function () use (&$from, $children) {
             foreach ($children as $child) {
                 $this->addChild($child, $from);
