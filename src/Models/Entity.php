@@ -95,7 +95,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @var bool
      */
-    private $isMoved = false;
+    private $isReparenting = false;
 
     /**
      * Indicates if the model should be timestamped.
@@ -277,7 +277,7 @@ class Entity extends Eloquent implements EntityInterface
             if ($entity->isDirty($entity->getPositionColumn())) {
                 $latest = static::getLatestPosition($entity);
 
-                if (!$entity->isMoved) {
+                if (!$entity->isReparenting) {
                     $latest--;
                 }
 
@@ -1788,7 +1788,7 @@ class Entity extends Eloquent implements EntityInterface
     }
 
     /**
-     * Makes the model a child or a root with given position. Do not use moveTo to move a node within the same ancestor (call position = value and save instead).
+     * Makes the model a child or a root with given position.
      *
      * @param int $position
      * @param EntityInterface|int $ancestor
@@ -1798,10 +1798,6 @@ class Entity extends Eloquent implements EntityInterface
     public function moveTo($position, $ancestor = null)
     {
         $parentId = $ancestor instanceof self ? $ancestor->getKey() : $ancestor;
-
-        if ($this->parent_id === $parentId && $this->parent_id !== null) {
-            return $this;
-        }
 
         if ($this->getKey() === $parentId) {
             throw new InvalidArgumentException('Target entity is equal to the sender.');
@@ -1818,12 +1814,14 @@ class Entity extends Eloquent implements EntityInterface
             }
         }
 
+        $isReparenting = $this->parent_id !== $parentId;
+
         $this->parent_id = $parentId;
         $this->position = $position;
 
-        $this->isMoved = true;
+        $this->isReparenting = $isReparenting;
         $this->save();
-        $this->isMoved = false;
+        $this->isReparenting = false;
 
         return $this;
     }

@@ -39,6 +39,21 @@ class MovementTests extends BaseTestCase
         static::assertEquals($parent->getKey(), $result->getParent()->getKey());
     }
 
+    public function testMoveToSameParentReordersSiblings()
+    {
+        $entity = Entity::find(15);
+
+        $entity->moveTo(1, 9);
+
+        static::assertEquals(1, $entity->position);
+        static::assertModelAttribute('position', [
+            10 => 0,
+            15 => 1,
+            13 => 2,
+            14 => 3
+        ]);
+    }
+
     public function testInsertedNodeDepth()
     {
         $entity = Entity::create(['title' => 'abcde']);
