@@ -8,9 +8,12 @@ use Franzose\ClosureTable\Entity;
 
 class Node extends Entity
 {
-    /**
-     * The table associated with the model.
-     */
+    // make these fields fillable for the sake of examples
+    protected $fillable = [
+        'id',
+        'parent_id',
+    ];
+
     protected $table = 'nodes';
 
     /**
