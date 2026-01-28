@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -8,7 +9,7 @@ use Franzose\ClosureTable\Tests\Page;
 
 final class SiblingManipulationTests extends BaseTestCase
 {
-    public function testAddSibling()
+    public function testAddSibling(): void
     {
         $entity = Entity::find(15);
 
@@ -19,7 +20,7 @@ final class SiblingManipulationTests extends BaseTestCase
         static::assertEquals('Foo!', $sibling->title);
     }
 
-    public function testAddSiblingAtPosition()
+    public function testAddSiblingAtPosition(): void
     {
         $entity = Entity::find(15);
         $sibling = new Page(['title' => 'Foo!']);
@@ -37,7 +38,7 @@ final class SiblingManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testAddSiblings()
+    public function testAddSiblings(): void
     {
         $entity = Entity::find(15);
         $entity->addSiblings([
@@ -56,7 +57,7 @@ final class SiblingManipulationTests extends BaseTestCase
         static::assertEquals(7, $siblings->get(3)->position);
     }
 
-    public function testAddSiblingsFromPosition()
+    public function testAddSiblingsFromPosition(): void
     {
         $entity = Entity::find(15);
 

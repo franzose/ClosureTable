@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -8,13 +9,13 @@ use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class DescendantTests extends BaseTestCase
 {
-    public function testGetDescendantsShouldReturnAnEmptyCollection()
+    public function testGetDescendantsShouldReturnAnEmptyCollection(): void
     {
         static::assertCount(0, (new Entity())->getDescendants());
         static::assertCount(0, Entity::find(1)->getDescendants());
     }
 
-    public function testDescendantsScope()
+    public function testDescendantsScope(): void
     {
         $entity = Entity::find(9);
 
@@ -24,7 +25,7 @@ class DescendantTests extends BaseTestCase
         static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
     }
 
-    public function testDescendantsOfScope()
+    public function testDescendantsOfScope(): void
     {
         $descendants = Entity::descendantsOf(9)->get();
 
@@ -32,7 +33,7 @@ class DescendantTests extends BaseTestCase
         static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
     }
 
-    public function testDescendantsWithSelfScope()
+    public function testDescendantsWithSelfScope(): void
     {
         $entity = Entity::find(9);
 
@@ -42,7 +43,7 @@ class DescendantTests extends BaseTestCase
         static::assertEquals([9, 10, 11, 12, 13, 14, 15], $descendants->modelKeys());
     }
 
-    public function testDescendantsWithSelfOfScope()
+    public function testDescendantsWithSelfOfScope(): void
     {
         $descendants = Entity::descendantsWithSelfOf(9)->get();
 
@@ -50,7 +51,7 @@ class DescendantTests extends BaseTestCase
         static::assertEquals([9, 10, 11, 12, 13, 14, 15], $descendants->modelKeys());
     }
 
-    public function testGetDescendants()
+    public function testGetDescendants(): void
     {
         $entity = Entity::find(9);
         $descendants = $entity->getDescendants();
@@ -60,7 +61,7 @@ class DescendantTests extends BaseTestCase
         static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
     }
 
-    public function testGetDescendantsWhere()
+    public function testGetDescendantsWhere(): void
     {
         $descendants = Entity::find(9)->getDescendantsWhere('position', '=', 1);
 
@@ -68,13 +69,13 @@ class DescendantTests extends BaseTestCase
         static::assertEquals([13], $descendants->modelKeys());
     }
 
-    public function testCountDescendants()
+    public function testCountDescendants(): void
     {
         static::assertEquals(6, Entity::find(9)->countDescendants());
         static::assertEquals(0, Entity::find(1)->countDescendants());
     }
 
-    public function testHasDescendants()
+    public function testHasDescendants(): void
     {
         static::assertTrue(Entity::find(9)->hasDescendants());
         static::assertFalse(Entity::find(1)->hasDescendants());

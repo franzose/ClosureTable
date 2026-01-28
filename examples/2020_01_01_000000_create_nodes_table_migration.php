@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -6,9 +7,9 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateNodesTableMigration extends Migration
 {
-    public function up()
+    public function up(): void
     {
-        Schema::create('nodes', function (Blueprint $table) {
+        Schema::create('nodes', static function (Blueprint $table) {
             $table->increments('id');
             $table->integer('parent_id')->unsigned()->nullable();
             $table->integer('position', false, true);
@@ -20,7 +21,7 @@ class CreateNodesTableMigration extends Migration
                 ->onDelete('set null');
         });
 
-        Schema::create('nodes_closure', function (Blueprint $table) {
+        Schema::create('nodes_closure', static function (Blueprint $table) {
             $table->increments('closure_id');
 
             $table->integer('ancestor', false, true);
@@ -39,7 +40,7 @@ class CreateNodesTableMigration extends Migration
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('nodes_closure');
         Schema::dropIfExists('nodes');

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App;
 
@@ -8,8 +9,6 @@ class NodeClosure extends ClosureTable
 {
     /**
      * The table associated with the model.
-     *
-     * @var string
      */
     protected $table = 'nodes_closure';
 }

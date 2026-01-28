@@ -1,18 +1,14 @@
 <?php
+declare(strict_types=1);
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 class CreateEntitiesClosureTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-    public function up()
+    public function up(): void
     {
-        Schema::create('entities_closure', function (Blueprint $table) {
+        Schema::create('entities_closure', static function (Blueprint $table) {
             $table->increments('closure_id');
             $table->unsignedInteger('ancestor');
             $table->unsignedInteger('descendant');
@@ -25,12 +21,7 @@ class CreateEntitiesClosureTable extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
+    public function down(): void
     {
         Schema::drop('entities_closure');
     }

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -9,7 +10,7 @@ use InvalidArgumentException;
 
 class MovementTests extends BaseTestCase
 {
-    public function testMoveToThrowsException()
+    public function testMoveToThrowsException(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -18,7 +19,7 @@ class MovementTests extends BaseTestCase
         $entity->moveTo(0, $entity);
     }
 
-    public function testMoveToDescendantThrowsException()
+    public function testMoveToDescendantThrowsException(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -27,7 +28,7 @@ class MovementTests extends BaseTestCase
         $entity->moveTo(0, 12);
     }
 
-    public function testMoveTo()
+    public function testMoveTo(): void
     {
         $parent = Entity::find(1);
         $child = Entity::find(2);
@@ -39,7 +40,7 @@ class MovementTests extends BaseTestCase
         static::assertEquals($parent->getKey(), $result->getParent()->getKey());
     }
 
-    public function testMoveToSameParentReordersSiblings()
+    public function testMoveToSameParentReordersSiblings(): void
     {
         $entity = Entity::find(15);
 
@@ -54,7 +55,7 @@ class MovementTests extends BaseTestCase
         ]);
     }
 
-    public function testInsertedNodeDepth()
+    public function testInsertedNodeDepth(): void
     {
         $entity = Entity::create(['title' => 'abcde']);
         $child = Entity::create(['title' => 'abcde']);
@@ -67,7 +68,7 @@ class MovementTests extends BaseTestCase
         static::assertEquals(1, $closure->depth);
     }
 
-    public function testValidNumberOfRowsInsertedByInsertNode()
+    public function testValidNumberOfRowsInsertedByInsertNode(): void
     {
         $ancestor = Entity::create(['title' => 'abcde']);
         $descendant = Entity::create(['title' => 'abcde']);
@@ -104,7 +105,7 @@ class MovementTests extends BaseTestCase
         );
     }
 
-    public function testMoveNodeToAnotherAncestor()
+    public function testMoveNodeToAnotherAncestor(): void
     {
         $descendant = Entity::find(1);
         $descendant->moveTo(0, 2);
@@ -115,7 +116,7 @@ class MovementTests extends BaseTestCase
         static::assertEquals(2, $descendants);
     }
 
-    public function testMoveNodeToDeepNesting()
+    public function testMoveNodeToDeepNesting(): void
     {
         $item = Entity::find(1);
         $item->moveTo(0, 2);
@@ -136,7 +137,7 @@ class MovementTests extends BaseTestCase
         static::assertEquals(5, $descendantRows);
     }
 
-    public function testMoveNodeToBecomeRoot()
+    public function testMoveNodeToBecomeRoot(): void
     {
         $item = Entity::find(1);
         $item->moveTo(0, 2);

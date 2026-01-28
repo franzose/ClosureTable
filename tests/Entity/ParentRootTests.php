@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -10,13 +11,13 @@ use Franzose\ClosureTable\Tests\BaseTestCase;
  */
 class ParentRootTests extends BaseTestCase
 {
-    public function testNewInstance()
+    public function testNewInstance(): void
     {
         static::assertFalse((new Entity())->isParent());
         static::assertFalse((new Entity())->isRoot());
     }
 
-    public function testExistingInstance()
+    public function testExistingInstance(): void
     {
         static::assertTrue(Entity::find(9)->isParent());
         static::assertFalse(Entity::find(1)->isParent());
@@ -24,7 +25,7 @@ class ParentRootTests extends BaseTestCase
         static::assertFalse(Entity::find(10)->isRoot());
     }
 
-    public function testGetParent()
+    public function testGetParent(): void
     {
         $parent = Entity::find(10)->getParent();
 
@@ -34,7 +35,7 @@ class ParentRootTests extends BaseTestCase
         static::assertNull((new Entity())->getParent());
     }
 
-    public function testGetRoots()
+    public function testGetRoots(): void
     {
         $roots = Entity::getRoots();
 
@@ -45,7 +46,7 @@ class ParentRootTests extends BaseTestCase
         }
     }
 
-    public function testMakeRoot()
+    public function testMakeRoot(): void
     {
         $child = Entity::find(13);
 

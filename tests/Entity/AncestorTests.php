@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -8,13 +9,13 @@ use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class AncestorTests extends BaseTestCase
 {
-    public function testGetAncestorsShouldReturnAnEmptyCollection()
+    public function testGetAncestorsShouldReturnAnEmptyCollection(): void
     {
         static::assertCount(0, (new Entity())->getAncestors());
         static::assertCount(0, Entity::find(1)->getAncestors());
     }
 
-    public function testAncestorsScope()
+    public function testAncestorsScope(): void
     {
         $entity = Entity::find(12);
 
@@ -24,7 +25,7 @@ class AncestorTests extends BaseTestCase
         static::assertEquals([11, 10, 9], $ancestors->modelKeys());
     }
 
-    public function testAncestorsOfScope()
+    public function testAncestorsOfScope(): void
     {
         $ancestors = Entity::ancestorsOf(12)->get();
 
@@ -32,7 +33,7 @@ class AncestorTests extends BaseTestCase
         static::assertEquals([11, 10, 9], $ancestors->modelKeys());
     }
 
-    public function testAncestorsWithSelfScope()
+    public function testAncestorsWithSelfScope(): void
     {
         $entity = Entity::find(12);
 
@@ -42,7 +43,7 @@ class AncestorTests extends BaseTestCase
         static::assertEquals([12, 11, 10, 9], $ancestors->modelKeys());
     }
 
-    public function testAncestorsWithSelfOfScope()
+    public function testAncestorsWithSelfOfScope(): void
     {
         $ancestors = Entity::ancestorsWithSelfOf(12)->get();
 
@@ -50,7 +51,7 @@ class AncestorTests extends BaseTestCase
         static::assertEquals([12, 11, 10, 9], $ancestors->modelKeys());
     }
 
-    public function testGetAncestorsShouldNotBeEmpty()
+    public function testGetAncestorsShouldNotBeEmpty(): void
     {
         $entity = Entity::find(12);
 
@@ -62,7 +63,7 @@ class AncestorTests extends BaseTestCase
         static::assertEquals([11, 10, 9], $ancestors->modelKeys());
     }
 
-    public function testAncestorsWhere()
+    public function testAncestorsWhere(): void
     {
         $entity = Entity::find(12);
 
@@ -74,13 +75,13 @@ class AncestorTests extends BaseTestCase
         static::assertEquals([11, 10], $ancestors->modelKeys());
     }
 
-    public function testCountAncestors()
+    public function testCountAncestors(): void
     {
         static::assertEquals(0, Entity::find(1)->countAncestors());
         static::assertEquals(3, Entity::find(12)->countAncestors());
     }
 
-    public function testHasAncestors()
+    public function testHasAncestors(): void
     {
         static::assertFalse(Entity::find(1)->hasAncestors());
         static::assertTrue(Entity::find(12)->hasAncestors());

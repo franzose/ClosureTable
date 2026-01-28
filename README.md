@@ -3,7 +3,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/franzose/ClosureTable)](https://packagist.org/packages/franzose/closure-table)
 [![Total Downloads](https://poser.pugx.org/franzose/closure-table/downloads.png)](https://packagist.org/packages/franzose/closure-table)
 
-This is a database manipulation package for the Laravel 5.4+ framework. You may want to use it when you need to store and operate hierarchical data in your database. The package is an implementation of a well-known design pattern called [closure table](https://www.slideshare.net/billkarwin/models-for-hierarchical-data). However, in order to simplify and optimize SQL `SELECT` queries, it uses adjacency lists to query direct parent/child relationships.
+This is a database manipulation package for the Laravel framework. You may want to use it when you need to store and operate hierarchical data in your database. The package is an implementation of a well-known design pattern called [closure table](https://www.slideshare.net/billkarwin/models-for-hierarchical-data). However, in order to simplify and optimize SQL `SELECT` queries, it uses adjacency lists to query direct parent/child relationships.
 
 Contents:
 - [Installation](#installation)
@@ -32,7 +32,7 @@ Create the entity model, closure table model, and their migration manually. You 
 - `examples/2020_01_01_000000_create_nodes_table_migration.php`
 
 ## Requirements
-You have to keep in mind that, by design of this package, the models/tables have a required minimum of attributes/columns:
+Laravel 9+ and PHP 8.2+ are required. Keep in mind that, by design of this package, the models/tables have a required minimum of attributes/columns:
 <table>
 <tr>
 <th colspan="3">Entity</th>

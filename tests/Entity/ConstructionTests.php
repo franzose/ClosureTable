@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -9,14 +10,14 @@ use Franzose\ClosureTable\Tests\Page;
 
 class ConstructionTests extends BaseTestCase
 {
-    public function testPositionMustBeFillable()
+    public function testPositionMustBeFillable(): void
     {
         $entity = new Entity();
 
         static::assertTrue($entity->isFillable('position'));
     }
 
-    public function testPositionShouldBeCorrect()
+    public function testPositionShouldBeCorrect(): void
     {
         static::assertNull((new Entity())->position);
         static::assertEquals(0, (new Entity(['position' => -1]))->position);
@@ -26,7 +27,7 @@ class ConstructionTests extends BaseTestCase
         static::assertEquals(0, $entity->position);
     }
 
-    public function testEntityShouldUseDefaultClosureTable()
+    public function testEntityShouldUseDefaultClosureTable(): void
     {
         $entity = new CustomEntity();
         $closure = $entity->getClosureTable();
@@ -35,14 +36,14 @@ class ConstructionTests extends BaseTestCase
         static::assertEquals($entity->getTable() . '_closure', $closure->getTable());
     }
 
-    public function testNewFromBuilderUsesProvidedConnection()
+    public function testNewFromBuilderUsesProvidedConnection(): void
     {
         $entity = (new Entity())->newFromBuilder(['id' => 1], 'sqlite');
 
         static::assertEquals('sqlite', $entity->getConnectionName());
     }
 
-    public function testCreate()
+    public function testCreate(): void
     {
         $entity = new Page(['title' => 'Item 1']);
 
@@ -55,7 +56,7 @@ class ConstructionTests extends BaseTestCase
         static::assertEquals(null, $entity->parent_id);
     }
 
-    public function testDeleteUsesSoftDeletes()
+    public function testDeleteUsesSoftDeletes(): void
     {
         $entity = Entity::create(['title' => 'Item 1']);
 

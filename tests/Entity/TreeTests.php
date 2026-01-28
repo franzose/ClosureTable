@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -10,7 +11,7 @@ use Franzose\ClosureTable\Tests\Page;
 
 class TreeTests extends BaseTestCase
 {
-    public function testDeleteSubtree()
+    public function testDeleteSubtree(): void
     {
         $entity = Entity::find(9);
         $entity->deleteSubtree();
@@ -19,7 +20,7 @@ class TreeTests extends BaseTestCase
         static::assertEquals(8, Entity::whereBetween('id', [1, 8])->count());
     }
 
-    public function testDeleteSubtreeWithAncestor()
+    public function testDeleteSubtreeWithAncestor(): void
     {
         $entity = Entity::find(9);
         $entity->deleteSubtree(true);
@@ -28,7 +29,7 @@ class TreeTests extends BaseTestCase
         static::assertEquals(8, Entity::whereBetween('id', [1, 8])->count());
     }
 
-    public function testForceDeleteSubtree()
+    public function testForceDeleteSubtree(): void
     {
         $entity = Entity::find(9);
         $entity->deleteSubtree(false, true);
@@ -37,7 +38,7 @@ class TreeTests extends BaseTestCase
         static::assertEquals(1, ClosureTable::whereBetween('ancestor', [9, 15])->count());
     }
 
-    public function testForceDeleteDeepSubtree()
+    public function testForceDeleteDeepSubtree(): void
     {
         Entity::find(9)->moveTo(0, 8);
         Entity::find(8)->moveTo(0, 7);
@@ -54,7 +55,7 @@ class TreeTests extends BaseTestCase
         static::assertEquals(1, ClosureTable::whereBetween('ancestor', [1, 9])->count());
     }
 
-    public function testForceDeleteSubtreeWithSelf()
+    public function testForceDeleteSubtreeWithSelf(): void
     {
         $entity = Entity::find(9);
         $entity->deleteSubtree(true, true);
@@ -63,7 +64,7 @@ class TreeTests extends BaseTestCase
         static::assertEquals(0, ClosureTable::whereBetween('ancestor', [9, 15])->count());
     }
 
-    public function testCreateFromArray()
+    public function testCreateFromArray(): void
     {
         $array = [
             [
@@ -100,7 +101,7 @@ class TreeTests extends BaseTestCase
         static::assertEquals(93, $pageZero->getChildAt(0)->getKey());
     }
 
-    public function testCreateFromArrayBug81()
+    public function testCreateFromArrayBug81(): void
     {
         $array = [
             [
@@ -167,7 +168,7 @@ class TreeTests extends BaseTestCase
     /**
      * @link https://github.com/franzose/ClosureTable/issues/239
      */
-    public function testCreateFromArrayIssue239()
+    public function testCreateFromArrayIssue239(): void
     {
         Page::createFromArray([
             [
