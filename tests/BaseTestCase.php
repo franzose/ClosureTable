@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Franzose\ClosureTable\Tests;
 
 use DB;
@@ -10,13 +12,16 @@ use Orchestra\Testbench\TestCase;
 
 abstract class BaseTestCase extends TestCase
 {
-    const DATABASE_CONNECTION = 'closuretable';
+    private const BASE_PATH = __DIR__ . '/../';
+    private const ENV_FILE_NAME = '.env.testing';
 
-    public function setUp()
+    protected const DATABASE_CONNECTION = 'closuretable';
+
+    public function setUp(): void
     {
         parent::setUp();
 
-        $this->app->setBasePath(__DIR__ . '/../');
+        $this->app->setBasePath(self::BASE_PATH);
 
         $artisan = $this->app->make(Kernel::class);
 
@@ -27,21 +32,21 @@ abstract class BaseTestCase extends TestCase
         ]);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // this is to avoid "too many connection" errors
         DB::disconnect(static::DATABASE_CONNECTION);
+
+        parent::tearDown();
     }
 
     /**
      * @param Application $app
      */
-    protected function getEnvironmentSetUp($app)
+    protected function defineEnvironment($app): void
     {
-        $envFilePath = __DIR__ . '/..';
-
-        if (file_exists($envFilePath . '/.env.testing')) {
-            (new Dotenv($envFilePath, '.env.testing'))->load();
+        if (file_exists(self::BASE_PATH . '/' . self::ENV_FILE_NAME)) {
+            Dotenv::createImmutable(self::BASE_PATH, self::ENV_FILE_NAME)->load();
         }
 
         $app['config']->set('database.default', static::DATABASE_CONNECTION);
@@ -58,7 +63,7 @@ abstract class BaseTestCase extends TestCase
         ]);
     }
 
-    public static function assertModelAttribute($attribute, array $expected)
+    public static function assertModelAttribute(string $attribute, array $expected): void
     {
         $actual = Entity::whereIn('id', array_keys($expected))
             ->get(['id', $attribute])

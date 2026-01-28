@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -9,10 +10,7 @@ class CustomEntity extends Entity
 {
     protected $table = 'custom';
 
-    /**
-     * @return ClosureTable|null
-     */
-    public function getClosureTable()
+    public function getClosureTable(): ClosureTable
     {
         return $this->closure;
     }

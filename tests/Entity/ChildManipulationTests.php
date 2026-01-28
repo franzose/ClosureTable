@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -7,7 +8,7 @@ use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class ChildManipulationTests extends BaseTestCase
 {
-    public function testAddChild()
+    public function testAddChild(): void
     {
         $leaf = Entity::find(14);
         $child = Entity::find(15);
@@ -19,7 +20,7 @@ class ChildManipulationTests extends BaseTestCase
         static::assertTrue($leaf->isParent());
     }
 
-    public function testAddChild2()
+    public function testAddChild2(): void
     {
         $parent = Entity::find(11);
         $child = Entity::find(13);
@@ -37,7 +38,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testAddChildReordersNodesOnThePreviousLevel()
+    public function testAddChildReordersNodesOnThePreviousLevel(): void
     {
         $parent = Entity::find(13);
         $child = Entity::find(5);
@@ -54,7 +55,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testAddChildShouldReturnChild()
+    public function testAddChildShouldReturnChild(): void
     {
         $leaf = Entity::find(14);
         $child = Entity::find(15);
@@ -64,7 +65,7 @@ class ChildManipulationTests extends BaseTestCase
         static::assertSame($child, $result);
     }
 
-    public function testAddChildToTheLastPosition()
+    public function testAddChildToTheLastPosition(): void
     {
         $parent = Entity::find(9);
         $child = Entity::find(12);
@@ -82,7 +83,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testAddChildToPosition()
+    public function testAddChildToPosition(): void
     {
         $parent = Entity::find(9);
         $child = Entity::find(12);
@@ -100,7 +101,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testAddChildHavingChildren()
+    public function testAddChildHavingChildren(): void
     {
         $parent = Entity::find(13);
         $child = Entity::find(10);
@@ -119,7 +120,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testAddChildren()
+    public function testAddChildren(): void
     {
         $entity = Entity::find(15);
         $child1 = new Entity();
@@ -139,7 +140,7 @@ class ChildManipulationTests extends BaseTestCase
         static::assertEquals(2, $child3->position);
     }
 
-    public function testAddChildrenAppendsAfterExistingChildren()
+    public function testAddChildrenAppendsAfterExistingChildren(): void
     {
         $entity = Entity::find(9);
         $child1 = new Entity();
@@ -160,7 +161,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testAddChildrenFromPosition()
+    public function testAddChildrenFromPosition(): void
     {
         $entity = Entity::find(9);
         $child1 = new Entity();
@@ -179,7 +180,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testRemoveChild()
+    public function testRemoveChild(): void
     {
         $entity = Entity::find(9);
 
@@ -194,7 +195,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testRemoveChildHavingChildren()
+    public function testRemoveChildHavingChildren(): void
     {
         $entity = Entity::find(9);
 
@@ -209,7 +210,7 @@ class ChildManipulationTests extends BaseTestCase
         static::assertFalse($entity12->isRoot());
     }
 
-    public function testRemoveChildren()
+    public function testRemoveChildren(): void
     {
         $entity = Entity::find(9);
         $entity->addChild(new Entity());
@@ -224,7 +225,7 @@ class ChildManipulationTests extends BaseTestCase
         ]);
     }
 
-    public function testRemoveChildrenToTheEnd()
+    public function testRemoveChildrenToTheEnd(): void
     {
         $entity = Entity::find(9);
 
@@ -238,7 +239,7 @@ class ChildManipulationTests extends BaseTestCase
         static::assertEquals(0, $firstChild->position);
     }
 
-    public function testRemoveChildrenHavingChildren()
+    public function testRemoveChildrenHavingChildren(): void
     {
         Entity::find(13)->addChildren([new Entity(), new Entity()]);
 

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Franzose\ClosureTable;
 
 use Illuminate\Database\Eloquent\Collection;
@@ -7,18 +9,13 @@ use Illuminate\Database\Eloquent\Collection;
  * Extended Collection class. Provides some useful methods.
  *
  * @method Entity|null get($key, $default = null)
- * @package Franzose\ClosureTable\Extensions
  */
 class EntityCollection extends Collection
 {
     /**
      * Returns a child node at the given position.
-     *
-     * @param int $position
-     *
-     * @return Entity|null
      */
-    public function getChildAt($position)
+    public function getChildAt(int $position): ?Entity
     {
         return $this->filter(static function (Entity $entity) use ($position) {
             return $entity->position === $position;
@@ -27,20 +24,16 @@ class EntityCollection extends Collection
 
     /**
      * Returns the first child node.
-     *
-     * @return Entity|null
      */
-    public function getFirstChild()
+    public function getFirstChild(): ?Entity
     {
         return $this->getChildAt(0);
     }
 
     /**
      * Returns the last child node.
-     *
-     * @return Entity|null
      */
-    public function getLastChild()
+    public function getLastChild(): ?Entity
     {
         return $this->sortByDesc(static function (Entity $entity) {
             return $entity->position;
@@ -49,13 +42,8 @@ class EntityCollection extends Collection
 
     /**
      * Filters the collection by the given positions.
-     *
-     * @param int $from
-     * @param int|null $to
-     *
-     * @return EntityCollection
      */
-    public function getRange($from, $to = null)
+    public function getRange(int $from, ?int $to = null): self
     {
         return $this->filter(static function (Entity $entity) use ($from, $to) {
             if ($to === null) {
@@ -69,12 +57,8 @@ class EntityCollection extends Collection
     /**
      * Filters collection to return nodes on the "left"
      * and on the "right" from the node with the given position.
-     *
-     * @param int $position
-     *
-     * @return EntityCollection
      */
-    public function getNeighbors($position)
+    public function getNeighbors(int $position): self
     {
         return $this->filter(static function (Entity $entity) use ($position) {
             return $entity->position === $position - 1 ||
@@ -84,12 +68,8 @@ class EntityCollection extends Collection
 
     /**
      * Filters collection to return previous siblings of a node with the given position.
-     *
-     * @param int $position
-     *
-     * @return EntityCollection
      */
-    public function getPrevSiblings($position)
+    public function getPrevSiblings(int $position): self
     {
         return $this->filter(static function (Entity $entity) use ($position) {
             return $entity->position < $position;
@@ -98,12 +78,8 @@ class EntityCollection extends Collection
 
     /**
      * Filters collection to return next siblings of a node with the given position.
-     *
-     * @param int $position
-     *
-     * @return EntityCollection
      */
-    public function getNextSiblings($position)
+    public function getNextSiblings(int $position): self
     {
         return $this->filter(static function (Entity $entity) use ($position) {
             return $entity->position > $position;
@@ -112,11 +88,8 @@ class EntityCollection extends Collection
 
     /**
      * Retrieves children relation.
-     *
-     * @param $position
-     * @return EntityCollection
      */
-    public function getChildrenOf($position)
+    public function getChildrenOf(int $position): self
     {
         if (!$this->hasChildren($position)) {
             return new static();
@@ -127,11 +100,8 @@ class EntityCollection extends Collection
 
     /**
      * Indicates whether an item has children.
-     *
-     * @param $position
-     * @return bool
      */
-    public function hasChildren($position)
+    public function hasChildren(int $position): bool
     {
         $item = $this->getChildAt($position);
 
@@ -140,10 +110,8 @@ class EntityCollection extends Collection
 
     /**
      * Makes tree-like collection.
-     *
-     * @return EntityCollection
      */
-    public function toTree()
+    public function toTree(): self
     {
         $items = $this->items;
 
@@ -154,9 +122,8 @@ class EntityCollection extends Collection
      * Performs actual tree building.
      *
      * @param Entity[] $items
-     * @return array
      */
-    protected function makeTree(array $items)
+    protected function makeTree(array $items): array
     {
         /** @var Entity[] $result */
         $result = [];

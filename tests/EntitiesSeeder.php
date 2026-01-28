@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Franzose\ClosureTable\Tests;
 
 use \DB;
@@ -6,7 +8,7 @@ use Illuminate\Database\Seeder;
 
 class EntitiesSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
         $entitiesSql = 'insert into entities (parent_id, title, excerpt, body, position) values(?, ?, ?, ?, ?)';
         $closuresSql = 'insert into entities_closure (ancestor, descendant, depth) values(?, ?, ?)';

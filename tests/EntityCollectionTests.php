@@ -1,13 +1,15 @@
 <?php
+declare(strict_types=1);
+
 namespace Franzose\ClosureTable\Tests;
 
 use DB;
 use Franzose\ClosureTable\Entity;
 use Franzose\ClosureTable\EntityCollection;
 
-class CollectionTestCase extends BaseTestCase
+class EntityCollectionTests extends BaseTestCase
 {
-    public function testGetChildAt()
+    public function testGetChildAt(): void
     {
         $collection = new EntityCollection([
             new Page(['position' => 0]),
@@ -19,7 +21,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertNull($collection->getChildAt(999));
     }
 
-    public function testGetFirstChild()
+    public function testGetFirstChild(): void
     {
         $collection = new EntityCollection([
             new Page(['position' => 0]),
@@ -30,7 +32,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertNull((new EntityCollection())->getFirstChild());
     }
 
-    public function testGetLastChild()
+    public function testGetLastChild(): void
     {
         $collection = new EntityCollection([
             new Page(['position' => 0]),
@@ -41,7 +43,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertNull((new EntityCollection())->getLastChild());
     }
 
-    public function testGetRange()
+    public function testGetRange(): void
     {
         $collection = new EntityCollection([
             new Page(['position' => 0]),
@@ -54,7 +56,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertEquals([1, 2, 3], $collection->getRange(1, 3)->pluck('position')->toArray());
     }
 
-    public function testGetNeighbors()
+    public function testGetNeighbors(): void
     {
         $collection = new EntityCollection([
             new Page(['position' => 0]),
@@ -69,7 +71,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertEquals([0, 2], $neighbors->pluck('position')->toArray());
     }
 
-    public function testGetPrevSiblings()
+    public function testGetPrevSiblings(): void
     {
         $collection = new EntityCollection([
             new Page(['position' => 0]),
@@ -84,7 +86,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertEquals([0, 1, 2], $siblings->pluck('position')->toArray());
     }
 
-    public function testGetNextSiblings()
+    public function testGetNextSiblings(): void
     {
         $collection = new EntityCollection([
             new Page(['position' => 0]),
@@ -99,7 +101,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertEquals([1, 2, 3], $siblings->pluck('position')->toArray());
     }
 
-    public function testGetChildrenOf()
+    public function testGetChildrenOf(): void
     {
         $entity = new Page(['position' => 0]);
         $childrenRelationIndex = $entity->getChildrenRelationIndex();
@@ -125,7 +127,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertSame($expected, $actual);
     }
 
-    public function testHasChildren()
+    public function testHasChildren(): void
     {
         $entity = new Page(['position' => 0]);
         $childrenRelationIndex = $entity->getChildrenRelationIndex();
@@ -149,7 +151,7 @@ class CollectionTestCase extends BaseTestCase
         static::assertTrue($collection->hasChildren(0));
     }
 
-    public function testToTree()
+    public function testToTree(): void
     {
         $queries = 0;
 

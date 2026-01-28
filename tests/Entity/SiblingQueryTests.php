@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -8,7 +9,7 @@ use Franzose\ClosureTable\Tests\BaseTestCase;
 
 class SiblingQueryTests extends BaseTestCase
 {
-    public function testGetSiblings()
+    public function testGetSiblings(): void
     {
         $entity = Entity::find(13);
 
@@ -21,7 +22,7 @@ class SiblingQueryTests extends BaseTestCase
         static::assertEquals(15, $siblings->get(2)->getKey());
     }
 
-    public function testGetSiblingsForRoot()
+    public function testGetSiblingsForRoot(): void
     {
         $entity = Entity::find(1);
 
@@ -31,17 +32,17 @@ class SiblingQueryTests extends BaseTestCase
         static::assertEquals([2, 3, 4, 5, 6, 7, 8, 9], $siblings->modelKeys());
     }
 
-    public function testsCountSiblings()
+    public function testsCountSiblings(): void
     {
         static::assertEquals(3, Entity::find(13)->countSiblings());
     }
 
-    public function testsHasSiblings()
+    public function testsHasSiblings(): void
     {
         static::assertTrue(Entity::find(13)->hasSiblings());
     }
 
-    public function testsGetNeighbors()
+    public function testsGetNeighbors(): void
     {
         $entity = Entity::find(13);
 
@@ -52,7 +53,7 @@ class SiblingQueryTests extends BaseTestCase
         static::assertEquals(14, $neighbors->get(1)->getKey());
     }
 
-    public function testsGetSiblingAt()
+    public function testsGetSiblingAt(): void
     {
         $entity = Entity::find(13);
 
@@ -63,22 +64,22 @@ class SiblingQueryTests extends BaseTestCase
         static::assertEquals(14, $third->getKey());
     }
 
-    public function testGetFirstSibling()
+    public function testGetFirstSibling(): void
     {
         static::assertEquals(10, Entity::find(13)->getFirstSibling()->getKey());
     }
 
-    public function testGetLastSibling()
+    public function testGetLastSibling(): void
     {
         static::assertEquals(15, Entity::find(13)->getLastSibling()->getKey());
     }
 
-    public function testGetPrevSibling()
+    public function testGetPrevSibling(): void
     {
         static::assertEquals(14, Entity::find(15)->getPrevSibling()->getKey());
     }
 
-    public function testGetPrevSiblings()
+    public function testGetPrevSiblings(): void
     {
         $entity = Entity::find(15);
 
@@ -90,24 +91,24 @@ class SiblingQueryTests extends BaseTestCase
         static::assertEquals(14, $siblings->get(2)->getKey());
     }
 
-    public function testsCountPrevSiblings()
+    public function testsCountPrevSiblings(): void
     {
         static::assertEquals(3, Entity::find(15)->countPrevSiblings());
         static::assertEquals(0, Entity::find(1)->countPrevSiblings());
     }
 
-    public function testsHasPrevSiblings()
+    public function testsHasPrevSiblings(): void
     {
         static::assertTrue(Entity::find(15)->hasPrevSiblings());
         static::assertFalse(Entity::find(1)->hasPrevSiblings());
     }
 
-    public function testGetNextSibling()
+    public function testGetNextSibling(): void
     {
         static::assertEquals(13, Entity::find(10)->getNextSibling()->getKey());
     }
 
-    public function testGetNextSiblings()
+    public function testGetNextSiblings(): void
     {
         $entity = Entity::find(10);
 
@@ -119,19 +120,19 @@ class SiblingQueryTests extends BaseTestCase
         static::assertEquals(15, $siblings->get(2)->getKey());
     }
 
-    public function testCountNextSiblings()
+    public function testCountNextSiblings(): void
     {
         static::assertEquals(3, Entity::find(10)->countNextSiblings());
         static::assertEquals(0, Entity::find(15)->countNextSiblings());
     }
 
-    public function testsHasNextSiblings()
+    public function testsHasNextSiblings(): void
     {
         static::assertTrue(Entity::find(10)->hasNextSiblings());
         static::assertFalse(Entity::find(15)->hasNextSiblings());
     }
 
-    public function testGetSiblingsRange()
+    public function testGetSiblingsRange(): void
     {
         $entity = Entity::find(15);
 
@@ -142,73 +143,73 @@ class SiblingQueryTests extends BaseTestCase
         static::assertEquals(14, $siblings->get(1)->getKey());
     }
 
-    public function testGetSiblingsOpenRange()
+    public function testGetSiblingsOpenRange(): void
     {
         static::assertCount(2, Entity::find(15)->getSiblingsRange(1));
     }
 
-    public function testSiblingOfScope()
+    public function testSiblingOfScope(): void
     {
         static::assertEquals([1, 2, 3, 4, 5, 6, 7, 8, 9], Entity::siblingOf(9)->get()->modelKeys());
         static::assertEquals([10, 13, 14, 15], Entity::siblingOf(10)->get()->modelKeys());
     }
 
-    public function testSiblingsOfScope()
+    public function testSiblingsOfScope(): void
     {
         static::assertEquals([1, 2, 3, 4, 5, 6, 7, 8], Entity::siblingsOf(9)->get()->modelKeys());
         static::assertEquals([10, 14, 15], Entity::siblingsOf(13)->get()->modelKeys());
     }
 
-    public function testNeighborsOfScope()
+    public function testNeighborsOfScope(): void
     {
         static::assertEquals([7, 9], Entity::neighborsOf(8)->get()->modelKeys());
         static::assertEquals([10, 14], Entity::neighborsOf(13)->get()->modelKeys());
     }
 
-    public function testSiblingOfAtScope()
+    public function testSiblingOfAtScope(): void
     {
         static::assertEquals([2], Entity::siblingOfAt(9, 1)->get()->modelKeys());
         static::assertEquals([14], Entity::siblingOfAt(10, 2)->get()->modelKeys());
     }
 
 
-    public function testFirstSiblingOfScope()
+    public function testFirstSiblingOfScope(): void
     {
         static::assertEquals([1], Entity::firstSiblingOf(9)->get()->modelKeys());
         static::assertEquals([10], Entity::firstSiblingOf(15)->get()->modelKeys());
     }
 
-    public function testLastSiblingOfScope()
+    public function testLastSiblingOfScope(): void
     {
         static::assertEquals([9], Entity::lastSiblingOf(1)->get()->modelKeys());
         static::assertEquals([15], Entity::lastSiblingOf(10)->get()->modelKeys());
     }
 
-    public function testPrevSiblingOfScope()
+    public function testPrevSiblingOfScope(): void
     {
         static::assertEquals([8], Entity::prevSiblingOf(9)->get()->modelKeys());
         static::assertEquals([14], Entity::prevSiblingOf(15)->get()->modelKeys());
     }
 
-    public function testPrevSiblingsOfScope()
+    public function testPrevSiblingsOfScope(): void
     {
         static::assertEquals([1, 2, 3, 4, 5, 6, 7, 8], Entity::prevSiblingsOf(9)->get()->modelKeys());
         static::assertEquals([10, 13, 14], Entity::prevSiblingsOf(15)->get()->modelKeys());
     }
 
-    public function testNextSiblingOfScope()
+    public function testNextSiblingOfScope(): void
     {
         static::assertEquals([9], Entity::nextSiblingOf(8)->get()->modelKeys());
         static::assertEquals([15], Entity::nextSiblingOf(14)->get()->modelKeys());
     }
 
-    public function testNextSiblingsOfScope()
+    public function testNextSiblingsOfScope(): void
     {
         static::assertEquals([2, 3, 4, 5, 6, 7, 8, 9], Entity::nextSiblingsOf(1)->get()->modelKeys());
         static::assertEquals([13, 14, 15], Entity::nextSiblingsOf(10)->get()->modelKeys());
     }
 
-    public function testSiblingsRangeOfScope()
+    public function testSiblingsRangeOfScope(): void
     {
         static::assertEquals([6, 7, 8, 9], Entity::siblingsRangeOf(1, 5)->get()->modelKeys());
         static::assertEquals([3, 4, 5, 6], Entity::siblingsRangeOf(1, 2, 5)->get()->modelKeys());

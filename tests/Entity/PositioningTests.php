@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Franzose\ClosureTable\Tests\Entity;
 
@@ -9,7 +10,7 @@ use Franzose\ClosureTable\Tests\Page;
 
 final class PositioningTests extends BaseTestCase
 {
-    public function testCreate()
+    public function testCreate(): void
     {
         DB::statement('DELETE FROM entities');
         DB::statement('DELETE FROM entities_closure');
@@ -25,7 +26,7 @@ final class PositioningTests extends BaseTestCase
         static::assertModelAttribute('position', [16 => 0, 17 => 1]);
     }
 
-    public function testSavingLoadedEntityShouldNotTriggerReordering()
+    public function testSavingLoadedEntityShouldNotTriggerReordering(): void
     {
         $entity = new Page(['title' => 'Item 1']);
         $entity->save();
@@ -64,7 +65,7 @@ final class PositioningTests extends BaseTestCase
         static::assertEquals($parentId, $sameEntity->parent_id);
     }
 
-    public function testMoveToTheFirstPosition()
+    public function testMoveToTheFirstPosition(): void
     {
         $entity = Entity::find(9);
 
@@ -84,7 +85,7 @@ final class PositioningTests extends BaseTestCase
         ]);
     }
 
-    public function testMoveToTheFifthPosition()
+    public function testMoveToTheFifthPosition(): void
     {
         $entity = Entity::find(9);
 
@@ -104,7 +105,7 @@ final class PositioningTests extends BaseTestCase
         ]);
     }
 
-    public function testMoveToPositionWhichIsOutOfTheUpperBound()
+    public function testMoveToPositionWhichIsOutOfTheUpperBound(): void
     {
         $entity = Entity::find(1);
 
@@ -124,7 +125,7 @@ final class PositioningTests extends BaseTestCase
         ]);
     }
 
-    public function testCreateRootAppendsAfterExistingRoots()
+    public function testCreateRootAppendsAfterExistingRoots(): void
     {
         $entity = new Entity;
         $entity->save();

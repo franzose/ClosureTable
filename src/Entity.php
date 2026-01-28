@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Franzose\ClosureTable;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +19,7 @@ use InvalidArgumentException;
  * remember you can get its value either by $this->pos or $this->position.
  *
  * @property int position Alias for the current position attribute name
- * @property int parent_id Alias for the direct ancestor identifier attribute name
+ * @property mixed parent_id Alias for the direct ancestor identifier attribute name
  * @property EntityCollection children Child nodes loaded from the database
  * @method Builder ancestors()
  * @method Builder ancestorsOf($id)
@@ -66,47 +68,35 @@ class Entity extends Eloquent
 {
     use SoftDeletes;
 
-    const CHILDREN_RELATION_NAME = 'children';
+    public const CHILDREN_RELATION_NAME = 'children';
 
     /**
      * ClosureTable model instance.
-     *
-     * @var ClosureTable
      */
-    protected $closure = ClosureTable::class;
+    protected string|ClosureTable $closure = ClosureTable::class;
 
     /**
      * Cached "previous" (i.e. before the model is moved) direct ancestor id of this model.
-     *
-     * @var int
      */
-    private $previousParentId;
+    private mixed $previousParentId = null;
 
     /**
      * Cached "previous" (i.e. before the model is moved) model position.
-     *
-     * @var int
      */
-    private $previousPosition;
+    private ?int $previousPosition = null;
 
     /**
      * Whether this node is being moved to another parent node.
-     *
-     * @var bool
      */
-    private $isReparenting = false;
+    private bool $isReparenting = false;
 
     /**
      * Indicates if the model should be timestamped.
-     *
-     * @var bool
      */
     public $timestamps = false;
 
     /**
      * Entity constructor.
-     *
-     * @param array $attributes
      */
     public function __construct(array $attributes = [])
     {
@@ -131,7 +121,7 @@ class Entity extends Eloquent
         parent::__construct($attributes);
     }
 
-    public function newFromBuilder($attributes = [], $connection = null)
+    public function newFromBuilder($attributes = [], $connection = null): static
     {
         $instance = parent::newFromBuilder($attributes, $connection);
         $instance->previousParentId = $instance->parent_id;
@@ -141,20 +131,16 @@ class Entity extends Eloquent
 
     /**
      * Gets value of the "parent id" attribute.
-     *
-     * @return int
      */
-    public function getParentIdAttribute()
+    public function getParentIdAttribute(): mixed
     {
         return $this->getAttributeFromArray($this->getParentIdColumn());
     }
 
     /**
      * Sets new parent id and caches the old one.
-     *
-     * @param int $value
      */
-    public function setParentIdAttribute($value)
+    public function setParentIdAttribute(mixed $value): void
     {
         if ($this->parent_id === $value) {
             return;
@@ -167,40 +153,34 @@ class Entity extends Eloquent
 
     /**
      * Gets the fully qualified "parent id" column.
-     *
-     * @return string
      */
-    public function getQualifiedParentIdColumn()
+    public function getQualifiedParentIdColumn(): string
     {
         return $this->getTable() . '.' . $this->getParentIdColumn();
     }
 
     /**
      * Gets the short name of the "parent id" column.
-     *
-     * @return string
      */
-    public function getParentIdColumn()
+    public function getParentIdColumn(): string
     {
         return 'parent_id';
     }
 
     /**
      * Gets value of the "position" attribute.
-     *
-     * @return int
      */
-    public function getPositionAttribute()
+    public function getPositionAttribute(): ?int
     {
-        return $this->getAttributeFromArray($this->getPositionColumn());
+        $value = $this->getAttributeFromArray($this->getPositionColumn());
+
+        return $value === null ? null : (int) $value;
     }
 
     /**
      * Sets new position and caches the old one.
-     *
-     * @param int $value
      */
-    public function setPositionAttribute($value)
+    public function setPositionAttribute(int $value): void
     {
         if ($this->position === $value) {
             return;
@@ -208,35 +188,29 @@ class Entity extends Eloquent
 
         $position = $this->getPositionColumn();
         $this->previousPosition = $this->original[$position] ?? null;
-        $this->attributes[$position] = max(0, (int) $value);
+        $this->attributes[$position] = max(0, $value);
     }
 
     /**
      * Gets the fully qualified "position" column.
-     *
-     * @return string
      */
-    public function getQualifiedPositionColumn()
+    public function getQualifiedPositionColumn(): string
     {
         return $this->getTable() . '.' . $this->getPositionColumn();
     }
 
     /**
      * Gets the short name of the "position" column.
-     *
-     * @return string
      */
-    public function getPositionColumn()
+    public function getPositionColumn(): string
     {
         return 'position';
     }
 
     /**
      * Gets the fully qualified "real depth" column.
-     *
-     * @return string
      */
-    public function getQualifiedRealDepthColumn()
+    public function getQualifiedRealDepthColumn(): string
     {
         return $this->getTable() . '.' . $this->getRealDepthColumn();
     }
@@ -244,10 +218,9 @@ class Entity extends Eloquent
     /**
      * Gets the short name of the "real depth" column.
      *
-     * @return string
      * @deprecated since 6.0
      */
-    public function getRealDepthColumn()
+    public function getRealDepthColumn(): string
     {
         return 'real_depth';
     }
@@ -255,20 +228,17 @@ class Entity extends Eloquent
     /**
      * Gets the "children" relation index.
      *
-     * @return string
      * @deprecated since 6.0
      */
-    public function getChildrenRelationIndex()
+    public function getChildrenRelationIndex(): string
     {
         return static::CHILDREN_RELATION_NAME;
     }
 
     /**
      * The "booting" method of the model.
-     *
-     * @return void
      */
-    public static function boot()
+    public static function boot(): void
     {
         parent::boot();
 
@@ -320,105 +290,72 @@ class Entity extends Eloquent
 
     /**
      * Indicates whether the model is a parent.
-     *
-     * @return bool
      */
-    public function isParent()
+    public function isParent(): bool
     {
         return $this->exists && $this->hasChildren();
     }
 
     /**
      * Indicates whether the model has no ancestors.
-     *
-     * @return bool
      */
-    public function isRoot()
+    public function isRoot(): bool
     {
         return $this->exists && $this->parent_id === null;
     }
 
     /**
      * Retrieves direct ancestor of a model.
-     *
-     * @param array $columns
-     * @return Entity|null
      */
-    public function getParent(array $columns = ['*'])
+    public function getParent(array $columns = ['*']): ?self
     {
         return $this->exists ? $this->find($this->parent_id, $columns) : null;
     }
 
     /**
      * Returns many-to-one relationship to the direct ancestor.
-     *
-     * @return BelongsTo
      */
-    public function parent()
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(get_class($this), $this->getParentIdColumn());
     }
 
     /**
      * Returns query builder for ancestors.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeAncestors(Builder $builder)
+    public function scopeAncestors(Builder $builder): Builder
     {
         return $this->buildAncestorsQuery($builder, $this->getKey(), false);
     }
 
     /**
      * Returns query builder for ancestors of the node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeAncestorsOf(Builder $builder, $id)
+    public function scopeAncestorsOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildAncestorsQuery($builder, $id, false);
     }
 
     /**
      * Returns query builder for ancestors including the current node.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeAncestorsWithSelf(Builder $builder)
+    public function scopeAncestorsWithSelf(Builder $builder): Builder
     {
         return $this->buildAncestorsQuery($builder, $this->getKey(), true);
     }
 
     /**
      * Returns query builder for ancestors of the node with given ID including that node also.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeAncestorsWithSelfOf(Builder $builder, $id)
+    public function scopeAncestorsWithSelfOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildAncestorsQuery($builder, $id, true);
     }
 
     /**
      * Builds base ancestors query.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     * @param bool $withSelf
-     *
-     * @return Builder
      */
-    private function buildAncestorsQuery(Builder $builder, $id, $withSelf)
+    private function buildAncestorsQuery(Builder $builder, mixed $id, bool $withSelf): Builder
     {
         $depthOperator = $withSelf ? '>=' : '>';
 
@@ -435,11 +372,8 @@ class Entity extends Eloquent
 
     /**
      * Retrieves all ancestors of a model.
-     *
-     * @param array $columns
-     * @return EntityCollection
      */
-    public function getAncestors(array $columns = ['*'])
+    public function getAncestors(array $columns = ['*']): EntityCollection
     {
         return $this->ancestors()->get($columns);
     }
@@ -447,11 +381,9 @@ class Entity extends Eloquent
     /**
      * Retrieves tree structured ancestors of a model.
      *
-     * @param array $columns
-     * @return EntityCollection
      * @deprecated since 6.0, use {@link EntityCollection::toTree()} instead
      */
-    public function getAncestorsTree(array $columns = ['*'])
+    public function getAncestorsTree(array $columns = ['*']): EntityCollection
     {
         return $this->getAncestors($columns)->toTree();
     }
@@ -459,99 +391,65 @@ class Entity extends Eloquent
     /**
      * Retrieves ancestors applying given conditions.
      *
-     * @param mixed $column
-     * @param mixed $operator
-     * @param mixed $value
-     * @param array $columns
-     * @return EntityCollection
      * @deprecated since 6.0, use {@link Entity::ancestors()} scope instead
      */
-    public function getAncestorsWhere($column, $operator = null, $value = null, array $columns = ['*'])
+    public function getAncestorsWhere(mixed $column, mixed $operator = null, mixed $value = null, array $columns = ['*']): EntityCollection
     {
         return $this->ancestors()->where($column, $operator, $value)->get($columns);
     }
 
     /**
      * Returns a number of model's ancestors.
-     *
-     * @return int
      */
-    public function countAncestors()
+    public function countAncestors(): int
     {
         return $this->ancestors()->count();
     }
 
     /**
      * Indicates whether a model has ancestors.
-     *
-     * @return bool
      */
-    public function hasAncestors()
+    public function hasAncestors(): bool
     {
         return (bool) $this->countAncestors();
     }
 
     /**
      * Returns query builder for descendants.
-     *
-     * @param Builder $builder
-     * @param bool $withSelf
-     *
-     * @return Builder
      */
-    public function scopeDescendants(Builder $builder)
+    public function scopeDescendants(Builder $builder): Builder
     {
         return $this->buildDescendantsQuery($builder, $this->getKey(), false);
     }
 
     /**
      * Returns query builder for descendants of the node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeDescendantsOf(Builder $builder, $id)
+    public function scopeDescendantsOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildDescendantsQuery($builder, $id, false);
     }
 
     /**
      * Returns query builder for descendants including the current node.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeDescendantsWithSelf(Builder $builder)
+    public function scopeDescendantsWithSelf(Builder $builder): Builder
     {
         return $this->buildDescendantsQuery($builder, $this->getKey(), true);
     }
 
     /**
      * Returns query builder for descendants including the current node of the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeDescendantsWithSelfOf(Builder $builder, $id)
+    public function scopeDescendantsWithSelfOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildDescendantsQuery($builder, $id, true);
     }
 
     /**
      * Builds base descendants query.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     * @param bool $withSelf
-     *
-     * @return Builder
      */
-    private function buildDescendantsQuery(Builder $builder, $id, $withSelf)
+    private function buildDescendantsQuery(Builder $builder, mixed $id, bool $withSelf): Builder
     {
         $depthOperator = $withSelf ? '>=' : '>';
 
@@ -568,11 +466,8 @@ class Entity extends Eloquent
 
     /**
      * Retrieves all descendants of a model.
-     *
-     * @param array $columns
-     * @return EntityCollection
      */
-    public function getDescendants(array $columns = ['*'])
+    public function getDescendants(array $columns = ['*']): EntityCollection
     {
         return $this->descendants()->get($columns);
     }
@@ -580,11 +475,9 @@ class Entity extends Eloquent
     /**
      * Retrieves tree structured descendants of a model.
      *
-     * @param array $columns
-     * @return EntityCollection
      * @deprecated since 6.0, use {@link EntityCollection::toTree()} instead
      */
-    public function getDescendantsTree(array $columns = ['*'])
+    public function getDescendantsTree(array $columns = ['*']): EntityCollection
     {
         return $this->getDescendants($columns)->toTree();
     }
@@ -592,76 +485,57 @@ class Entity extends Eloquent
     /**
      * Retrieves descendants applying given conditions.
      *
-     * @param mixed $column
-     * @param mixed $operator
-     * @param mixed $value
-     * @param array $columns
-     * @return EntityCollection
      * @deprecated since 6.0, use {@link Entity::descendants()} scope instead
      */
-    public function getDescendantsWhere($column, $operator = null, $value = null, array $columns = ['*'])
+    public function getDescendantsWhere(mixed $column, mixed $operator = null, mixed $value = null, array $columns = ['*']): EntityCollection
     {
         return $this->descendants()->where($column, $operator, $value)->get($columns);
     }
 
     /**
      * Returns a number of model's descendants.
-     *
-     * @return int
      */
-    public function countDescendants()
+    public function countDescendants(): int
     {
         return $this->descendants()->count();
     }
 
     /**
      * Indicates whether a model has descendants.
-     *
-     * @return bool
      */
-    public function hasDescendants()
+    public function hasDescendants(): bool
     {
         return (bool) $this->countDescendants();
     }
 
     /**
      * Returns one-to-many relationship to child nodes.
-     *
-     * @return HasMany
      */
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(get_class($this), $this->getParentIdColumn());
     }
 
     /**
      * Retrieves all children of a model.
-     *
-     * @param array $columns
-     *
-     * @return EntityCollection
      */
-    public function getChildren(array $columns = ['*'])
+    public function getChildren(array $columns = ['*']): EntityCollection
     {
         return $this->children()->get($columns);
     }
 
     /**
      * Returns a number of model's children.
-     *
-     * @return int
      */
-    public function countChildren()
+    public function countChildren(): int
     {
         return $this->children()->count();
     }
 
     /**
-     *  Indicates whether a model has children.
-     *
-     * @return bool
+     * Indicates whether a model has children.
      */
-    public function hasChildren()
+    public function hasChildren(): bool
     {
         return (bool) $this->countChildren();
     }
@@ -669,35 +543,25 @@ class Entity extends Eloquent
     /**
      * Indicates whether a model has children as a relation.
      *
-     * @return bool
      * @deprecated from 6.0
      */
-    public function hasChildrenRelation()
+    public function hasChildrenRelation(): bool
     {
         return $this->relationLoaded($this->getChildrenRelationIndex());
     }
 
     /**
      * Returns query builder for child nodes.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeChildNode(Builder $builder)
+    public function scopeChildNode(Builder $builder): Builder
     {
         return $this->scopeChildNodeOf($builder, $this->getKey());
     }
 
     /**
      * Returns query builder for child nodes of the node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeChildNodeOf(Builder $builder, $id)
+    public function scopeChildNodeOf(Builder $builder, mixed $id): Builder
     {
         $parentId = $this->getParentIdColumn();
 
@@ -708,13 +572,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for a child at the given position.
-     *
-     * @param Builder $builder
-     * @param int $position
-     *
-     * @return Builder
      */
-    public function scopeChildAt(Builder $builder, $position)
+    public function scopeChildAt(Builder $builder, int $position): Builder
     {
         return $this
             ->scopeChildNode($builder)
@@ -723,14 +582,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for a child at the given position of the node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     * @param int $position
-     *
-     * @return Builder
      */
-    public function scopeChildOf(Builder $builder, $id, $position)
+    public function scopeChildOf(Builder $builder, mixed $id, int $position): Builder
     {
         return $this
             ->scopeChildNodeOf($builder, $id)
@@ -739,98 +592,64 @@ class Entity extends Eloquent
 
     /**
      * Retrieves a child with given position.
-     *
-     * @param int $position
-     * @param array $columns
-     * @return Entity
      */
-    public function getChildAt($position, array $columns = ['*'])
+    public function getChildAt(int $position, array $columns = ['*']): ?self
     {
         return $this->childAt($position)->first($columns);
     }
 
     /**
      * Returns query builder for the first child node.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeFirstChild(Builder $builder)
+    public function scopeFirstChild(Builder $builder): Builder
     {
         return $this->scopeChildAt($builder, 0);
     }
 
     /**
      * Returns query builder for the first child node of the node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeFirstChildOf(Builder $builder, $id)
+    public function scopeFirstChildOf(Builder $builder, mixed $id): Builder
     {
         return $this->scopeChildOf($builder, $id, 0);
     }
 
     /**
      * Retrieves the first child.
-     *
-     * @param array $columns
-     * @return Entity
      */
-    public function getFirstChild(array $columns = ['*'])
+    public function getFirstChild(array $columns = ['*']): ?self
     {
         return $this->getChildAt(0, $columns);
     }
 
     /**
      * Returns query builder for the last child node.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeLastChild(Builder $builder)
+    public function scopeLastChild(Builder $builder): Builder
     {
         return $this->scopeChildNode($builder)->orderByDesc($this->getPositionColumn());
     }
 
     /**
      * Returns query builder for the last child node of the node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeLastChildOf(Builder $builder, $id)
+    public function scopeLastChildOf(Builder $builder, mixed $id): Builder
     {
         return $this->scopeChildNodeOf($builder, $id)->orderByDesc($this->getPositionColumn());
     }
 
     /**
      * Retrieves the last child.
-     *
-     * @param array $columns
-     * @return Entity
      */
-    public function getLastChild(array $columns = ['*'])
+    public function getLastChild(array $columns = ['*']): ?self
     {
         return $this->lastChild()->first($columns);
     }
 
     /**
      * Returns query builder to child nodes in the range of the given positions.
-     *
-     * @param Builder $builder
-     * @param int $from
-     * @param int|null $to
-     *
-     * @return Builder
      */
-    public function scopeChildrenRange(Builder $builder, $from, $to = null)
+    public function scopeChildrenRange(Builder $builder, int $from, ?int $to = null): Builder
     {
         $position = $this->getPositionColumn();
         $query = $this->scopeChildNode($builder)->where($position, '>=', $from);
@@ -844,15 +663,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder to child nodes in the range of the given positions for the node of the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     * @param int $from
-     * @param int|null $to
-     *
-     * @return Builder
      */
-    public function scopeChildrenRangeOf(Builder $builder, $id, $from, $to = null)
+    public function scopeChildrenRangeOf(Builder $builder, mixed $id, int $from, ?int $to = null): Builder
     {
         $position = $this->getPositionColumn();
         $query = $this->scopeChildNodeOf($builder, $id)->where($position, '>=', $from);
@@ -866,26 +678,16 @@ class Entity extends Eloquent
 
     /**
      * Retrieves children within given positions range.
-     *
-     * @param int $from
-     * @param int $to
-     * @param array $columns
-     * @return EntityCollection
      */
-    public function getChildrenRange($from, $to = null, array $columns = ['*'])
+    public function getChildrenRange(int $from, ?int $to = null, array $columns = ['*']): EntityCollection
     {
         return $this->childrenRange($from, $to)->get($columns);
     }
 
     /**
      * Appends a child to the model.
-     *
-     * @param Entity $child
-     * @param int $position
-     * @param bool $returnChild
-     * @return Entity
      */
-    public function addChild(Entity $child, $position = null, $returnChild = false)
+    public function addChild(self $child, ?int $position = null, bool $returnChild = false): static
     {
         if ($this->exists) {
             $position = $position ?? $this->getLatestChildPosition();
@@ -898,10 +700,8 @@ class Entity extends Eloquent
 
     /**
      * Returns the latest child position.
-     *
-     * @return int
      */
-    private function getLatestChildPosition()
+    private function getLatestChildPosition(): int
     {
         $lastChild = $this->lastChild()->first([$this->getPositionColumn()]);
 
@@ -911,14 +711,10 @@ class Entity extends Eloquent
     /**
      * Appends a collection of children to the model.
      *
-     * @param Entity[] $children
-     * @param int $from
-     *
-     * @return Entity
      * @throws InvalidArgumentException
-     * @throws \Throwable
+     * @throws Throwable
      */
-    public function addChildren(array $children, $from = null)
+    public function addChildren(array $children, ?int $from = null): static
     {
         if (!$this->exists) {
             return $this;
@@ -941,18 +737,16 @@ class Entity extends Eloquent
     /**
      * Appends the given entity to the children relation.
      *
-     * @param Entity $entity
      * @internal
      */
-    public function appendChild(Entity $entity)
+    public function appendChild(self $entity): static
     {
         $this->getChildrenRelation()->add($entity);
+
+        return $this;
     }
 
-    /**
-     * @return EntityCollection
-     */
-    private function getChildrenRelation()
+    private function getChildrenRelation(): EntityCollection
     {
         if (!$this->relationLoaded(static::CHILDREN_RELATION_NAME)) {
             $this->setRelation(static::CHILDREN_RELATION_NAME, new EntityCollection());
@@ -964,13 +758,9 @@ class Entity extends Eloquent
     /**
      * Removes a model's child with given position.
      *
-     * @param int $position
-     * @param bool $forceDelete
-     *
-     * @return $this
-     * @throws \Throwable
+     * @throws Throwable
      */
-    public function removeChild($position = null, $forceDelete = false)
+    public function removeChild(?int $position = null, bool $forceDelete = false): static
     {
         if (!$this->exists) {
             return $this;
@@ -1000,15 +790,10 @@ class Entity extends Eloquent
     /**
      * Removes model's children within a range of positions.
      *
-     * @param int $from
-     * @param int $to
-     * @param bool $forceDelete
-     *
-     * @return $this
      * @throws InvalidArgumentException
-     * @throws \Throwable
+     * @throws Throwable
      */
-    public function removeChildren($from, $to = null, $forceDelete = false)
+    public function removeChildren(int $from, ?int $to = null, bool $forceDelete = false): static
     {
         if (!is_numeric($from) || ($to !== null && !is_numeric($to))) {
             throw new InvalidArgumentException('`from` and `to` are the position boundaries. They must be of type int.');
@@ -1035,12 +820,8 @@ class Entity extends Eloquent
 
     /**
      * Returns sibling query builder.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeSibling(Builder $builder)
+    public function scopeSibling(Builder $builder): Builder
     {
         $parentIdColumn = $this->getParentIdColumn();
 
@@ -1053,25 +834,16 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for siblings of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeSiblingOf(Builder $builder, $id)
+    public function scopeSiblingOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildSiblingQuery($builder, $id);
     }
 
     /**
      * Returns siblings query builder.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeSiblings(Builder $builder)
+    public function scopeSiblings(Builder $builder): Builder
     {
         return $this
             ->scopeSibling($builder)
@@ -1080,13 +852,8 @@ class Entity extends Eloquent
 
     /**
      * Return query builder for siblings of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeSiblingsOf(Builder $builder, $id)
+    public function scopeSiblingsOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildSiblingQuery($builder, $id, function ($position) {
             return function (Builder $builder) use ($position) {
@@ -1096,45 +863,33 @@ class Entity extends Eloquent
     }
 
     /**
-     * Retrives all siblings of a model.
-     *
-     * @param array $columns
-     *
-     * @return EntityCollection
+     * Retrieves all siblings of a model.
      */
-    public function getSiblings(array $columns = ['*'])
+    public function getSiblings(array $columns = ['*']): EntityCollection
     {
         return $this->siblings()->get($columns);
     }
 
     /**
      * Returns number of model's siblings.
-     *
-     * @return int
      */
-    public function countSiblings()
+    public function countSiblings(): int
     {
         return $this->siblings()->count();
     }
 
     /**
      * Indicates whether a model has siblings.
-     *
-     * @return bool
      */
-    public function hasSiblings()
+    public function hasSiblings(): bool
     {
         return (bool) $this->countSiblings();
     }
 
     /**
      * Returns neighbors query builder.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeNeighbors(Builder $builder)
+    public function scopeNeighbors(Builder $builder): Builder
     {
         $position = $this->position;
 
@@ -1145,13 +900,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for the neighbors of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeNeighborsOf(Builder $builder, $id)
+    public function scopeNeighborsOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildSiblingQuery($builder, $id, function ($position) {
             return function (Builder $builder) use ($position) {
@@ -1162,25 +912,16 @@ class Entity extends Eloquent
 
     /**
      * Retrieves neighbors (immediate previous and immediate next models) of a model.
-     *
-     * @param array $columns
-     *
-     * @return EntityCollection
      */
-    public function getNeighbors(array $columns = ['*'])
+    public function getNeighbors(array $columns = ['*']): EntityCollection
     {
         return $this->neighbors()->get($columns);
     }
 
     /**
      * Returns query builder for a sibling at the given position.
-     *
-     * @param Builder $builder
-     * @param int $position
-     *
-     * @return Builder
      */
-    public function scopeSiblingAt(Builder $builder, $position)
+    public function scopeSiblingAt(Builder $builder, int $position): Builder
     {
         return $this
             ->scopeSiblings($builder)
@@ -1189,14 +930,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for a sibling at the given position of a node of the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     * @param int $position
-     *
-     * @return Builder
      */
-    public function scopeSiblingOfAt(Builder $builder, $id, $position)
+    public function scopeSiblingOfAt(Builder $builder, mixed $id, int $position): Builder
     {
         return $this
             ->scopeSiblingOf($builder, $id)
@@ -1205,73 +940,48 @@ class Entity extends Eloquent
 
     /**
      * Retrieves a model's sibling with given position.
-     *
-     * @param int $position
-     * @param array $columns
-     * @return Entity
      */
-    public function getSiblingAt($position, array $columns = ['*'])
+    public function getSiblingAt(int $position, array $columns = ['*']): ?self
     {
         return $this->siblingAt($position)->first($columns);
     }
 
     /**
      * Returns query builder for the first sibling.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeFirstSibling(Builder $builder)
+    public function scopeFirstSibling(Builder $builder): Builder
     {
         return $this->scopeSiblingAt($builder, 0);
     }
 
     /**
      * Returns query builder for the first sibling of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeFirstSiblingOf(Builder $builder, $id)
+    public function scopeFirstSiblingOf(Builder $builder, mixed $id): Builder
     {
         return $this->scopeSiblingOfAt($builder, $id, 0);
     }
 
     /**
      * Retrieves the first model's sibling.
-     *
-     * @param array $columns
-     * @return Entity
      */
-    public function getFirstSibling(array $columns = ['*'])
+    public function getFirstSibling(array $columns = ['*']): ?self
     {
         return $this->getSiblingAt(0, $columns);
     }
 
     /**
      * Returns query builder for the last sibling.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeLastSibling(Builder $builder)
+    public function scopeLastSibling(Builder $builder): Builder
     {
         return $this->scopeSiblings($builder)->orderByDesc($this->getPositionColumn());
     }
 
     /**
      * Returns query builder for the last sibling of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeLastSiblingOf(Builder $builder, $id)
+    public function scopeLastSiblingOf(Builder $builder, mixed $id): Builder
     {
         return $this
             ->scopeSiblingOf($builder, $id)
@@ -1281,23 +991,16 @@ class Entity extends Eloquent
 
     /**
      * Retrieves the last model's sibling.
-     *
-     * @param array $columns
-     * @return Entity
      */
-    public function getLastSibling(array $columns = ['*'])
+    public function getLastSibling(array $columns = ['*']): ?self
     {
         return $this->lastSibling()->first($columns);
     }
 
     /**
      * Returns query builder for the previous sibling.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopePrevSibling(Builder $builder)
+    public function scopePrevSibling(Builder $builder): Builder
     {
         return $this
             ->scopeSibling($builder)
@@ -1306,13 +1009,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for the previous sibling of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopePrevSiblingOf(Builder $builder, $id)
+    public function scopePrevSiblingOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildSiblingQuery($builder, $id, function ($position) {
             return function (Builder $builder) use ($position) {
@@ -1323,23 +1021,16 @@ class Entity extends Eloquent
 
     /**
      * Retrieves immediate previous sibling of a model.
-     *
-     * @param array $columns
-     * @return Entity
      */
-    public function getPrevSibling(array $columns = ['*'])
+    public function getPrevSibling(array $columns = ['*']): ?self
     {
         return $this->prevSibling()->first($columns);
     }
 
     /**
      * Returns query builder for the previous siblings.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopePrevSiblings(Builder $builder)
+    public function scopePrevSiblings(Builder $builder): Builder
     {
         return $this
             ->scopeSibling($builder)
@@ -1348,13 +1039,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for the previous siblings of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopePrevSiblingsOf(Builder $builder, $id)
+    public function scopePrevSiblingsOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildSiblingQuery($builder, $id, function ($position) {
             return function (Builder $builder) use ($position) {
@@ -1365,44 +1051,32 @@ class Entity extends Eloquent
 
     /**
      * Retrieves all previous siblings of a model.
-     *
-     * @param array $columns
-     *
-     * @return EntityCollection
      */
-    public function getPrevSiblings(array $columns = ['*'])
+    public function getPrevSiblings(array $columns = ['*']): EntityCollection
     {
         return $this->prevSiblings()->get($columns);
     }
 
     /**
      * Returns number of previous siblings of a model.
-     *
-     * @return int
      */
-    public function countPrevSiblings()
+    public function countPrevSiblings(): int
     {
         return $this->prevSiblings()->count();
     }
 
     /**
      * Indicates whether a model has previous siblings.
-     *
-     * @return bool
      */
-    public function hasPrevSiblings()
+    public function hasPrevSiblings(): bool
     {
         return (bool) $this->countPrevSiblings();
     }
 
     /**
      * Returns query builder for the next sibling.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeNextSibling(Builder $builder)
+    public function scopeNextSibling(Builder $builder): Builder
     {
         return $this
             ->scopeSibling($builder)
@@ -1411,13 +1085,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for the next sibling of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeNextSiblingOf(Builder $builder, $id)
+    public function scopeNextSiblingOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildSiblingQuery($builder, $id, function ($position) {
             return function (Builder $builder) use ($position) {
@@ -1428,23 +1097,16 @@ class Entity extends Eloquent
 
     /**
      * Retrieves immediate next sibling of a model.
-     *
-     * @param array $columns
-     * @return Entity
      */
-    public function getNextSibling(array $columns = ['*'])
+    public function getNextSibling(array $columns = ['*']): ?self
     {
         return $this->nextSibling()->first($columns);
     }
 
     /**
      * Returns query builder for the next siblings.
-     *
-     * @param Builder $builder
-     *
-     * @return Builder
      */
-    public function scopeNextSiblings(Builder $builder)
+    public function scopeNextSiblings(Builder $builder): Builder
     {
         return $this
             ->scopeSibling($builder)
@@ -1453,13 +1115,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for the next siblings of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     *
-     * @return Builder
      */
-    public function scopeNextSiblingsOf(Builder $builder, $id)
+    public function scopeNextSiblingsOf(Builder $builder, mixed $id): Builder
     {
         return $this->buildSiblingQuery($builder, $id, function ($position) {
             return function (Builder $builder) use ($position) {
@@ -1470,46 +1127,32 @@ class Entity extends Eloquent
 
     /**
      * Retrieves all next siblings of a model.
-     *
-     * @param array $columns
-     *
-     * @return EntityCollection
      */
-    public function getNextSiblings(array $columns = ['*'])
+    public function getNextSiblings(array $columns = ['*']): EntityCollection
     {
         return $this->nextSiblings()->get($columns);
     }
 
     /**
      * Returns number of next siblings of a model.
-     *
-     * @return int
      */
-    public function countNextSiblings()
+    public function countNextSiblings(): int
     {
         return $this->nextSiblings()->count();
     }
 
     /**
      * Indicates whether a model has next siblings.
-     *
-     * @return bool
      */
-    public function hasNextSiblings()
+    public function hasNextSiblings(): bool
     {
         return (bool) $this->countNextSiblings();
     }
 
     /**
      * Returns query builder for a range of siblings.
-     *
-     * @param Builder $builder
-     * @param int $from
-     * @param int|null $to
-     *
-     * @return Builder
      */
-    public function scopeSiblingsRange(Builder $builder, $from, $to = null)
+    public function scopeSiblingsRange(Builder $builder, int $from, ?int $to = null): Builder
     {
         $position = $this->getPositionColumn();
 
@@ -1526,15 +1169,8 @@ class Entity extends Eloquent
 
     /**
      * Returns query builder for a range of siblings of a node with the given ID.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     * @param int $from
-     * @param int|null $to
-     *
-     * @return Builder
      */
-    public function scopeSiblingsRangeOf(Builder $builder, $id, $from, $to = null)
+    public function scopeSiblingsRangeOf(Builder $builder, mixed $id, int $from, ?int $to = null): Builder
     {
         $position = $this->getPositionColumn();
 
@@ -1551,27 +1187,16 @@ class Entity extends Eloquent
 
     /**
      * Retrieves siblings within given positions range.
-     *
-     * @param int $from
-     * @param int $to
-     * @param array $columns
-     * @return EntityCollection
      */
-    public function getSiblingsRange($from, $to = null, array $columns = ['*'])
+    public function getSiblingsRange(int $from, ?int $to = null, array $columns = ['*']): EntityCollection
     {
         return $this->siblingsRange($from, $to)->get($columns);
     }
 
     /**
      * Builds query for siblings.
-     *
-     * @param Builder $builder
-     * @param mixed $id
-     * @param callable|null $positionCallback
-     *
-     * @return Builder
      */
-    private function buildSiblingQuery(Builder $builder, $id, callable $positionCallback = null)
+    private function buildSiblingQuery(Builder $builder, mixed $id, ?callable $positionCallback = null): Builder
     {
         $parentIdColumn = $this->getParentIdColumn();
         $positionColumn = $this->getPositionColumn();
@@ -1602,13 +1227,8 @@ class Entity extends Eloquent
 
     /**
      * Appends a sibling within the current depth.
-     *
-     * @param Entity $sibling
-     * @param int|null $position
-     * @param bool $returnSibling
-     * @return Entity
      */
-    public function addSibling(Entity $sibling, $position = null, $returnSibling = false)
+    public function addSibling(self $sibling, ?int $position = null, bool $returnSibling = false): static
     {
         if ($this->exists) {
             $position = $position ?? static::getLatestPosition($this);
@@ -1626,13 +1246,9 @@ class Entity extends Eloquent
     /**
      * Appends multiple siblings within the current depth.
      *
-     * @param Entity[] $siblings
-     * @param int|null $from
-     *
-     * @return Entity
      * @throws Throwable
      */
-    public function addSiblings(array $siblings, $from = null)
+    public function addSiblings(array $siblings, ?int $from = null): static
     {
         if (!$this->exists) {
             return $this;
@@ -1652,39 +1268,26 @@ class Entity extends Eloquent
 
     /**
      * Retrieves root (with no ancestors) models.
-     *
-     * @param array $columns
-     *
-     * @return EntityCollection
      */
-    public static function getRoots(array $columns = ['*'])
+    public static function getRoots(array $columns = ['*']): EntityCollection
     {
-        /**
-         * @var Entity $instance
-         */
-        $instance = new static;
+        $instance = new static();
 
         return $instance->whereNull($instance->getParentIdColumn())->get($columns);
     }
 
     /**
      * Makes model a root with given position.
-     *
-     * @param int $position
-     * @return $this
      */
-    public function makeRoot($position)
+    public function makeRoot(int $position): static
     {
-        return $this->moveTo($position, null);
+        return $this->moveTo($position);
     }
 
     /**
      * Adds "parent id" column to columns list for proper tree querying.
-     *
-     * @param array $columns
-     * @return array
      */
-    protected function prepareTreeQueryColumns(array $columns)
+    protected function prepareTreeQueryColumns(array $columns): array
     {
         return ($columns === ['*'] ? $columns : array_merge($columns, [$this->getParentIdColumn()]));
     }
@@ -1692,12 +1295,9 @@ class Entity extends Eloquent
     /**
      * Retrieves entire tree.
      *
-     * @param array $columns
-     *
-     * @return EntityCollection
      * @deprecated since 6.0
      */
-    public static function getTree(array $columns = ['*'])
+    public static function getTree(array $columns = ['*']): EntityCollection
     {
         /**
          * @var Entity $instance
@@ -1715,15 +1315,9 @@ class Entity extends Eloquent
     /**
      * Retrieves tree by condition.
      *
-     * @param mixed $column
-     * @param mixed $operator
-     * @param mixed $value
-     * @param array $columns
-     *
-     * @return EntityCollection
      * @deprecated since 6.0
      */
-    public static function getTreeWhere($column, $operator = null, $value = null, array $columns = ['*'])
+    public static function getTreeWhere(mixed $column, mixed $operator = null, mixed $value = null, array $columns = ['*']): EntityCollection
     {
         /**
          * @var Entity $instance
@@ -1737,13 +1331,9 @@ class Entity extends Eloquent
     /**
      * Retrieves tree with any conditions using QueryBuilder
      *
-     * @param Builder $query
-     * @param array $columns
-     *
-     * @return EntityCollection
      * @deprecated since 6.0
      */
-    public static function getTreeByQuery(Builder $query, array $columns = ['*'])
+    public static function getTreeByQuery(Builder $query, array $columns = ['*']): EntityCollection
     {
         /**
          * @var Entity $instance
@@ -1756,13 +1346,9 @@ class Entity extends Eloquent
     /**
      * Saves models from the given attributes array.
      *
-     * @param array $tree
-     * @param Entity $parent
-     *
-     * @return EntityCollection
      * @throws Throwable
      */
-    public static function createFromArray(array $tree, Entity $parent = null)
+    public static function createFromArray(array $tree, ?self $parent = null): EntityCollection
     {
         $entities = [];
 
@@ -1789,12 +1375,9 @@ class Entity extends Eloquent
     /**
      * Makes the model a child or a root with given position.
      *
-     * @param int $position
-     * @param Entity|int $ancestor
-     * @return Entity
      * @throws InvalidArgumentException
      */
-    public function moveTo($position, $ancestor = null)
+    public function moveTo(int $position, mixed $ancestor = null): static
     {
         $parentId = $ancestor instanceof self ? $ancestor->getKey() : $ancestor;
 
@@ -1827,12 +1410,8 @@ class Entity extends Eloquent
 
     /**
      * Gets the next sibling position after the last one.
-     *
-     * @param Entity $entity
-     *
-     * @return int
      */
-    public static function getLatestPosition(Entity $entity)
+    public static function getLatestPosition(self $entity): int
     {
         $positionColumn = $entity->getPositionColumn();
         $parentIdColumn = $entity->getParentIdColumn();
@@ -1853,10 +1432,8 @@ class Entity extends Eloquent
 
     /**
      * Reorders node's siblings when it is moved to another position or ancestor.
-     *
-     * @return void
      */
-    private function reorderSiblings()
+    private function reorderSiblings(): void
     {
         $position = $this->getPositionColumn();
         $parentIdColumn = $this->getParentIdColumn();
@@ -1885,13 +1462,9 @@ class Entity extends Eloquent
     /**
      * Deletes a subtree from database.
      *
-     * @param bool $withSelf
-     * @param bool $forceDelete
-     *
-     * @return void
-     * @throws \Exception
+     * @throws Throwable
      */
-    public function deleteSubtree($withSelf = false, $forceDelete = false)
+    public function deleteSubtree(bool $withSelf = false, bool $forceDelete = false): void
     {
         $action = ($forceDelete === true ? 'forceDelete' : 'delete');
 
@@ -1908,10 +1481,9 @@ class Entity extends Eloquent
     /**
      * Create a new Eloquent Collection instance.
      *
-     * @param  array $models
-     * @return EntityCollection
+     * @param Entity[] $models
      */
-    public function newCollection(array $models = [])
+    public function newCollection(array $models = []): EntityCollection
     {
         return new EntityCollection($models);
     }
@@ -1919,12 +1491,9 @@ class Entity extends Eloquent
     /**
      * Executes queries within a transaction.
      *
-     * @param callable $callable
-     *
-     * @return mixed
      * @throws Throwable
      */
-    private function transactional(callable $callable)
+    private function transactional(callable $callable): mixed
     {
         return $this->getConnection()->transaction($callable);
     }

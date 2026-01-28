@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Franzose\ClosureTable;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
@@ -37,12 +39,8 @@ class ClosureTable extends Eloquent
 
     /**
      * Inserts new node into closure table.
-     *
-     * @param mixed $ancestorId
-     * @param mixed $descendantId
-     * @return void
      */
-    public function insertNode($ancestorId, $descendantId)
+    public function insertNode(mixed $ancestorId, mixed $descendantId): void
     {
         $rows = $this->selectRowsToInsert($ancestorId, $descendantId);
 
@@ -51,7 +49,7 @@ class ClosureTable extends Eloquent
         }
     }
 
-    private function selectRowsToInsert($ancestorId, $descendantId)
+    private function selectRowsToInsert(mixed $ancestorId, mixed $descendantId): array
     {
         $table = $this->getPrefixedTable();
         $ancestor = $this->getAncestorColumn();
@@ -80,11 +78,8 @@ class ClosureTable extends Eloquent
 
     /**
      * Make a node a descendant of another ancestor or makes it a root node.
-     *
-     * @param mixed $ancestorId
-     * @return void
      */
-    public function moveNodeTo($ancestorId = null)
+    public function moveNodeTo(mixed $ancestorId = null): void
     {
         $table = $this->getPrefixedTable();
         $ancestor = $this->getAncestorColumn();
@@ -122,10 +117,8 @@ class ClosureTable extends Eloquent
 
     /**
      * Unbinds current relationships.
-     *
-     * @return void
      */
-    protected function unbindRelationships()
+    protected function unbindRelationships(): void
     {
         $table = $this->getPrefixedTable();
         $ancestorColumn = $this->getAncestorColumn();
@@ -157,130 +150,104 @@ class ClosureTable extends Eloquent
 
     /**
      * Get table name with custom prefix for use in raw queries.
-     *
-     * @return string
      */
-    public function getPrefixedTable()
+    public function getPrefixedTable(): string
     {
         return $this->getConnection()->getTablePrefix() . $this->getTable();
     }
 
     /**
      * Get value of the "ancestor" attribute.
-     *
-     * @return int
      */
-    public function getAncestorAttribute()
+    public function getAncestorAttribute(): mixed
     {
         return $this->getAttributeFromArray($this->getAncestorColumn());
     }
 
     /**
      * Set new ancestor id.
-     *
-     * @param $value
      */
-    public function setAncestorAttribute($value)
+    public function setAncestorAttribute(mixed $value): void
     {
         $this->attributes[$this->getAncestorColumn()] = $value;
     }
 
     /**
      * Get the fully qualified "ancestor" column.
-     *
-     * @return string
      */
-    public function getQualifiedAncestorColumn()
+    public function getQualifiedAncestorColumn(): string
     {
         return $this->getTable() . '.' . $this->getAncestorColumn();
     }
 
     /**
      * Get the short name of the "ancestor" column.
-     *
-     * @return string
      */
-    public function getAncestorColumn()
+    public function getAncestorColumn(): string
     {
         return 'ancestor';
     }
 
     /**
      * Get value of the "descendant" attribute.
-     *
-     * @return int
      */
-    public function getDescendantAttribute()
+    public function getDescendantAttribute(): mixed
     {
         return $this->getAttributeFromArray($this->getDescendantColumn());
     }
 
     /**
      * Set new descendant id.
-     *
-     * @param $value
      */
-    public function setDescendantAttribute($value)
+    public function setDescendantAttribute(mixed $value): void
     {
         $this->attributes[$this->getDescendantColumn()] = $value;
     }
 
     /**
      * Get the fully qualified "descendant" column.
-     *
-     * @return string
      */
-    public function getQualifiedDescendantColumn()
+    public function getQualifiedDescendantColumn(): string
     {
         return $this->getTable() . '.' . $this->getDescendantColumn();
     }
 
     /**
      * Get the short name of the "descendant" column.
-     *
-     * @return string
      */
-    public function getDescendantColumn()
+    public function getDescendantColumn(): string
     {
         return 'descendant';
     }
 
     /**
      * Gets value of the "depth" attribute.
-     *
-     * @return int
      */
-    public function getDepthAttribute()
+    public function getDepthAttribute(): int
     {
         return $this->getAttributeFromArray($this->getDepthColumn());
     }
 
     /**
      * Sets new depth.
-     *
-     * @param $value
      */
-    public function setDepthAttribute($value)
+    public function setDepthAttribute(int $value): void
     {
-        $this->attributes[$this->getDepthColumn()] = (int) $value;
+        $this->attributes[$this->getDepthColumn()] = $value;
     }
 
     /**
      * Gets the fully qualified "deleted at" column.
-     *
-     * @return string
      */
-    public function getQualifiedDepthColumn()
+    public function getQualifiedDepthColumn(): string
     {
         return $this->getTable() . '.' . $this->getDepthColumn();
     }
 
     /**
      * Get the short name of the "depth" column.
-     *
-     * @return string
      */
-    public function getDepthColumn()
+    public function getDepthColumn(): string
     {
         return 'depth';
     }

@@ -7,3 +7,4 @@ Dockerfile
 /_ide_helper.php
 composer.phar
 .DS_Store
+.phpunit.result.cache

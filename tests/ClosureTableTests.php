@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Franzose\ClosureTable\Tests;
 
 use Franzose\ClosureTable\ClosureTable;
@@ -6,27 +8,12 @@ use Franzose\ClosureTable\Entity;
 
 class ClosureTableTests extends BaseTestCase
 {
-    /**
-     * @var ClosureTable;
-     */
-    private $ctable;
+    private ClosureTable $ctable;
+    private string $ancestorColumn;
+    private string $descendantColumn;
+    private string $depthColumn;
 
-    /**
-     * @var string
-     */
-    private $ancestorColumn;
-
-    /**
-     * @var string
-     */
-    private $descendantColumn;
-
-    /**
-     * @var string
-     */
-    private $depthColumn;
-
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -36,7 +23,7 @@ class ClosureTableTests extends BaseTestCase
         $this->depthColumn = $this->ctable->getDepthColumn();
     }
 
-    public function testAncestorQualifiedKeyName()
+    public function testAncestorQualifiedKeyName(): void
     {
         static::assertEquals(
             $this->ctable->getTable() . '.' . $this->ancestorColumn,
@@ -44,7 +31,7 @@ class ClosureTableTests extends BaseTestCase
         );
     }
 
-    public function testDescendantQualifiedKeyName()
+    public function testDescendantQualifiedKeyName(): void
     {
         static::assertEquals(
             $this->ctable->getTable() . '.' . $this->descendantColumn,
@@ -52,7 +39,7 @@ class ClosureTableTests extends BaseTestCase
         );
     }
 
-    public function testDepthQualifiedKeyName()
+    public function testDepthQualifiedKeyName(): void
     {
         static::assertEquals(
             $this->ctable->getTable() . '.' . $this->depthColumn,
@@ -60,7 +47,7 @@ class ClosureTableTests extends BaseTestCase
         );
     }
 
-    public function testNewNodeShouldBeInsertedIntoClosureTable()
+    public function testNewNodeShouldBeInsertedIntoClosureTable(): void
     {
         $entity = Entity::create(['title' => 'abcde']);
         $closure = ClosureTable::whereDescendant($entity->getKey())->first();

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Franzose\ClosureTable\Tests;
 
 use Franzose\ClosureTable\Entity;
