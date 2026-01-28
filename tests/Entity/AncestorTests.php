@@ -67,7 +67,7 @@ class AncestorTests extends BaseTestCase
     {
         $entity = Entity::find(12);
 
-        $ancestors = $entity->getAncestorsWhere('position', '<', 2);
+        $ancestors = $entity->ancestors()->where('position', '<', 2)->get();
 
         static::assertInstanceOf(EntityCollection::class, $ancestors);
         static::assertCount(2, $ancestors);

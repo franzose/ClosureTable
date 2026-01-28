@@ -208,34 +208,6 @@ class Entity extends Eloquent
     }
 
     /**
-     * Gets the fully qualified "real depth" column.
-     */
-    public function getQualifiedRealDepthColumn(): string
-    {
-        return $this->getTable() . '.' . $this->getRealDepthColumn();
-    }
-
-    /**
-     * Gets the short name of the "real depth" column.
-     *
-     * @deprecated since 6.0
-     */
-    public function getRealDepthColumn(): string
-    {
-        return 'real_depth';
-    }
-
-    /**
-     * Gets the "children" relation index.
-     *
-     * @deprecated since 6.0
-     */
-    public function getChildrenRelationIndex(): string
-    {
-        return static::CHILDREN_RELATION_NAME;
-    }
-
-    /**
      * The "booting" method of the model.
      */
     public static function boot(): void
@@ -379,26 +351,6 @@ class Entity extends Eloquent
     }
 
     /**
-     * Retrieves tree structured ancestors of a model.
-     *
-     * @deprecated since 6.0, use {@link EntityCollection::toTree()} instead
-     */
-    public function getAncestorsTree(array $columns = ['*']): EntityCollection
-    {
-        return $this->getAncestors($columns)->toTree();
-    }
-
-    /**
-     * Retrieves ancestors applying given conditions.
-     *
-     * @deprecated since 6.0, use {@link Entity::ancestors()} scope instead
-     */
-    public function getAncestorsWhere(mixed $column, mixed $operator = null, mixed $value = null, array $columns = ['*']): EntityCollection
-    {
-        return $this->ancestors()->where($column, $operator, $value)->get($columns);
-    }
-
-    /**
      * Returns a number of model's ancestors.
      */
     public function countAncestors(): int
@@ -473,26 +425,6 @@ class Entity extends Eloquent
     }
 
     /**
-     * Retrieves tree structured descendants of a model.
-     *
-     * @deprecated since 6.0, use {@link EntityCollection::toTree()} instead
-     */
-    public function getDescendantsTree(array $columns = ['*']): EntityCollection
-    {
-        return $this->getDescendants($columns)->toTree();
-    }
-
-    /**
-     * Retrieves descendants applying given conditions.
-     *
-     * @deprecated since 6.0, use {@link Entity::descendants()} scope instead
-     */
-    public function getDescendantsWhere(mixed $column, mixed $operator = null, mixed $value = null, array $columns = ['*']): EntityCollection
-    {
-        return $this->descendants()->where($column, $operator, $value)->get($columns);
-    }
-
-    /**
      * Returns a number of model's descendants.
      */
     public function countDescendants(): int
@@ -538,16 +470,6 @@ class Entity extends Eloquent
     public function hasChildren(): bool
     {
         return (bool) $this->countChildren();
-    }
-
-    /**
-     * Indicates whether a model has children as a relation.
-     *
-     * @deprecated from 6.0
-     */
-    public function hasChildrenRelation(): bool
-    {
-        return $this->relationLoaded($this->getChildrenRelationIndex());
     }
 
     /**
@@ -1285,65 +1207,6 @@ class Entity extends Eloquent
     }
 
     /**
-     * Adds "parent id" column to columns list for proper tree querying.
-     */
-    protected function prepareTreeQueryColumns(array $columns): array
-    {
-        return ($columns === ['*'] ? $columns : array_merge($columns, [$this->getParentIdColumn()]));
-    }
-
-    /**
-     * Retrieves entire tree.
-     *
-     * @deprecated since 6.0
-     */
-    public static function getTree(array $columns = ['*']): EntityCollection
-    {
-        /**
-         * @var Entity $instance
-         */
-        $instance = new static;
-
-        return $instance
-            ->load(static::CHILDREN_RELATION_NAME)
-            ->orderBy($instance->getParentIdColumn())
-            ->orderBy($instance->getPositionColumn())
-            ->get($instance->prepareTreeQueryColumns($columns))
-            ->toTree();
-    }
-
-    /**
-     * Retrieves tree by condition.
-     *
-     * @deprecated since 6.0
-     */
-    public static function getTreeWhere(mixed $column, mixed $operator = null, mixed $value = null, array $columns = ['*']): EntityCollection
-    {
-        /**
-         * @var Entity $instance
-         */
-        $instance = new static;
-        $columns = $instance->prepareTreeQueryColumns($columns);
-
-        return $instance->where($column, $operator, $value)->get($columns)->toTree();
-    }
-
-    /**
-     * Retrieves tree with any conditions using QueryBuilder
-     *
-     * @deprecated since 6.0
-     */
-    public static function getTreeByQuery(Builder $query, array $columns = ['*']): EntityCollection
-    {
-        /**
-         * @var Entity $instance
-         */
-        $instance = new static;
-        $columns = $instance->prepareTreeQueryColumns($columns);
-        return $query->get($columns)->toTree();
-    }
-
-    /**
      * Saves models from the given attributes array.
      *
      * @throws Throwable
@@ -1355,11 +1218,8 @@ class Entity extends Eloquent
         foreach ($tree as $item) {
             $children = $item[static::CHILDREN_RELATION_NAME] ?? [];
 
-            /**
-             * @var Entity $entity
-             */
             $entity = new static($item);
-            $entity->parent_id = $parent ? $parent->getKey() : null;
+            $entity->parent_id = $parent?->getKey();
             $entity->save();
 
             if ($children !== null) {

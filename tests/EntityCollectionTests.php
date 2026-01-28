@@ -104,7 +104,6 @@ class EntityCollectionTests extends BaseTestCase
     public function testGetChildrenOf(): void
     {
         $entity = new Page(['position' => 0]);
-        $childrenRelationIndex = $entity->getChildrenRelationIndex();
 
         $collection = new EntityCollection([
             $entity,
@@ -120,7 +119,7 @@ class EntityCollectionTests extends BaseTestCase
 
         /** @var Entity $firstEntity */
         $firstEntity = $collection->get(0);
-        $firstEntity->setRelation($childrenRelationIndex, $expected);
+        $firstEntity->setRelation(Entity::CHILDREN_RELATION_NAME, $expected);
 
         $actual = $collection->getChildrenOf(0);
 
@@ -130,7 +129,6 @@ class EntityCollectionTests extends BaseTestCase
     public function testHasChildren(): void
     {
         $entity = new Page(['position' => 0]);
-        $childrenRelationIndex = $entity->getChildrenRelationIndex();
 
         $collection = new EntityCollection([
             $entity,
@@ -146,7 +144,7 @@ class EntityCollectionTests extends BaseTestCase
 
         /** @var Entity $firstEntity */
         $firstEntity = $collection->get(0);
-        $firstEntity->setRelation($childrenRelationIndex, $children);
+        $firstEntity->setRelation(Entity::CHILDREN_RELATION_NAME, $children);
 
         static::assertTrue($collection->hasChildren(0));
     }

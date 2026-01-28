@@ -63,7 +63,7 @@ class DescendantTests extends BaseTestCase
 
     public function testGetDescendantsWhere(): void
     {
-        $descendants = Entity::find(9)->getDescendantsWhere('position', '=', 1);
+        $descendants = Entity::find(9)->descendants()->where('position', '=', 1)->get();
 
         static::assertCount(1, $descendants);
         static::assertEquals([13], $descendants->modelKeys());

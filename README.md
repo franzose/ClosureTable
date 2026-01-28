@@ -186,16 +186,7 @@ Node::find(4)->ancestors()->where('id', '>', 1)->get()->pluck('id')->toArray(); 
 Node::find(4)->ancestorsWithSelf()->where('id', '>', 1)->get()->pluck('id')->toArray(); // [2, 3, 4];
 Node::ancestorsOf(4)->where('id', '>', 1)->get()->pluck('id')->toArray(); // [2, 3];
 Node::ancestorsWithSelfOf(4)->where('id', '>', 1)->get()->pluck('id')->toArray(); // [2, 3, 4];
-```
-
-There are several methods that have been deprecated since ClosureTable 6:
-
-```diff
--Node::find(4)->getAncestorsTree();
-+Node::find(4)->getAncestors()->toTree();
-
--Node::find(4)->getAncestorsWhere('id', '>', 1);
-+Node::find(4)->ancestors()->where('id', '>', 1)->get();
+Node::find(4)->getAncestors()->toTree();
 ```
 
 ### Descendants
@@ -219,16 +210,7 @@ Node::find(1)->descendants()->where('id', '<', 4)->get()->pluck('id')->toArray()
 Node::find(1)->descendantsWithSelf()->where('id', '<', 4)->get()->pluck('id')->toArray(); // [1, 2, 3];
 Node::descendantsOf(1)->where('id', '<', 4)->get()->pluck('id')->toArray(); // [2, 3];
 Node::descendantsWithSelfOf(1)->where('id', '<', 4)->get()->pluck('id')->toArray(); // [1, 2, 3];
-```
-
-There are several methods that have been deprecated since ClosureTable 6:
-
-```diff
--Node::find(4)->getDescendantsTree();
-+Node::find(4)->getDescendants()->toTree();
-
--Node::find(4)->getDescendantsWhere('foo', '=', 'bar');
-+Node::find(4)->descendants()->where('foo', '=', 'bar')->get();
+Node::find(4)->getDescendants()->toTree();
 ```
 
 ### Children
@@ -370,14 +352,7 @@ Node::find(4)->deleteSubtree(true);
 Node::find(1)->getDescendants()->pluck('id')->toArray(); // [2, 3]
 ```
 
-There are several methods that have been deprecated since ClosureTable 6:
-
-```diff
--Node::getTree();
--Node::getTreeByQuery(...);
--Node::getTreeWhere('foo', '=', 'bar');
-+Node::where('foo', '=', 'bar')->get()->toTree();
-```
+Build trees via query results: `Node::where('foo', '=', 'bar')->get()->toTree()`.
 
 ### Collection methods
 This library uses an extended collection class which offers some convenient methods:
