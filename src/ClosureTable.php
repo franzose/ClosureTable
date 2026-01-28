@@ -11,8 +11,6 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
  * @property mixed ancestor Alias for the ancestor attribute name
  * @property mixed descendant Alias for the descendant attribute name
  * @property int depth Alias for the depth attribute name
- *
- * @package Franzose\ClosureTable
  */
 class ClosureTable extends Eloquent
 {
