@@ -21,8 +21,8 @@ jobs:
             health_cmd: "mysqladmin ping -h 127.0.0.1 -uuser -puserpass"
           - name: mariadb
             image: mariadb:11
-            port: 3366
-            container_port: 3366
+            port: 3306
+            container_port: 3306
             driver: mysql
             collation: utf8_unicode_ci
             health_cmd: "mysqladmin ping -h 127.0.0.1 -uuser -puserpass"
@@ -45,6 +45,10 @@ jobs:
           MYSQL_USER: user
           MYSQL_PASSWORD: userpass
           MYSQL_ROOT_PASSWORD: rootpass
+          MARIADB_DATABASE: ${{ matrix.db.name }}
+          MARIADB_USER: user
+          MARIADB_PASSWORD: userpass
+          MARIADB_ROOT_PASSWORD: rootpass
           POSTGRES_DB: ${{ matrix.db.name }}
           POSTGRES_USER: user
           POSTGRES_PASSWORD: userpass
