@@ -67,8 +67,9 @@ class Entity extends Eloquent
     public function __construct(array $attributes = [])
     {
         $position = $this->getPositionColumn();
+        $parentId = $this->getParentIdColumn();
 
-        $this->fillable(array_merge($this->getFillable(), [$position]));
+        $this->fillable(array_merge($this->getFillable(), [$position, $parentId]));
 
         if (isset($attributes[$position]) && $attributes[$position] < 0) {
             $attributes[$position] = 0;
