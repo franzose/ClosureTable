@@ -19,7 +19,7 @@ class DescendantTests extends BaseTestCase
     {
         $entity = Entity::find(9);
 
-        $descendants = $entity->descendants()->get();
+        $descendants = $entity->descendants()->orderBy('id')->get();
 
         static::assertCount(6, $descendants);
         static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
@@ -27,7 +27,7 @@ class DescendantTests extends BaseTestCase
 
     public function testDescendantsOfScope(): void
     {
-        $descendants = Entity::descendantsOf(9)->get();
+        $descendants = Entity::descendantsOf(9)->orderBy('id')->get();
 
         static::assertCount(6, $descendants);
         static::assertEquals([10, 11, 12, 13, 14, 15], $descendants->modelKeys());
@@ -37,7 +37,7 @@ class DescendantTests extends BaseTestCase
     {
         $entity = Entity::find(9);
 
-        $descendants = $entity->descendantsWithSelf()->get();
+        $descendants = $entity->descendantsWithSelf()->orderBy('id')->get();
 
         static::assertCount(7, $descendants);
         static::assertEquals([9, 10, 11, 12, 13, 14, 15], $descendants->modelKeys());
@@ -45,7 +45,7 @@ class DescendantTests extends BaseTestCase
 
     public function testDescendantsWithSelfOfScope(): void
     {
-        $descendants = Entity::descendantsWithSelfOf(9)->get();
+        $descendants = Entity::descendantsWithSelfOf(9)->orderBy('id')->get();
 
         static::assertCount(7, $descendants);
         static::assertEquals([9, 10, 11, 12, 13, 14, 15], $descendants->modelKeys());
@@ -63,7 +63,7 @@ class DescendantTests extends BaseTestCase
 
     public function testGetDescendantsWhere(): void
     {
-        $descendants = Entity::find(9)->descendants()->where('position', '=', 1)->get();
+        $descendants = Entity::find(9)->descendants()->where('position', '=', 1)->orderBy('id')->get();
 
         static::assertCount(1, $descendants);
         static::assertEquals([13], $descendants->modelKeys());
