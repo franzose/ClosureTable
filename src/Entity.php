@@ -522,18 +522,6 @@ class Entity extends Eloquent
         return $this;
     }
 
-    /**
-     * Appends the given entity to the children relation.
-     *
-     * @internal
-     */
-    public function appendChild(self $entity): static
-    {
-        $this->getChildrenRelation()->add($entity);
-
-        return $this;
-    }
-
     private function getChildrenRelation(): EntityCollection
     {
         if (!$this->relationLoaded(static::CHILDREN_RELATION_NAME)) {
