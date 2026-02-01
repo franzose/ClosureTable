@@ -78,4 +78,4 @@ Since ClosureTable 6, a lot of query scopes are available in the Entity model. S
 Learn how to use query scopes in the [Laravel documentation](https://laravel.com/docs/12.x/eloquent#query-scopes). Dig into the [examples](examples) to see how to use them and more.
 
 ### Ordering
-`getAncestors()` is ordered by depth ascending (nearest first), then by `position` ascending, and finally by the primary key ascending as a stable fallback. For scope queries, add your own `orderBy()` (or `reorder()`) to define the ordering you want.
+`getAncestors()` and `getDescendants()` are ordered by depth ascending (nearest first), then by `position` ascending, and finally by the primary key ascending as a stable fallback. For scope queries, add your own `orderBy()` (or `reorder()`) to define the ordering you want.

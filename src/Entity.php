@@ -329,7 +329,17 @@ class Entity extends Eloquent
      */
     public function getDescendants(array $columns = ['*']): EntityCollection
     {
-        return $this->descendants()->get($columns);
+        $query = $this->descendants();
+
+        $query->orderBy($this->closure->getQualifiedDepthColumn());
+
+        if ($this->hasTableColumn($this->getPositionColumn())) {
+            $query->orderBy($this->getQualifiedPositionColumn());
+        }
+
+        $query->orderBy($this->getQualifiedKeyName());
+
+        return $query->get($columns);
     }
 
     /**
