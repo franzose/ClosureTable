@@ -1,5 +1,5 @@
 # ClosureTable
-[![Build Status](https://travis-ci.org/franzose/ClosureTable.png)](https://travis-ci.org/franzose/ClosureTable)
+[![GitHub Workflow Status](https://github.com/franzose/ClosureTable/actions/workflows/tests.yml/badge.svg)](https://github.com/franzose/ClosureTable/actions)
 [![Latest Release](https://img.shields.io/github/v/release/franzose/ClosureTable)](https://packagist.org/packages/franzose/closure-table)
 [![Total Downloads](https://poser.pugx.org/franzose/closure-table/downloads.png)](https://packagist.org/packages/franzose/closure-table)
 
