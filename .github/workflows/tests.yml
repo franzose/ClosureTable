@@ -1,0 +1,74 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4', '8.5']
+        db:
+          - name: mysql
+            image: mysql:8.0
+            port: 3306
+            container_port: 3306
+            driver: mysql
+            collation: utf8_unicode_ci
+            health_cmd: "mysqladmin ping -h 127.0.0.1 -uuser -puserpass"
+          - name: postgres
+            image: postgres:16
+            port: 5432
+            container_port: 5432
+            driver: pgsql
+            collation: ""
+            health_cmd: "pg_isready -h 127.0.0.1 -U user -d closuretabletest"
+
+    name: PHP ${{ matrix.php }} / ${{ matrix.db.name }}
+    services:
+      db:
+        image: ${{ matrix.db.image }}
+        ports:
+          - ${{ matrix.db.port }}:${{ matrix.db.container_port }}
+        env:
+          MYSQL_DATABASE: ${{ matrix.db.name }}
+          MYSQL_USER: user
+          MYSQL_PASSWORD: userpass
+          MYSQL_ROOT_PASSWORD: rootpass
+          POSTGRES_DB: ${{ matrix.db.name }}
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: userpass
+        options: >-
+          --health-cmd "${{ matrix.db.health_cmd }}"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_DRIVER: ${{ matrix.db.driver }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: ${{ matrix.db.port }}
+      DB_USERNAME: user
+      DB_PASSWORD: userpass
+      DB_NAME: ${{ matrix.db.name }}
+      DB_COLLATION: ${{ matrix.db.collation }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_mysql, pdo_pgsql
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run tests
+        run: vendor/bin/phpunit

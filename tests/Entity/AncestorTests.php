@@ -19,36 +19,36 @@ class AncestorTests extends BaseTestCase
     {
         $entity = Entity::find(12);
 
-        $ancestors = $entity->ancestors()->get();
+        $ancestors = $entity->ancestors()->orderBy('id')->get();
 
         static::assertCount(3, $ancestors);
-        static::assertEquals([11, 10, 9], $ancestors->modelKeys());
+        static::assertEquals([9, 10, 11], $ancestors->modelKeys());
     }
 
     public function testAncestorsOfScope(): void
     {
-        $ancestors = Entity::ancestorsOf(12)->get();
+        $ancestors = Entity::ancestorsOf(12)->orderBy('id')->get();
 
         static::assertCount(3, $ancestors);
-        static::assertEquals([11, 10, 9], $ancestors->modelKeys());
+        static::assertEquals([9, 10, 11], $ancestors->modelKeys());
     }
 
     public function testAncestorsWithSelfScope(): void
     {
         $entity = Entity::find(12);
 
-        $ancestors = $entity->ancestorsWithSelf()->get();
+        $ancestors = $entity->ancestorsWithSelf()->orderBy('id')->get();
 
         static::assertCount(4, $ancestors);
-        static::assertEquals([12, 11, 10, 9], $ancestors->modelKeys());
+        static::assertEquals([9, 10, 11, 12], $ancestors->modelKeys());
     }
 
     public function testAncestorsWithSelfOfScope(): void
     {
-        $ancestors = Entity::ancestorsWithSelfOf(12)->get();
+        $ancestors = Entity::ancestorsWithSelfOf(12)->orderBy('id')->get();
 
         static::assertCount(4, $ancestors);
-        static::assertEquals([12, 11, 10, 9], $ancestors->modelKeys());
+        static::assertEquals([9, 10, 11, 12], $ancestors->modelKeys());
     }
 
     public function testGetAncestorsShouldNotBeEmpty(): void
@@ -67,12 +67,12 @@ class AncestorTests extends BaseTestCase
     {
         $entity = Entity::find(12);
 
-        $ancestors = $entity->ancestors()->where('position', '<', 2)->get();
+        $ancestors = $entity->ancestors()->where('position', '<', 2)->orderBy('id')->get();
 
         static::assertInstanceOf(EntityCollection::class, $ancestors);
         static::assertCount(2, $ancestors);
         static::assertContainsOnlyInstancesOf(Entity::class, $ancestors);
-        static::assertEquals([11, 10], $ancestors->modelKeys());
+        static::assertEquals([10, 11], $ancestors->modelKeys());
     }
 
     public function testCountAncestors(): void
