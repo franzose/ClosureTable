@@ -427,12 +427,12 @@ class Entity extends Eloquent implements EntityInterface
         return $builder
             ->join(
                 $this->closure->getTable(),
-                $this->closure->getAncestorColumn(),
+                $this->closure->getQualifiedAncestorColumn(),
                 '=',
                 $this->getQualifiedKeyName()
             )
-            ->where($this->closure->getDescendantColumn(), '=', $id)
-            ->where($this->closure->getDepthColumn(), $depthOperator, 0);
+            ->where($this->closure->getQualifiedDescendantColumn(), '=', $id)
+            ->where($this->closure->getQualifiedDepthColumn(), $depthOperator, 0);
     }
 
     /**
@@ -560,12 +560,12 @@ class Entity extends Eloquent implements EntityInterface
         return $builder
             ->join(
                 $this->closure->getTable(),
-                $this->closure->getDescendantColumn(),
+                $this->closure->getQualifiedDescendantColumn(),
                 '=',
                 $this->getQualifiedKeyName()
             )
-            ->where($this->closure->getAncestorColumn(), '=', $id)
-            ->where($this->closure->getDepthColumn(), $depthOperator, 0);
+            ->where($this->closure->getQualifiedAncestorColumn(), '=', $id)
+            ->where($this->closure->getQualifiedDepthColumn(), $depthOperator, 0);
     }
 
     /**
