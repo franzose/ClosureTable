@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Franzose\ClosureTable\Scope\Ancestor;
 use Franzose\ClosureTable\Scope\DirectChild;
@@ -23,8 +24,9 @@ use InvalidArgumentException;
  * However, if you named, for example, the position column to be "pos",
  * remember you can get its value either by $this->pos or $this->position.
  *
- * @property int position Alias for the current position attribute name
+ * @property int|null position Alias for the current position attribute name
  * @property mixed parent_id Alias for the direct ancestor identifier attribute name
+ * @property int|null depth Current node depth
  * @property EntityCollection children Child nodes loaded from the database
  */
 class Entity extends Eloquent
@@ -35,6 +37,7 @@ class Entity extends Eloquent
     use DirectChild;
     use Sibling;
 
+    private const DEPTH_RELATION_NAME = 'closureDepth';
     public const CHILDREN_RELATION_NAME = 'children';
 
     /**
@@ -68,6 +71,15 @@ class Entity extends Eloquent
      * Indicates if the model should be timestamped.
      */
     public $timestamps = false;
+
+    /**
+     * The relations to eager load on every query.
+     *
+     * @var string[]
+     */
+    protected $with = [
+        self::DEPTH_RELATION_NAME,
+    ];
 
     /**
      * Entity constructor.
@@ -180,6 +192,42 @@ class Entity extends Eloquent
     public function getPositionColumn(): string
     {
         return 'position';
+    }
+
+    /**
+     * Returns the closure row with the max depth for the current node.
+     *
+     * @internal
+     */
+    public function closureDepth(): HasOne
+    {
+        $relatedClass = get_class($this->closure);
+        $descendantColumn = $this->closure->getDescendantColumn();
+        $depthColumn = $this->closure->getDepthColumn();
+
+        $relation = $this->hasOne($relatedClass, $descendantColumn, $this->getKeyName());
+        $relation->getRelated()->setTable($this->closure->getTable());
+
+        return $relation->ofMany($depthColumn, 'max');
+    }
+
+    /**
+     * Gets the current node depth.
+     */
+    public function getDepthAttribute(): ?int
+    {
+        if (!$this->exists) {
+            return null;
+        }
+
+        if ($this->relationLoaded(static::DEPTH_RELATION_NAME)) {
+            $depth = $this->getRelation(static::DEPTH_RELATION_NAME)?->getAttribute($this->closure->getDepthColumn());
+            return $depth !== null ? (int) $depth : 0;
+        }
+
+        $depth = $this->closureDepth()->value($this->closure->getDepthColumn());
+
+        return $depth !== null ? (int) $depth : 0;
     }
 
     /**
