@@ -137,7 +137,13 @@ class EntityCollection extends Collection
             $parentId = $item->parent_id;
 
             if (array_key_exists($parentId, $result)) {
-                $result[$parentId]->appendChild($item);
+                $parent = $result[$parentId];
+                $children = $parent->relationLoaded(Entity::CHILDREN_RELATION_NAME)
+                    ? $parent->getRelation(Entity::CHILDREN_RELATION_NAME)
+                    : new EntityCollection();
+
+                $children->add($item);
+                $parent->setRelation(Entity::CHILDREN_RELATION_NAME, $children);
             } else {
                 $tops[] = $item;
             }
