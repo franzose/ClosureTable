@@ -12,6 +12,7 @@ use Franzose\ClosureTable\Scope\Ancestor;
 use Franzose\ClosureTable\Scope\DirectChild;
 use Franzose\ClosureTable\Scope\Descendant;
 use Franzose\ClosureTable\Scope\Sibling;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 use InvalidArgumentException;
 
@@ -50,6 +51,13 @@ class Entity extends Eloquent
      * Cached "previous" (i.e. before the model is moved) model position.
      */
     private ?int $previousPosition = null;
+
+    /**
+     * Cache for table/column existence checks.
+     *
+     * @var array<string, bool>
+     */
+    protected static array $tableColumnCache = [];
 
     /**
      * Whether this node is being moved to another parent node.
@@ -175,6 +183,29 @@ class Entity extends Eloquent
     }
 
     /**
+     * Checks if the current model table has the given column.
+     */
+    protected function hasTableColumn(string $column): bool
+    {
+        $connection = $this->getConnectionName() ?? 'default';
+        $cacheKey = $connection . '|' . $this->getTable() . '|' . $column;
+
+        if (array_key_exists($cacheKey, self::$tableColumnCache)) {
+            return self::$tableColumnCache[$cacheKey];
+        }
+
+        if ($connection === 'default') {
+            $exists = Schema::hasColumn($this->getTable(), $column);
+        } else {
+            $exists = Schema::connection($connection)->hasColumn($this->getTable(), $column);
+        }
+
+        self::$tableColumnCache[$cacheKey] = $exists;
+
+        return $exists;
+    }
+
+    /**
      * The "booting" method of the model.
      */
     public static function boot(): void
@@ -264,7 +295,17 @@ class Entity extends Eloquent
      */
     public function getAncestors(array $columns = ['*']): EntityCollection
     {
-        return $this->ancestors()->get($columns);
+        $query = $this->ancestors();
+
+        $query->orderBy($this->closure->getQualifiedDepthColumn());
+
+        if ($this->hasTableColumn($this->getPositionColumn())) {
+            $query->orderBy($this->getQualifiedPositionColumn());
+        }
+
+        $query->orderBy($this->getQualifiedKeyName());
+
+        return $query->get($columns);
     }
 
     /**
