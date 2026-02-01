@@ -14,7 +14,7 @@ foreach ($nodes as $node) {
     $node->save();
 }
 
-Node::find(4)->getAncestors()->pluck('id')->toArray(); // [1, 2, 3]
+Node::find(4)->getAncestors()->pluck('id')->toArray(); // [3, 2, 1]
 Node::find(4)->countAncestors(); // 3
 Node::find(4)->hasAncestors(); // true
 Node::find(4)->ancestors()->where('id', '>', 1)->get()->pluck('id')->toArray(); // [2, 3];
