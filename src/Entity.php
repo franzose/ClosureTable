@@ -261,6 +261,14 @@ class Entity extends Eloquent
         parent::boot();
 
         static::saving(static function (Entity $entity) {
+            if (!$entity->exists) {
+                if (!$entity->isDirty($entity->getPositionColumn())) {
+                    $entity->position = static::getLatestPosition($entity);
+                }
+
+                return;
+            }
+
             if ($entity->isDirty($entity->getPositionColumn())) {
                 $latest = static::getLatestPosition($entity);
 
@@ -269,8 +277,6 @@ class Entity extends Eloquent
                 }
 
                 $entity->position = max(0, min($entity->position, $latest));
-            } elseif (!$entity->exists) {
-                $entity->position = static::getLatestPosition($entity);
             }
         });
 
@@ -795,8 +801,55 @@ class Entity extends Eloquent
     public static function createFromArray(array $tree, ?self $parent = null): EntityCollection
     {
         $entities = [];
+        $items = array_values($tree);
+        $instance = new static();
+        $positionColumn = $instance->getPositionColumn();
+        $hasPosition = false;
 
-        foreach ($tree as $item) {
+        foreach ($items as $item) {
+            if (array_key_exists($positionColumn, $item) && $item[$positionColumn] !== null) {
+                $hasPosition = true;
+                break;
+            }
+        }
+
+        if ($hasPosition) {
+            $indexed = [];
+            foreach ($items as $index => $item) {
+                $indexed[] = [
+                    'index' => $index,
+                    'position' => array_key_exists($positionColumn, $item) ? $item[$positionColumn] : null,
+                    'item' => $item,
+                ];
+            }
+
+            usort($indexed, static function (array $a, array $b): int {
+                $aHas = $a['position'] !== null;
+                $bHas = $b['position'] !== null;
+
+                if ($aHas && $bHas) {
+                    if ($a['position'] === $b['position']) {
+                        return $a['index'] <=> $b['index'];
+                    }
+
+                    return $a['position'] <=> $b['position'];
+                }
+
+                if ($aHas) {
+                    return -1;
+                }
+
+                if ($bHas) {
+                    return 1;
+                }
+
+                return $a['index'] <=> $b['index'];
+            });
+
+            $items = array_map(static fn (array $row): array => $row['item'], $indexed);
+        }
+
+        foreach ($items as $item) {
             $children = $item[static::CHILDREN_RELATION_NAME] ?? [];
 
             $entity = new static($item);
