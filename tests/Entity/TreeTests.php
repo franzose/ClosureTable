@@ -207,4 +207,45 @@ class TreeTests extends BaseTestCase
         static::assertEquals(700, $childrenOf600->get(0)->id);
         static::assertEquals(800, $childrenOf600->get(1)->id);
     }
+
+    public function testCreateFromArrayPreservesExplicitPositions(): void
+    {
+        $parent = Page::create(['title' => 'Root']);
+
+        Page::createFromArray([
+            ['id' => 301, 'title' => 'C', 'position' => 2],
+            ['id' => 302, 'title' => 'A', 'position' => 0],
+            ['id' => 303, 'title' => 'B', 'position' => 1],
+        ], $parent);
+
+        static::assertEquals(2, Page::find(301)->position);
+        static::assertEquals(0, Page::find(302)->position);
+        static::assertEquals(1, Page::find(303)->position);
+    }
+
+    public function testCreateFromArrayPreservesExplicitPositionGaps(): void
+    {
+        $parent = Page::create(['title' => 'Root gaps']);
+
+        Page::createFromArray([
+            ['id' => 304, 'title' => 'Gapped', 'position' => 5],
+        ], $parent);
+
+        static::assertEquals(5, Page::find(304)->position);
+    }
+
+    public function testCreateFromArrayAssignsPositionsWhenMissing(): void
+    {
+        $parent = Page::create(['title' => 'Root implicit']);
+
+        Page::createFromArray([
+            ['id' => 305, 'title' => 'First'],
+            ['id' => 306, 'title' => 'Second'],
+            ['id' => 307, 'title' => 'Third'],
+        ], $parent);
+
+        static::assertEquals(0, Page::find(305)->position);
+        static::assertEquals(1, Page::find(306)->position);
+        static::assertEquals(2, Page::find(307)->position);
+    }
 }
