@@ -278,7 +278,7 @@ class Entity extends Eloquent implements EntityInterface
             if ($entity->isDirty($entity->getPositionColumn())) {
                 $latest = static::getLatestPosition($entity);
 
-                if (!$entity->isReparenting) {
+                if (!$entity->isReparenting && $entity->exists) {
                     $latest--;
                 }
 
