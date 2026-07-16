@@ -1052,7 +1052,30 @@ class Entity extends Eloquent implements EntityInterface
      */
     public function scopeSibling(Builder $builder)
     {
-        return $builder->where($this->getParentIdColumn(), '=', $this->parent_id);
+        $builder->where($this->getParentIdColumn(), '=', $this->parent_id);
+
+        return $this->applyPositionScope($builder);
+    }
+
+    /**
+     * Additional scope for the "sibling" / position group, applied on top of the
+     * parent_id grouping used by getLatestPosition()/reorderSiblings()/sibling().
+     *
+     * Default: no-op (the original global behaviour, where all NULL-parent roots
+     * form a single sibling group). Override in a subclass to make the position
+     * bookkeeping tenant-local, e.g.:
+     *
+     *   protected function applyPositionScope(Builder $query): Builder
+     *   {
+     *       return $query->where('post_id', $this->post_id);
+     *   }
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    protected function applyPositionScope(Builder $query): Builder
+    {
+        return $query;
     }
 
     /**
@@ -1832,8 +1855,10 @@ class Entity extends Eloquent implements EntityInterface
         $positionColumn = $entity->getPositionColumn();
         $parentIdColumn = $entity->getParentIdColumn();
 
-        $latest = $entity->select($positionColumn)
-            ->where($parentIdColumn, '=', $entity->parent_id)
+        $query = $entity->select($positionColumn)
+            ->where($parentIdColumn, '=', $entity->parent_id);
+
+        $latest = $entity->applyPositionScope($query)
             ->latest($positionColumn)
             ->first();
 
@@ -1852,13 +1877,15 @@ class Entity extends Eloquent implements EntityInterface
         $position = $this->getPositionColumn();
 
         if ($this->previousPosition !== null) {
-            $this
+            $decrementQuery = $this
                 ->where($this->getKeyName(), '<>', $this->getKey())
                 ->where($this->getParentIdColumn(), '=', $this->previousParentId)
-                ->where($position, '>', $this->previousPosition)
-                ->decrement($position);
+                ->where($position, '>', $this->previousPosition);
+
+            $this->applyPositionScope($decrementQuery)->decrement($position);
         }
 
+        // sibling() applies applyPositionScope() through scopeSibling()
         $this
             ->sibling()
             ->where($this->getKeyName(), '<>', $this->getKey())
