@@ -170,7 +170,7 @@ class Collection extends EloquentCollection
         foreach ($items as $item) {
             $parentId = $item->parent_id;
 
-            if (array_key_exists($parentId, $result)) {
+            if ($parentId !== null && array_key_exists($parentId, $result)) {
                 $result[$parentId]->appendChild($item);
             } else {
                 $tops[] = $item;
