@@ -1573,7 +1573,7 @@ class Entity extends Eloquent implements EntityInterface
      *
      * @return Builder
      */
-    private function buildSiblingQuery(Builder $builder, $id, callable $positionCallback = null)
+    private function buildSiblingQuery(Builder $builder, $id, ?callable $positionCallback = null)
     {
         $parentIdColumn = $this->getParentIdColumn();
         $positionColumn = $this->getPositionColumn();
@@ -1759,12 +1759,12 @@ class Entity extends Eloquent implements EntityInterface
      * Saves models from the given attributes array.
      *
      * @param array $tree
-     * @param EntityInterface $parent
+     * @param EntityInterface|null $parent
      *
      * @return Collection
      * @throws Throwable
      */
-    public static function createFromArray(array $tree, EntityInterface $parent = null)
+    public static function createFromArray(array $tree, ?EntityInterface $parent = null)
     {
         $entities = [];
 
