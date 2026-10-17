@@ -8,3 +8,4 @@ Dockerfile
 composer.phar
 .DS_Store
 .phpunit.result.cache
+/.phpunit.cache
