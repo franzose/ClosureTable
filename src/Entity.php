@@ -910,7 +910,8 @@ class Entity extends Eloquent
         $positionColumn = $entity->getPositionColumn();
         $parentIdColumn = $entity->getParentIdColumn();
 
-        $latest = $entity->select($positionColumn)
+        $latest = $entity->withTrashed()
+            ->select($positionColumn)
             ->when(
                 $entity->parent_id === null,
                 fn (Builder $builder) => $builder->whereNull($parentIdColumn),
@@ -933,7 +934,9 @@ class Entity extends Eloquent
         $parentIdColumn = $this->getParentIdColumn();
 
         if ($this->previousPosition !== null) {
+            // Soft-deleted siblings keep their positions, so they have to be shifted too.
             $query = $this
+                ->withTrashed()
                 ->where($this->getKeyName(), '<>', $this->getKey())
                 ->where($position, '>', $this->previousPosition);
 
@@ -947,6 +950,7 @@ class Entity extends Eloquent
         }
 
         $this
+            ->withTrashed()
             ->sibling()
             ->where($this->getKeyName(), '<>', $this->getKey())
             ->where($position, '>=', $this->position)
