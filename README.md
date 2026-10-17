@@ -18,7 +18,7 @@ Create the entity model, closure table model, and their migration manually. You 
 - [examples/2020_01_01_000000_create_nodes_table_migration.php](examples/2020_01_01_000000_create_nodes_table_migration.php)
 
 ## Requirements
-Laravel 9+ and PHP 8.2+ are required. Keep in mind that, by design of this package, the models/tables have a required minimum of attributes/columns:
+Laravel 12+ and PHP 8.2+ are required (Laravel 13 requires PHP 8.3+). Keep in mind that, by design of this package, the models/tables have a required minimum of attributes/columns:
 <table>
 <tr>
 <th colspan="3">Entity</th>
