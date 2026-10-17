@@ -11,6 +11,8 @@ It's strongly recommended to use [Composer](https://getcomposer.org) to install 
 $ composer require franzose/closure-table
 ```
 
+Upgrading from ClosureTable 6? See the [upgrade guide](UPGRADE.md).
+
 ## Setup
 Create the entity model, closure table model, and their migration manually. You can use the [examples](examples) as a starting point:
 - [examples/Node.php](examples/Node.php)
