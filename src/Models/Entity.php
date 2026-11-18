@@ -102,6 +102,15 @@ class Entity extends Eloquent implements EntityInterface
     private $created = false;
 
     /**
+     * Whether the position was assigned automatically (appended to the end) on creation.
+     * Such a node has no siblings to shift, so reordering is skipped
+     * to avoid taking needless range locks on the siblings.
+     *
+     * @var bool
+     */
+    private $isPositionAutoAssigned = false;
+
+    /**
      * Indicates if the model should soft delete.
      *
      * @var bool
@@ -285,6 +294,8 @@ class Entity extends Eloquent implements EntityInterface
         parent::boot();
 
         static::saving(static function (Entity $entity) {
+            $entity->isPositionAutoAssigned = false;
+
             if ($entity->isDirty($entity->getPositionColumn())) {
                 $latest = static::getLatestPosition($entity);
 
@@ -295,6 +306,7 @@ class Entity extends Eloquent implements EntityInterface
                 $entity->position = max(0, min($entity->position, $latest));
             } elseif (!$entity->exists) {
                 $entity->position = static::getLatestPosition($entity);
+                $entity->isPositionAutoAssigned = true;
             }
             $entity->created = false;
         });
@@ -315,7 +327,9 @@ class Entity extends Eloquent implements EntityInterface
         static::saved(static function (Entity $entity) {
             $parentIdChanged = !$entity->created && $entity->isDirty($entity->getParentIdColumn());
 
-            if ($parentIdChanged || $entity->isDirty($entity->getPositionColumn())) {
+            $positionChanged = $entity->isDirty($entity->getPositionColumn()) && !$entity->isPositionAutoAssigned;
+
+            if ($parentIdChanged || $positionChanged) {
                 $entity->reorderSiblings();
             }
 
